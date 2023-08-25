@@ -1,0 +1,11 @@
+package com.fms.pfc.domain.dto;
+
+import lombok.Data;
+
+@Data
+public class MenuRoleFunctionPKDto {
+	private Integer menuItemId;
+	private String roleId;
+	private Integer recordTypeId;
+	private Integer functionType;
+}

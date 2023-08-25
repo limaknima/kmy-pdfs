@@ -1,0 +1,219 @@
+package com.fms.pfc.controller.main;
+
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.MessageSource;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.context.annotation.SessionScope;
+import org.springframework.web.servlet.ModelAndView;
+
+import com.fms.pfc.common.Authority;
+import com.fms.pfc.common.CommonConstants;
+import com.fms.pfc.domain.model.main.OnDemandSearch;
+import com.fms.pfc.service.api.base.TrxHisService;
+import com.fms.pfc.service.api.main.G2LotViewService;
+import com.fms.pfc.service.api.main.OnDemandSearchService;
+import com.fms.pfc.validation.common.CommonValidation;
+
+@Controller
+@SessionScope
+public class OnDemandSearchController {
+
+	private static final Logger logger = LoggerFactory.getLogger(OnDemandSearchController.class);
+
+	private Authority auth;
+	private CommonValidation commonValServ;
+	private MessageSource msgSource;
+	private OnDemandSearchService odsServ;
+	private TrxHisService trxHistServ;
+	private G2LotViewService g2LotServ;
+
+	private Map<String, Object> model = new HashMap<String, Object>();
+	private String screenMode = "";
+
+	private static String LBL_HPL = "";
+	private static String LBL_G2LOT = "";
+	private static String LBL_FILENAME = "";
+	private static String LBL_FILEPATH = "";
+	private static String LBL_FROMDATE = "";
+	private static String LBL_TODATE = "";
+	private static  String MODULE_NAME = "";
+
+	@Autowired
+	public OnDemandSearchController(Authority auth, CommonValidation commonValServ, MessageSource msgSource,
+			OnDemandSearchService odsServ, TrxHisService trxHistServ, G2LotViewService g2LotServ) {
+		super();
+		this.auth = auth;
+		this.commonValServ = commonValServ;
+		this.msgSource = msgSource;
+		this.odsServ = odsServ;
+		this.trxHistServ = trxHistServ;
+		this.g2LotServ = g2LotServ;
+
+		getAllLabels();
+	}
+
+	/**
+	 * Display initial screen
+	 * 
+	 * @param request
+	 * @param response
+	 * @return
+	 */
+	@GetMapping("/main/pfc/onDemandList")
+	public ModelAndView initListing(HttpServletRequest request, HttpServletResponse response) {
+
+		removeAlert(model);
+		model = auth.onPageLoad(model, request);
+		auth.isAuthUrl(request, response);
+		model.put("hplItems", g2LotServ.hplList());
+		
+		List<OnDemandSearch> searchByCriteria = odsServ.searchByCriteria("", "", "", "", "", "", "", "", "");
+		model.put("odsAllItems", searchByCriteria);
+		
+		if(!searchByCriteria.isEmpty()) {
+			model.put("btnNotifyHid", false);
+			model.put("btnExportHid", false);
+		} else {
+			model.put("btnNotifyHid", true);
+			model.put("btnExportHid", true);
+		}
+
+		return new ModelAndView("/main/pfc/onDemandSearch", model);
+	}
+
+	/**
+	 * Do search
+	 * 
+	 * @param prName
+	 * @param ltType
+	 * @param prNameExp
+	 * @param session
+	 * @return
+	 */
+	@PostMapping("/main/pfc/onDemandSearch")
+	public ModelAndView search(HttpServletRequest request, 
+			@RequestParam(name = "hpl") String hpl, 
+			@RequestParam(name = "g2LotNo") String g2LotNo, 
+			@RequestParam(name = "g2LotNoExp") String g2LotNoExp, 
+			@RequestParam(name = "fileName") String fileName,
+			@RequestParam(name = "fileNameExp") String fileNameExp, 
+			@RequestParam(name = "path") String path, 
+			@RequestParam(name = "pathExp") String pathExp, 
+			@RequestParam(name = "fromDate") String fromDate, 
+			@RequestParam(name = "toDate") String toDate,
+			HttpSession session) {
+
+		boolean hasError = false;
+
+		removeAlert(model);		
+		
+		model.put("hpl", hpl);
+		model.put("g2LotNo", g2LotNo);
+		model.put("g2LotNoExp", g2LotNoExp);
+		model.put("fileName", fileName);
+		model.put("fileNameExp", fileNameExp);
+		model.put("path", path);
+		model.put("pathExp", pathExp);
+		model.put("fromDate", fromDate);
+		model.put("toDate", toDate);
+		
+		String errorMsg = "";	
+		errorMsg += commonValServ.validateDateFormat(fromDate, LBL_FROMDATE);
+		errorMsg += commonValServ.validateDateFormat(toDate, LBL_TODATE);
+		errorMsg += commonValServ.validateDateRange(fromDate, toDate, LBL_FROMDATE, LBL_TODATE);
+
+		try {
+			if (errorMsg.length() == 0) {
+
+				List<OnDemandSearch> items = odsServ.searchByCriteria(hpl, g2LotNo, g2LotNoExp, fileName, fileNameExp,
+						path, pathExp, fromDate, toDate);
+				model.put("odsAllItems", items);
+				
+				if(!items.isEmpty()) {
+					model.put("btnNotifyHid", false);
+					model.put("btnExportHid", false);
+				} else {
+					model.put("btnNotifyHid", true);
+					model.put("btnExportHid", true);
+				}
+
+				StringBuffer sb = new StringBuffer();
+				sb.append("Search Criteria: ");
+				sb.append(LBL_HPL).append("=").append(hpl == null ? "<ALL>" : hpl.toString()).append(", ");
+				sb.append(LBL_G2LOT).append("=").append(g2LotNo.isEmpty() ? "<ALL>" : g2LotNo).append(", ");
+				sb.append(LBL_FILENAME).append("=").append(fileName.isEmpty() ? "<ALL>" : fileName).append(", ");
+				sb.append(LBL_FILEPATH).append("=").append(path.isEmpty() ? "<ALL>" : path).append(", ");
+				sb.append(LBL_FROMDATE).append("=").append(fromDate == null ? "<ALL>" : fromDate).append(", ");
+				sb.append(LBL_TODATE).append("=").append(toDate == null ? "<ALL>" : toDate);
+
+				trxHistServ.addTrxHistory(new Date(), "Search " + MODULE_NAME, request.getRemoteUser(),
+						CommonConstants.FUNCTION_TYPE_SEARCH, "Search " + MODULE_NAME,
+						CommonConstants.RECORD_TYPE_ID_ON_DEMAND, sb.toString());
+
+			} else {
+				hasError = true;
+			}
+
+		} catch (Exception e) {
+			e.printStackTrace();
+			hasError = true;
+			errorMsg += "Failed to get record.";
+			errorMsg += e.toString();
+
+		} finally {
+			if (hasError == true) {
+				model.put("error", errorMsg);
+				// return back user input
+				model.put("odsAllItems", odsServ.searchByCriteria("", "", "", "", "", "", "", "", ""));
+			}
+		}
+
+		return new ModelAndView("/main/pfc/onDemandSearch", model);
+	}
+	
+	@PostMapping(value = "/main/pfc/onDemandSearchAction", params = "action=notify")
+	public ModelAndView sendNotification(HttpServletRequest request, HttpSession session) {
+		logger.debug("sendNotification() ..");
+		return new ModelAndView("/main/pfc/onDemandSearch", model);
+	}
+	
+	@PostMapping(value = "/main/pfc/onDemandSearchAction", params = "action=export")
+	public ModelAndView exportToFile(HttpServletRequest request, HttpSession session) {
+		logger.debug("exportToFile() ..");
+		
+		return new ModelAndView("/main/pfc/onDemandSearch", model);
+	}
+
+	private Map<String, Object> removeAlert(Map<String, Object> model) {
+		model.remove("error");
+		model.remove("success");
+
+		return model;
+	}
+
+	private void getAllLabels() {
+		LBL_HPL = msgSource.getMessage("lblHpl", null, Locale.getDefault());
+		LBL_G2LOT = msgSource.getMessage("lblG2LotNo", null, Locale.getDefault());
+		LBL_FILENAME = msgSource.getMessage("lblFileName", null, Locale.getDefault());
+		LBL_FILEPATH = msgSource.getMessage("lblFilePath", null, Locale.getDefault());
+		LBL_FROMDATE = msgSource.getMessage("lblFromDate", null, Locale.getDefault());
+		LBL_TODATE = msgSource.getMessage("lblToDate", null, Locale.getDefault());
+		MODULE_NAME = msgSource.getMessage("moduleOnDemand", null, Locale.getDefault());
+	}
+}

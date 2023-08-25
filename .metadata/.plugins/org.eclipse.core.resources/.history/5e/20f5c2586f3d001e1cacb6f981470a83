@@ -1,0 +1,106 @@
+package com.fms.pfc.service.api.base;
+
+import java.util.List;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import com.fms.pfc.domain.converter.MenuRoleFunctionConverter;
+import com.fms.pfc.domain.dto.MenuRoleFunctionDto;
+import com.fms.pfc.domain.model.MenuRoleFunction;
+import com.fms.pfc.repository.base.api.MenuRoleFunctionRepository;
+
+@Service
+public class MenuRoleFunctionService {
+	private final Logger logger = LoggerFactory.getLogger(MenuRoleFunctionService.class);
+
+	private MenuRoleFunctionRepository mrfRepo;
+	private MenuRoleFunctionConverter mrfConv;
+	private RoleService roleServ;
+
+	@Autowired
+	public MenuRoleFunctionService(MenuRoleFunctionRepository mrfRepo, MenuRoleFunctionConverter mrfConv, RoleService roleServ) {
+		super();
+		this.mrfRepo = mrfRepo;
+		this.mrfConv = mrfConv;
+		this.roleServ = roleServ;
+	}
+
+	public MenuRoleFunction findById(Integer id) {
+		return mrfRepo.findById(id).orElse(null);
+	}
+
+	public MenuRoleFunctionDto findDtoById(Integer id) {
+		MenuRoleFunction obj = mrfRepo.findById(id).orElse(null);
+		MenuRoleFunctionDto dto = mrfConv.entityToDto(obj);
+		return dto;
+	}
+
+	public List<MenuRoleFunctionDto> findAllDto(boolean uiDisplay) {
+		List<MenuRoleFunction> entList = mrfRepo.findAll();
+		List<MenuRoleFunctionDto> dtoList = mrfConv.entityToDtoList(entList);
+
+		if (uiDisplay) {
+			dtoList.forEach(dto -> {
+				dto.setMenuName(getMenuName(dto.getMenuItemId()));
+				dto.setRoleName(getRoleName(dto.getRoleId()));
+				dto.setFunctionName(getFunctionName(dto.getFunctionType()));
+			});
+		}
+
+		return dtoList;
+	}
+
+	private String getFunctionName(Integer functionType) {
+		String fName = "";
+		switch (functionType) {
+		case 1:
+			fName = "Insert";
+			break;
+		case 2:
+			fName = "Update";
+			break;
+		case 3:
+			fName = "Delete";
+			break;
+		case 4:
+			fName = "Search";
+			break;
+		case 5:
+			fName = "View";
+			break;
+		case 6:
+			fName = "Purge";
+			break;
+		case 7:
+			fName = "Download";
+			break;
+		case 8:
+			fName = "Copy";
+			break;
+		case 9:
+			fName = "Renew";
+			break;
+		case 10:
+			fName = "Upload";
+			break;
+		default:
+			fName = "";
+			break;
+		}
+		return fName;
+	}
+
+	private String getRoleName(String roleId) {
+		String rName = roleServ.findOneById(roleId).getRoleName();
+		return rName;
+	}
+
+	private String getMenuName(Integer menuItemId) {
+		String rName = mrfRepo.getMenuItemName(menuItemId);
+		return rName;
+	}
+
+}

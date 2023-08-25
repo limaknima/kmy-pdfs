@@ -1,0 +1,849 @@
+package com.fms.pfc.controller.main;
+
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Objects;
+import java.util.stream.Collectors;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
+import javax.validation.Valid;
+
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.MessageSource;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.ModelMap;
+import org.springframework.validation.BindingResult;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.context.annotation.SessionScope;
+import org.springframework.web.servlet.ModelAndView;
+
+import com.fms.pfc.common.Authority;
+import com.fms.pfc.common.CommonConstants;
+import com.fms.pfc.common.CommonUtil;
+import com.fms.pfc.domain.dto.main.FoldCatgConfDto;
+import com.fms.pfc.domain.dto.main.G2LotViewDto;
+import com.fms.pfc.domain.dto.main.HplModelDto;
+import com.fms.pfc.domain.dto.main.RelPathDto;
+import com.fms.pfc.domain.model.main.FoldCatgConfSearch;
+import com.fms.pfc.domain.model.main.RelPath;
+import com.fms.pfc.service.api.base.TrxHisService;
+import com.fms.pfc.service.api.main.FoldCatgConfService;
+import com.fms.pfc.service.api.main.G2LotViewService;
+import com.fms.pfc.service.api.main.HplModelService;
+import com.fms.pfc.service.api.main.HplService;
+import com.fms.pfc.validation.common.CommonValidation;
+
+@Controller
+@SessionScope
+public class FoldCatgConfController {
+	private static final Logger logger = LoggerFactory.getLogger(FoldCatgConfController.class);
+
+	private Authority auth;
+	private CommonValidation commonValServ;
+	private MessageSource msgSource;
+	private FoldCatgConfService foldCatgConfServ;
+	private TrxHisService trxHistServ;
+	private HplService hplServ;
+	private HplModelService hplModelServ;
+	private G2LotViewService g2LotServ;
+
+	private Map<String, Object> model = new HashMap<String, Object>();
+	private String screenMode = "";
+
+	private static String HPL_LBL = "";
+	private static String MODEL_LBL = "";
+	private static String YEAR_LBL = "";
+	private static String MONTH_LBL = "";
+	private static String DAY_LBL = "";
+	private static String PROD_LN_LBL = "";
+	private static String SEQ_LBL = "";
+	private static String FILE_FORMAT_LBL = "";
+	private static String FILE_PATH_LBL = "";
+	private static String MODULE_NAME = "";
+	private static final String ERR_MSG_UNIQUE = " already exist ";
+	private static final String breakline = ".<br />";
+	private static final int YEAR_COUNT = 20;
+	private static final String DEFAULT_DATA_PATH = "D:/PFC/DATA/";
+
+	@Autowired
+	public FoldCatgConfController(Authority auth, CommonValidation commonValServ, MessageSource msgSource,
+			FoldCatgConfService foldCatgConfServ, TrxHisService trxHistServ, HplService hplServ,
+			HplModelService hplModelServ, G2LotViewService g2LotServ) {
+		super();
+		this.auth = auth;
+		this.commonValServ = commonValServ;
+		this.msgSource = msgSource;
+		this.foldCatgConfServ = foldCatgConfServ;
+		this.trxHistServ = trxHistServ;
+		this.hplServ = hplServ;
+		this.hplModelServ = hplModelServ;
+		this.g2LotServ = g2LotServ;
+		
+		getAllLabels();
+	}
+
+	/**
+	 * Display initial screen
+	 * 
+	 * @param request
+	 * @param response
+	 * @return
+	 */
+	@GetMapping("/main/pfc/foldCatgConfList")
+	public ModelAndView initListing(HttpServletRequest request, HttpServletResponse response) {
+
+		removeAlert(model);
+		model = auth.onPageLoad(model, request);
+		auth.isAuthUrl(request, response);
+		model.put("foldCatgAllItems", foldCatgConfServ.searchByCriteria2("", "", "", "", "", "", "", "", ""));
+		//model.put("searchHplItems", hplServ.searchByCriteria("", "", "", ""));
+		//model.put("searchHplModelItems", foldCatgConfServ.findHplModelSelectItems(0));
+		model.put("searchHplItems", g2LotServ.hplList());
+		model.put("searchHplModelItems", g2LotServ.hplModelList(""));
+		model.put("searchYearItems", CommonUtil.yearDropdownItems(YEAR_COUNT));
+		model.put("searchMonthItems", CommonUtil.monthDropdownItems());
+		model.put("searchDayItems", CommonUtil.dayDropdownItems());
+
+		return new ModelAndView("/main/pfc/foldCatgConfList", model);
+	}
+
+	/**
+	 * View form
+	 * 
+	 * @param request
+	 * @param ltContId
+	 * @return
+	 */
+	@RequestMapping("/main/pfc/foldCatgConfFormView")
+	public ModelAndView viewForm(HttpServletRequest request, @RequestParam(name = "pkCatgId") Integer pkCatgId) {
+
+		removeAlert(model);
+
+		FoldCatgConfDto dto = foldCatgConfServ.findDtoById(pkCatgId);
+		trxHistServ.addTrxHistory(new Date(), "View " + MODULE_NAME, request.getRemoteUser(),
+				CommonConstants.FUNCTION_TYPE_VIEW, dto.getPkCatgId().toString(),
+				CommonConstants.RECORD_TYPE_ID_FOLD_CATG_CONF, null);
+
+		// Set mode
+		screenMode = CommonConstants.SCREEN_MODE_VIEW;
+		model.put("mode", screenMode);
+		model.put("btnSaveSts", true);
+
+		// Set form header
+		model.put("header", "View " + MODULE_NAME);
+
+		// Set confirmation message
+		model.put("confirmHeader", "Edit cancellation");
+		model.put("confirmMsg", "Do you want to cancel Edit this record ?");
+
+		manageListButton(true, true, true, model);
+		
+		model.put("relPathDelList", new ArrayList<RelPathDto>());
+
+		// Put model to HTML
+		if (dto != null) {
+
+			model.put("pkCatgId", dto.getPkCatgId());
+			model.put("foldCatgConfItem", dto);
+			model.put("foldCatgConfItemCurrItem", dto);
+			model.put("relPathList", foldCatgConfServ.findRelPathListByParent(dto.getPkCatgId()));
+			model.put("hplModelId2Temp", dto.getFkHplModelId());
+			model.put("prodLn2Temp", dto.getProdLn());
+
+			model.put("hplItems", hplServ.searchByCriteria("", "", "", ""));
+			model.put("hplModelItems", foldCatgConfServ.findHplModelSelectItems(0));
+			model.put("yearItems", CommonUtil.yearDropdownItems(YEAR_COUNT));
+			model.put("monthItems", CommonUtil.monthDropdownItems());
+			model.put("dayItems", CommonUtil.dayDropdownItems());
+			
+			String hpl = (dto.getFkHplId() != null && dto.getFkHplId() != 0)
+					? hplServ.findDtoById(dto.getFkHplId()).getHplName()
+					: "";
+			model.put("prodLnItems", generateProdLnItems(generateG2LotItems("", "", dto.getProdLn(), hpl, "")));
+
+			model.put("createdUser", dto.getCreatorId());
+			model.put("modifiedUser", dto.getModifierId());
+
+			DateFormat formatter = new SimpleDateFormat("dd/MM/yyy hh:mm:ss a");
+			try {
+				String createdInfo = "Created by " + dto.getCreatorId() + " on "
+						+ formatter.format(dto.getCreatedDatetime());
+				model.put("createdInfo", createdInfo);
+			} catch (Exception e) {
+			}
+
+			String modifiedInfo = "";
+			try {
+				modifiedInfo = "Modified by " + dto.getModifierId() + " on "
+						+ formatter.format(dto.getModifiedDatetime());
+			} catch (Exception e) {
+				modifiedInfo = "Modified by --";
+			}
+			model.put("modifiedInfo", modifiedInfo);
+		}
+
+		return new ModelAndView("/main/pfc/foldCatgConfForm", model);
+	}
+
+	/**
+	 * Load add form
+	 * 
+	 * @param request
+	 * @return
+	 */
+	@GetMapping("/main/pfc/foldCatgConfForm")
+	public ModelAndView loadNewForm(HttpServletRequest request) {
+		removeAlert(model);
+
+		// Set mode
+		screenMode = CommonConstants.SCREEN_MODE_ADD;
+		model.put("mode", screenMode);
+
+		// Set fields
+		model.put("foldCatgConfItem", new FoldCatgConfDto());
+		model.put("relPathList", new ArrayList<RelPath>());
+		model.put("relPathDelList", new ArrayList<RelPathDto>());
+
+		// Set form header
+		model.put("header", "Add " + MODULE_NAME);
+		// Set confirmation message
+		model.put("confirmHeader", "Cancel confirmation");
+		model.put("confirmMsg", "Do you want to cancel this record ?");
+
+		model.put("btnEdit", true);
+		model.put("btnSaveSts", false);
+		model.put("btnAction", false);
+		model.put("btnSave", "Save");
+
+		model.put("hplItems", hplServ.searchByCriteria("", "", "", ""));
+		model.put("hplModelItems", foldCatgConfServ.findHplModelSelectItems(0));
+		model.put("yearItems", CommonUtil.yearDropdownItems(YEAR_COUNT));
+		model.put("monthItems", CommonUtil.monthDropdownItems());
+		model.put("dayItems", CommonUtil.dayDropdownItems());
+		model.put("defaultDataPath", DEFAULT_DATA_PATH);
+
+		manageListButton(false, true, true, model);
+
+		return new ModelAndView("/main/pfc/foldCatgConfForm", model);
+	}
+
+	/**
+	 * Save form
+	 * 
+	 * @param foldDto
+	 * @param request
+	 * @param bindingResult
+	 * @param session
+	 * @return
+	 * @throws Exception
+	 */
+	@PostMapping(value = "/main/pfc/foldCatgConfFormSave", params = "action=save")
+	public ModelAndView saveForm(@Valid FoldCatgConfDto foldDto,
+			@RequestParam(name = "hplModelId2", required = false) Integer hplModelId2,
+			@RequestParam(name = "prodLn2", required = false) String prodLn2, HttpServletRequest request,
+			BindingResult bindingResult, HttpSession session) throws Exception {
+
+		removeAlert(model);
+		String mode = screenMode;
+
+		List<RelPathDto> relPathList = (List<RelPathDto>) model.get("relPathList");
+		
+		if(null != hplModelId2 && hplModelId2 != 0) {
+			foldDto.setFkHplModelId(hplModelId2);
+		}
+		foldDto.setProdLn(prodLn2);
+
+		model.put("foldCatgConfItem", foldDto);
+
+		String errorMsg = validateForm(foldDto);
+
+		if (errorMsg.length() != 0) {
+			model.put("error", errorMsg);
+			model.remove("success");
+			model.put("foldCatgConfItem", foldDto);
+			model.put("prodLn2Temp", prodLn2);
+
+			if (mode.equals(CommonConstants.SCREEN_MODE_EDIT)) {
+				screenMode = CommonConstants.SCREEN_MODE_EDIT;
+				// Set mode to HTML header
+				model.put("mode", screenMode);
+				model.put("header", "Edit " + MODULE_NAME);
+				// Set confirmation message
+				model.put("confirmHeader", "Edit cancellation");
+				model.put("confirmMsg", "Do you want to cancel edit this record ?");
+			}
+			return new ModelAndView("/main/pfc/foldCatgConfForm", model);
+		}
+
+		if (mode.equals(CommonConstants.SCREEN_MODE_ADD)) {
+
+			try {
+				// If no error proceed to save add form
+				// Add form
+				Integer result = foldCatgConfServ.save(foldDto, request.getRemoteUser(), relPathList, null);
+
+				// Print add success
+				model.put("success", "Record added successfully.");
+				model.remove("error");
+				model.put("foldCatgConfItem", new FoldCatgConfDto());
+
+				trxHistServ.addTrxHistory(new Date(), "Insert " + MODULE_NAME, request.getRemoteUser(),
+						CommonConstants.FUNCTION_TYPE_INSERT, result != null ? result.toString() : "",
+						CommonConstants.RECORD_TYPE_ID_FOLD_CATG_CONF, null);
+
+			} catch (Exception e) {
+				// Print DB exception
+				e.printStackTrace();
+				model.put("error", "Record failed to be added.");
+				model.remove("success");
+			}
+
+		} else if (mode.equals(CommonConstants.SCREEN_MODE_EDIT)) {
+			// Set mode to HTML header
+			screenMode = CommonConstants.SCREEN_MODE_VIEW;
+			model.put("mode", screenMode);
+			model.put("header", MODULE_NAME);
+			
+			List<RelPathDto> relPathDelList = (List<RelPathDto>) model.get("relPathDelList");
+
+			try {
+				// Update form
+				Integer result = foldCatgConfServ.save(foldDto, request.getRemoteUser(), relPathList, relPathDelList);
+
+				// Print update success
+				model.put("success", "Record updated successfully.");
+				model.remove("error");
+
+				trxHistServ.addTrxHistory(new Date(), "Update " + MODULE_NAME, request.getRemoteUser(),
+						CommonConstants.FUNCTION_TYPE_UPDATE, result != null ? result.toString() : "",
+						CommonConstants.RECORD_TYPE_ID_FOLD_CATG_CONF, null);
+
+			} catch (Exception e) {
+				// Print DB exception
+				e.printStackTrace();
+				model.put("error", "Record failed to update.");
+				model.remove("success");
+			}
+		}
+
+		model.put("btnEdit", false);
+		model.put("foldCatgAllItems", foldCatgConfServ.searchByCriteria2("", "", "", "", "", "", "", "", ""));
+
+		return new ModelAndView("/main/pfc/foldCatgConfList", model);
+	}
+
+	/**
+	 * Construct error message based on validation result
+	 * 
+	 * @param ltDto
+	 * @return
+	 */
+	private String validateForm(FoldCatgConfDto foldDto) {
+		String errorMsg = "";
+		errorMsg += commonValServ.validateMandatoryInput(
+				!Objects.nonNull(foldDto.getFkHplId()) ? "" : foldDto.getFkHplId().toString(), HPL_LBL);
+		errorMsg += commonValServ.validateMandatoryInput(foldDto.getYear(), YEAR_LBL);
+		errorMsg += commonValServ.validateMandatoryInput(foldDto.getProdLn(), PROD_LN_LBL);
+		
+		// validate file format for other than gtms
+		if(Objects.nonNull(foldDto.getFkHplId())) {
+			String hplName = hplServ.findDtoById(foldDto.getFkHplId()).getHplName();
+			if(!StringUtils.equalsIgnoreCase(hplName, CommonConstants.RECORD_TYPE_ID_HPL_GTMS)) {
+				errorMsg += commonValServ.validateMandatoryInput(foldDto.getProdFileFormat(), FILE_FORMAT_LBL);
+			}
+		}
+		
+		if (screenMode == CommonConstants.SCREEN_MODE_ADD) {
+			if(StringUtils.isEmpty(errorMsg)) {
+				// check duplication, if exists return error
+				// hpl + model + year + month + day + prodln + seq + file format
+				List<FoldCatgConfDto> list = foldCatgConfServ.searchByCriteria(foldDto.getFkHplId(),
+						foldDto.getFkHplModelId(), foldDto.getYear(), foldDto.getMth(), foldDto.getDay(),
+						foldDto.getProdLn(), foldDto.getSeq(), foldDto.getProdFileFormat());
+				if (!list.isEmpty()) {
+					errorMsg += "Configuration with the same parameter already exists.";
+				}
+			}			
+		} else if (screenMode == CommonConstants.SCREEN_MODE_EDIT) {
+			// modify mode
+			if(StringUtils.isEmpty(errorMsg)) {
+				FoldCatgConfDto existing = (FoldCatgConfDto) model.get("foldCatgConfItemCurrItem");
+				if (Objects.nonNull(existing) && !StringUtils.equalsIgnoreCase(existing.toString(), foldDto.toString())) {
+					// check if current foldDto modified
+					List<FoldCatgConfDto> list = foldCatgConfServ.searchByCriteria(foldDto.getFkHplId(),
+							foldDto.getFkHplModelId(), foldDto.getYear(), foldDto.getMth(), foldDto.getDay(),
+							foldDto.getProdLn(), foldDto.getSeq(), foldDto.getProdFileFormat());
+					if (!list.isEmpty()) {
+						errorMsg += "Configuration with the same parameter already exists.";
+					}
+				}				
+			}
+		}
+
+		return errorMsg;
+	}
+
+	/**
+	 * Delete item
+	 * 
+	 * @param request
+	 * @param check
+	 * @param session
+	 * @return
+	 */
+	@RequestMapping("/main/pfc/foldCatgConfFormDel")
+	public ModelAndView deleteBatch(HttpServletRequest request, @RequestParam(value = "tableRow") String[] check,
+			HttpSession session) {
+
+		model.remove("error");
+		model.remove("success");
+		try {
+			// Delete form
+			for (int i = 0; i < check.length; i++) {
+
+//				if (1==1) {
+//					// Print delete failed
+//					model.put("error", "Letter Content is in used and it is not allow to delete from the system.");
+//				} else {
+				foldCatgConfServ.delete(Integer.parseInt(check[i]));
+				// Print delete success`
+				model.put("success", msgSource.getMessage("msgSuccessDelete", new Object[] {}, Locale.getDefault()));
+				model.remove("error");
+
+				trxHistServ.addTrxHistory(new Date(), "Delete " + MODULE_NAME, request.getRemoteUser(),
+						CommonConstants.FUNCTION_TYPE_DELETE, check[i], CommonConstants.RECORD_TYPE_ID_FOLD_CATG_CONF,
+						null);
+//				}
+			}
+
+		} catch (Exception e) {
+			// Print DB exception
+			model.put("error", msgSource.getMessage("msgFailDelete", new Object[] {}, Locale.getDefault()));
+			model.remove("success");
+			e.printStackTrace();
+		}
+
+		model.put("foldCatgAllItems",
+				model.put("foldCatgAllItems", foldCatgConfServ.searchByCriteria2("", "", "", "", "", "", "", "", "")));
+
+		return new ModelAndView(("/main/pfc/foldCatgConfList"), model);
+	}
+
+	/**
+	 * Do search
+	 * 
+	 * @param prName
+	 * @param ltType
+	 * @param prNameExp
+	 * @param session
+	 * @return
+	 */
+	@PostMapping("/main/pfc/foldCatgConfSearch")
+	public ModelAndView search(HttpServletRequest request, 
+			@RequestParam(name = "searchHplId") String searchHplId,
+			@RequestParam(name = "searchHplModelId") String searchHplModelId,
+			@RequestParam(name = "searchYear") String searchYear, @RequestParam(name = "searchMth") String searchMth,
+			@RequestParam(name = "searchDay") String searchDay, @RequestParam(name = "prodLn") String prodLn,
+			@RequestParam(name = "prodLnExp") String prodLnExp, @RequestParam(name = "seqNo") String seqNo,
+			@RequestParam(name = "seqNoExp") String seqNoExp, HttpSession session) {
+
+		boolean hasError = false;
+
+		removeAlert(model);
+		String errorMsg = "";
+
+		model.put("searchHplId", searchHplId);
+		model.put("searchHplModelId", searchHplModelId);
+		model.put("searchYear", searchYear);
+		model.put("searchMth", searchMth);
+		model.put("searchDay", searchDay);
+		model.put("prodLn", prodLn);
+		model.put("prodLnExp", prodLnExp);
+		model.put("seqNo", seqNo);
+		model.put("seqNoExp", seqNoExp);
+
+		try {
+			if (errorMsg.length() == 0) {
+
+				List<FoldCatgConfSearch> items = foldCatgConfServ.searchByCriteria2(searchHplId, searchHplModelId,
+						searchYear, searchMth, searchDay, prodLn, prodLnExp, seqNo, seqNoExp);
+
+				model.put("foldCatgAllItems", items);
+
+				StringBuffer sb = new StringBuffer();
+				sb.append("Search Criteria: ");
+				sb.append(HPL_LBL).append("=").append(searchHplId.isEmpty() ? "<ALL>" : searchHplId).append(", ");
+				sb.append(MODEL_LBL).append("=").append(searchHplModelId.isEmpty() ? "<ALL>" : searchHplModelId).append(", ");
+				sb.append(YEAR_LBL).append("=").append(searchYear.isEmpty() ? "<ALL>" : searchYear).append(", ");
+				sb.append(MONTH_LBL).append("=").append(searchMth.isEmpty() ? "<ALL>" : searchMth).append(", ");
+				sb.append(DAY_LBL).append("=").append(searchDay.isEmpty() ? "<ALL>" : searchDay).append(", ");
+				sb.append(PROD_LN_LBL).append("=").append(prodLn.isEmpty() ? "<ALL>" : prodLn);
+
+				trxHistServ.addTrxHistory(new Date(), "Search " + MODULE_NAME, request.getRemoteUser(),
+						CommonConstants.FUNCTION_TYPE_SEARCH, "Search " + MODULE_NAME,
+						CommonConstants.RECORD_TYPE_ID_FOLD_CATG_CONF, sb.toString());
+
+			} else {
+				hasError = true;
+			}
+
+		} catch (Exception e) {
+			e.printStackTrace();
+			hasError = true;
+			errorMsg += "Failed to get record.";
+			errorMsg += e.toString();
+
+		} finally {
+			if (hasError == true) {
+				model.put("error", errorMsg);
+				model.remove("success");
+				// return back user input
+				model.put("foldCatgAllItems", model.put("foldCatgAllItems",
+						foldCatgConfServ.searchByCriteria2("", "", "", "", "", "", "", "", "")));
+			}
+		}
+
+		return new ModelAndView("/main/pfc/foldCatgConfList", model);
+	}
+
+	@SuppressWarnings("unchecked")
+	@PostMapping(value = "/main/pfc/foldCatgConfFormSave", params = "action=add")
+	public ModelAndView addToList(HttpServletRequest request, FoldCatgConfDto foldDto,
+			@RequestParam(name = "pkRelPathId", required = false) Integer pkRelPathId,
+			@RequestParam(name = "relPathFilePath", required = false) String relPathFilePath,
+			@RequestParam(name = "relPathFileFormat", required = false) String relPathFileFormat,
+			@RequestParam(name = "hplModelId2", required = false) Integer hplModelId2, 
+			@RequestParam(name = "prodLn2", required = false) String prodLn2,
+			HttpSession session) {
+
+		String errorMsg = "";
+		model.remove("error");
+		List<RelPathDto> relPathList = (List<RelPathDto>) model.get("relPathList");
+		
+		foldDto.setProdLn(prodLn2);
+
+		holdValue(foldDto, model, screenMode, relPathFilePath, relPathFileFormat, hplModelId2, prodLn2);
+		
+		logger.debug("addToList() hplid={}, year={}, prodLn={}, hplModelId2={}, prodLn2={}", foldDto.getFkHplId(),foldDto.getYear(),foldDto.getProdLn(), hplModelId2, prodLn2);
+
+		// validation
+		{
+			//1) check main form first
+			if((Objects.isNull(foldDto.getFkHplId()) || foldDto.getFkHplId() == 0) || StringUtils.isEmpty(foldDto.getYear()) || StringUtils.isEmpty(foldDto.getProdLn())) {
+				errorMsg += "Kindly make sure the above required information has been filled in - " + HPL_LBL + " ," + YEAR_LBL + " ," + PROD_LN_LBL;
+				model.put("error", errorMsg);
+				return new ModelAndView("/main/pfc/foldCatgConfForm", model);
+			}
+			
+			//2) check sub-form
+
+			// as of current specs, GTMS has different folder format to cater for mikron and back end process
+			// so only validate both in sub-form for GTMS
+			String hplName = hplServ.findDtoById(foldDto.getFkHplId()).getHplName();
+			if(StringUtils.equalsIgnoreCase(hplName.trim(), "GTMS")) {
+				if (StringUtils.isEmpty(relPathFilePath) || StringUtils.isEmpty(relPathFileFormat)) {
+					errorMsg += "Please key in " + FILE_PATH_LBL + " and " + FILE_FORMAT_LBL + ".";
+					model.put("error", errorMsg);
+					return new ModelAndView("/main/pfc/foldCatgConfForm", model);
+				}				
+			} else {
+				if (StringUtils.isEmpty(relPathFilePath)) {
+					errorMsg += "Please key in " + FILE_PATH_LBL + ".";
+					model.put("error", errorMsg);
+					return new ModelAndView("/main/pfc/foldCatgConfForm", model);
+				}	
+			}
+
+			if (!CommonUtil.isPathValid(relPathFilePath)) {
+				errorMsg += FILE_PATH_LBL + " is not a valid path.";
+				model.put("error", errorMsg);
+				return new ModelAndView("/main/pfc/foldCatgConfForm", model);
+			}
+
+			// if relPath duplicate
+			List<RelPathDto> checkList = relPathList;
+			for (RelPathDto relPathDto : checkList) {
+				logger.debug(
+						"addToRelPathList() loop = " + relPathDto.getFilePath().concat(relPathDto.getProdFileFormat()));
+				if (StringUtils.equals(relPathDto.getFilePath().concat(relPathDto.getProdFileFormat()),
+						relPathFilePath.concat(relPathFileFormat))) {
+					errorMsg += "Combination " + relPathFilePath + " and " + relPathFileFormat
+							+ " already in the list.";
+					model.put("error", errorMsg);
+					return new ModelAndView("/main/pfc/foldCatgConfForm", model);
+				}
+			}
+		}
+
+		int row = relPathList.size();
+		RelPathDto dto = new RelPathDto();
+		dto.setFkCatgId(foldDto.getPkCatgId());
+		dto.setFilePath(relPathFilePath);
+		dto.setProdFileFormat(relPathFileFormat);
+		dto.setRowNo(row);
+		dto.setIndicator("new");
+		relPathList.add(dto);
+
+		model.put("relPathList", relPathList);
+		manageListButton(false, true, true, model);
+		clearRelPathForm(model);
+
+		return new ModelAndView("/main/pfc/foldCatgConfForm", model);
+	}
+
+	@SuppressWarnings("unchecked")
+	@PostMapping(value = "/main/pfc/foldCatgConfFormSave", params = "action=delete")
+	public ModelAndView deleteFromList(HttpServletRequest request, FoldCatgConfDto foldDto,
+			@RequestParam(name = "rowNo") int rowNo, @RequestParam(name = "relPathFilePath") String relPathFilePath,
+			@RequestParam(name = "relPathFileFormat") String relPathFileFormat,
+			@RequestParam(name = "hplModelId2", required = false) Integer hplModelId2, 
+			@RequestParam(name = "prodLn2", required = false) String prodLn2,
+			HttpSession session) {
+
+		logger.debug("deleteFromRelPathList() ... ");
+
+		holdValue(foldDto, model, screenMode, relPathFilePath, relPathFileFormat, hplModelId2, prodLn2);
+
+		List<RelPathDto> relPathList = (List<RelPathDto>) model.get("relPathList");
+		
+		if(StringUtils.equalsIgnoreCase(screenMode, CommonConstants.SCREEN_MODE_EDIT)) {
+			List<RelPathDto> delList = (List<RelPathDto>) model.get("relPathDelList");
+			delList.add(relPathList.get(rowNo));
+		}		
+		
+		relPathList.remove(rowNo);
+
+		int reDoRowNo = 0;
+		for (int row = 0; row < relPathList.size(); row++) {
+			relPathList.get(row).setRowNo(reDoRowNo);
+			reDoRowNo++;
+		}
+
+		model.put("relPathList", relPathList);
+		manageListButton(false, true, true, model);
+		clearRelPathForm(model);
+
+		return new ModelAndView("/main/pfc/foldCatgConfForm", model);
+	}
+
+	@PostMapping(value = "/main/pfc/foldCatgConfFormSave", params = "action=edit")
+	public ModelAndView editForm(HttpServletRequest request, HttpSession session) {
+
+		screenMode = CommonConstants.SCREEN_MODE_EDIT;
+		model.put("mode", screenMode);
+		manageListButton(false, true, true, model);
+		model.put("btnEdit", true);
+		model.put("btnSaveSts", false);
+		model.put("btnSave", "Save");
+		model.put("header", "Edit " + MODULE_NAME);
+		model.put("defaultDataPath", DEFAULT_DATA_PATH);
+		
+		model.remove("success");
+		model.remove("error");
+		clearRelPathForm(model);
+
+		return new ModelAndView("/main/pfc/foldCatgConfForm", model);
+	}
+
+	@SuppressWarnings("unchecked")
+	@GetMapping("/main/pfc/relPathFormGetData")
+	public ModelAndView retrieveFromDataTable(HttpServletRequest request, @RequestParam(name = "rowNo") int rowNo,
+			RelPathDto relPathDto, BindingResult result, HttpSession session) {
+
+		String mode = model.get("mode").toString();
+		model.remove("error");
+
+		List<RelPathDto> relPathList = (List<RelPathDto>) model.get("relPathList");
+		relPathList.forEach(obj -> {
+			if (obj.getRowNo() == rowNo) {
+				model.put("pkRelPathId", obj.getPkRelPathId());
+				model.put("relPathFilePath", obj.getFilePath());
+				model.put("relPathFileFormat", obj.getProdFileFormat());
+				model.put("rowNo", obj.getRowNo());
+			}
+		});
+
+		if (!StringUtils.equals(mode, CommonConstants.SCREEN_MODE_VIEW)) {
+			manageListButton(false, false, false, model);
+		}
+
+		return new ModelAndView("/main/pfc/foldCatgConfForm", model);
+	}
+
+	@SuppressWarnings("unchecked")
+	@PostMapping(value = "/main/pfc/foldCatgConfFormSave", params = "action=update")
+	public ModelAndView updateToList(HttpServletRequest request, FoldCatgConfDto foldDto,
+			@RequestParam(name = "rowNo") int rowNo, @RequestParam(name = "relPathFilePath") String relPathFilePath,
+			@RequestParam(name = "relPathFileFormat") String relPathFileFormat,
+			@RequestParam(name = "hplModelId2", required = false) Integer hplModelId2, 
+			@RequestParam(name = "prodLn2", required = false) String prodLn2,
+			HttpSession session) {
+
+		model.remove("error");
+		holdValue(foldDto, model, screenMode, relPathFilePath, relPathFileFormat, hplModelId2, prodLn2);
+		List<RelPathDto> relPathList = (List<RelPathDto>) model.get("relPathList");
+
+		// validation
+		{
+			String errorMsg = "";
+			// if Rel Path duplicate
+			List<RelPathDto> checkList = relPathList;
+			for (RelPathDto relPathDto : checkList) {
+				if (StringUtils.equals(relPathDto.getFilePath().concat(relPathDto.getProdFileFormat()),
+						relPathFilePath.concat(relPathFileFormat))) {
+					errorMsg += "Combination " + relPathFilePath + " and " + relPathFileFormat
+							+ " already in the list.";
+					model.put("error", errorMsg);
+					return new ModelAndView("/main/pfc/foldCatgConfForm", model);
+				}
+			}
+		}
+
+		for (RelPathDto obj : relPathList) {
+			if (obj.getRowNo() == rowNo) {
+				obj.setFilePath(relPathFilePath);
+				obj.setProdFileFormat(relPathFileFormat);
+			}
+		}
+
+		model.put("relPathList", relPathList);
+		manageListButton(false, true, true, model);
+		clearRelPathForm(model);
+
+		return new ModelAndView("/main/pfc/foldCatgConfForm", model);
+	}
+
+	@Deprecated
+	@GetMapping(value = "/main/pfc/getHplModelByHpl")
+	@ResponseBody
+	public Map<String, Object> getHplModelByHpl(@RequestParam(name = "pkHplId") Integer pkHplId,
+			HttpServletRequest request, HttpSession session) {
+		logger.debug("getHplModelByHpl() pkHplId={}", pkHplId);
+
+		List<HplModelDto> all = hplModelServ.findAllByParentNative(pkHplId);
+		all.sort(Comparator.comparing(HplModelDto::getHplModelName));
+
+		Map<String, Object> model = new HashMap<String, Object>();
+		model.put("items", all);
+
+		return model;
+	}
+
+	@Deprecated
+	@RequestMapping(value = "/main/pfc/onHplChange2", method = RequestMethod.GET)
+	public String onHplChange2(@RequestParam(name = "hplId") Integer hplId, FoldCatgConfDto foldDto,
+			BindingResult result, HttpSession session, ModelMap modelz) {
+
+		List<HplModelDto> items = new ArrayList<HplModelDto>();
+		items = foldCatgConfServ.findHplModelSelectItems(hplId);
+		// model.replace("foldCatgConfItem", foldDto);
+		// model.replace("hplModelItems", items);
+		// modelz.addAllAttributes(model);
+		// modelz.mergeAttributes(model);
+
+		logger.debug("onHplChange2() hplId={}, size={}", hplId, items.size());
+
+		return "/main/pfc/foldCatgConfForm :: #hplModelFrag";
+	}
+
+	@GetMapping(value = "/main/pfc/findHplModelItemsByParent")
+	@ResponseBody
+	public Map<String, Object> findHplModelItemsByParent(@RequestParam(name = "hplId") Integer hplId,
+			HttpServletRequest request, HttpSession session) {
+		List<HplModelDto> items = new ArrayList<HplModelDto>();
+		items = foldCatgConfServ.findHplModelSelectItems(hplId);
+		Map<String, Object> model = new HashMap<String, Object>();
+		model.put("items", items);
+
+		logger.debug("findHplModelItemsByParent() hplId={}, size={}", hplId, items.size());
+
+		return model;
+	}
+
+	private Map<String, Object> removeAlert(Map<String, Object> model) {
+		model.remove("error");
+		model.remove("success");
+
+		return model;
+	}
+
+	private Map<String, Object> manageListButton(boolean relPathAdd, boolean relPathUpdate, boolean relPathDelete,
+			Map<String, Object> model) {
+		model.put("listAddBtn", relPathAdd);
+		model.put("listUpdateBtn", relPathUpdate);
+		model.put("listDeleteBtn", relPathDelete);
+
+		return model;
+	}
+
+	private Map<String, Object> clearRelPathForm(Map<String, Object> model) {
+		model.remove("rowNo");
+		model.remove("relPathFilePath");
+		model.remove("relPathFileFormat");
+		model.remove("pkRelPathId");
+
+		return model;
+	}
+
+	private Map<String, Object> holdValue(FoldCatgConfDto foldDto, Map<String, Object> model, String screenMode,
+			String relPathFilePath, String relPathFileFormat, Integer hplModelId2, String prodLn2) {
+
+		model.put("mode", screenMode);
+		model.put("foldCatgConfItem", foldDto);
+		model.put("relPathFilePath", relPathFilePath);
+		model.put("relPathFileFormat", relPathFileFormat);
+
+		if (StringUtils.equals(screenMode, CommonConstants.SCREEN_MODE_ADD)) {
+			model.put("hplModelId2Temp", hplModelId2);
+			model.put("prodLn2Temp", prodLn2);
+
+		} else if (StringUtils.equals(screenMode, CommonConstants.SCREEN_MODE_EDIT)) {
+
+		}
+
+		return model;
+	}
+	
+	private void getAllLabels() {
+		HPL_LBL = msgSource.getMessage("lblHpl", null, Locale.getDefault());
+		MODEL_LBL = msgSource.getMessage("lblHplModel", null, Locale.getDefault());
+		YEAR_LBL = msgSource.getMessage("lblYear", null, Locale.getDefault());
+		MONTH_LBL = msgSource.getMessage("lblMonth", null, Locale.getDefault());
+		DAY_LBL = msgSource.getMessage("lblDay", null, Locale.getDefault());
+		PROD_LN_LBL = msgSource.getMessage("lblProdLn", null, Locale.getDefault());
+		SEQ_LBL = msgSource.getMessage("lblSeq", null, Locale.getDefault());
+		FILE_FORMAT_LBL = msgSource.getMessage("lblFileFormat", null, Locale.getDefault());
+		FILE_PATH_LBL = msgSource.getMessage("lblFilePath", null, Locale.getDefault());
+		MODULE_NAME = msgSource.getMessage("moduleFoldCatgConf", null, Locale.getDefault());
+	}
+	
+	private List<String> generateProdLnItems(List<G2LotViewDto> itemsPrd) {
+		List<String> prodLnList = itemsPrd.stream().map(G2LotViewDto::getProdLn).distinct().collect(Collectors.toList());
+		return prodLnList;
+	}
+	
+	private List<G2LotViewDto> generateG2LotItems(String year, String mth, String prodLn2, String hpl,
+			String hplModel) {
+		List<G2LotViewDto> items = new ArrayList<G2LotViewDto>();
+		items = g2LotServ.searchByCriteria("", hpl, hplModel, year, mth, "", prodLn2, "");
+		return items;
+	}
+
+}

@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+<title>PFC - Regulation Group Form</title>
+<link rel="icon" type="image/ico" th:href="@{/static/favicon.ico}">
+<link rel="stylesheet" type="text/css" th:href="@{/css/styles.css}" />
+<link rel="stylesheet"
+	href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css">
+<link rel="stylesheet"
+	href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/css/bootstrap-datepicker.css" />
+
+<script
+	src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/js/all.min.js"></script>
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+<script
+	src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/js/bootstrap-datepicker.min.js"></script>
+<script
+	src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/js/bootstrap.bundle.min.js"></script>
+
+<style>
+.form-group.required .control-label:after {
+	content: " *";
+	color: red;
+}
+</style>
+
+</head>
+<body onload="init()" class="sb-nav-fixed">
+	<div th:replace="/header :: navBar"></div>
+	<div id="layoutSidenav">
+		<div th:replace="/header :: sideNavBar"></div>
+		<div id="layoutSidenav_content">
+			<main>
+				<div class="container-fluid">
+					<br />				
+					<ol class="breadcrumb mb-4">
+						<li class="breadcrumb-item active" ><a th:href="@{/}"><i class="fa fa-home"></i></a></li>
+						<li class="breadcrumb-item active" ><a th:href="@{/menu/regulationMenu}"><span th:text="#{menuReg}"></span></a></li>
+						<li class="breadcrumb-item active" >Regulation Group</li>
+					</ol>
+					<div class="alert alert-danger alert-dismissible" th:if=${error}>
+						<a class="close" data-dismiss="alert" aria-label="close">&times;</a>
+						<a th:utext="${error}"></a>
+					</div>
+					<div class="alert alert-success alert-dismissible" th:if=${success}>
+						<a class="close" data-dismiss="alert" aria-label="close">&times;</a>
+						<a th:utext="${success}"></a>
+					</div>
+					<div class="card">
+						<div class="card-header" id="headingTwo" th:text="${header}"></div>
+						<a class="card-header" hidden="true" id="formMode"
+							th:text="${mode}"></a>
+						<div class="card-body">
+							<form action="#" id="mainForm"
+								th:action="@{/main/regulation/fileGroupForm}"
+								th:object="${fileGroupItem}" method="POST"
+								enctype="multipart/form-data">
+								<div id="fileGroupTitle" class="form-group row">
+									<label class="col-sm-2 col-form-label">File Group Name
+										<a id="asterisk" style="color: red;" hidden="true">*</a>
+									</label>
+									<div class="row col-sm-5">
+										<label class="col-form-label">:</label>
+										<div class="col">
+											<input type="text" id="grpName" readonly name="grpName"
+												class="form-control-plaintext" th:field="*{grpName}"
+												required maxlength=100>
+
+										</div>
+									</div>
+								</div>
+								<div id="fileGroupDescTitle" class="form-group row">
+									<label class="col-sm-2 col-form-label control-label">Description</label>
+									<div class="row col-sm-5">
+										<label class="col-form-label">:</label>
+										<div class="col">
+											<textarea id="grpDesc" class="form-control-plaintext"
+												rows="2" readonly th:field="*{grpDesc}" maxlength=200></textarea>
+										</div>
+									</div>
+								</div>
+							</form>
+						</div>
+					</div>
+					<div class="form-group row" th:if="${createdInfo}" id="createdInfo">
+						<div class="row col-sm-12">
+							<div class="col">
+								<a style="float: left;" th:text="${createdInfo}"></a> <a
+									style="float: right; margin-right: -30px;"
+									th:text="${modifiedInfo}"></a>
+							</div>
+						</div>
+					</div>
+					<div id="break" hidden="true">
+						<br />
+					</div>
+
+					<div class="form-group row col-sm-3">
+						<button class="btn btn-primary"
+							style="width: 90px; margin-right: 5px;"
+							onclick="enableEditMode()" id="btnEdit">Edit</button>
+						<button class="btn btn-primary" form="mainForm" type="submit"
+							style="width: 90px; margin-right: 5px;" hidden="true"
+							id="btnSave">Save</button>
+						<a class="btn btn-primary" style="width: 90px;" type="button"
+							id="btnCancel" th:href="@{/main/regulation/fileGroupList}">Cancel</a>
+						<button class="btn btn-primary" style="width: 90px;" type="button"
+							hidden="true" id="btnConfirmCancel" data-toggle="modal"
+							data-target="#confirmDialog">Cancel</button>
+
+						<!-- Confirmation message -->
+						<div class="modal fade" id="confirmDialog" tabindex="-1"
+							role="dialog" aria-hidden="true">
+							<div class="modal-dialog modal-dialog-centered" role="document">
+								<div class="modal-content">
+									<div class="modal-header">
+										<h5 class="modal-title" th:text="${confirmHeader}"></h5>
+										<button type="button" class="close" data-dismiss="modal"
+											aria-label="Close">
+											<span aria-hidden="true">&times;</span>
+										</button>
+									</div>
+									<div class="modal-body" th:text="${confirmMsg}"></div>
+									<div class="modal-footer">
+										<button type="submit" class="btn btn-primary"
+											onclick="onCancel()">Confirm</button>
+										<button type="button" class="btn btn-secondary"
+											data-dismiss="modal">Cancel</button>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</main>
+		</div>
+	</div>
+
+	<script type="text/javascript">
+		//When initialise page
+		function init() {
+
+			var mode = document.getElementById("formMode").text;
+
+			//Enable form for add
+			if (mode == "add") {
+				$("#fileGroupTitle").addClass("required");
+				$("#grpName").addClass("form-control");
+				$("#grpName").removeClass("form-control-plaintext");
+				document.getElementById("grpName").removeAttribute("readonly");
+				document.getElementById("asterisk").hidden = false;
+				enableEditMode();
+			} else if (mode == "edit") {
+				enableEditMode();
+			}
+		}
+
+		///* Enable form when edit or add */
+		function enableEditMode() {
+
+			var mode = document.getElementById("formMode").text;
+
+			if (mode == "view") {
+				document.getElementById("headingTwo").textContent = "Edit Regulation File Group";
+				document.getElementById("createdInfo").hidden = true;
+			}
+
+			document.getElementById("break").hidden = false;
+
+			$("#fileGroupTitle").addClass("required");
+			$("#grpDesc").addClass("form-control");
+			$("#grpDesc").removeClass("form-control-plaintext");
+			document.getElementById("grpDesc").removeAttribute("readonly");
+
+			document.getElementById("btnSave").hidden = false;
+			document.getElementById("btnEdit").hidden = true;
+			document.getElementById("btnCancel").hidden = true;
+			document.getElementById("btnConfirmCancel").hidden = false;
+		}
+
+		function onCancel() {
+
+			window.location = "[[@{/main/regulation/fileGroupList}]]";
+		}
+	</script>
+
+	<script type="text/javascript" src="../../js/scripts.js"></script>
+
+</body>
+
+<style>
+#grpDesc {
+	resize: none;
+}
+</style>
+</html>

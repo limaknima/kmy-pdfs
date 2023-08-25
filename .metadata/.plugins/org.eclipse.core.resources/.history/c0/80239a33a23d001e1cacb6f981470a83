@@ -1,0 +1,253 @@
+package com.fms.pfc.controller.base;
+
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Locale;
+import java.util.Map;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.MessageSource;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.context.annotation.SessionScope;
+import org.springframework.web.servlet.ModelAndView;
+
+import com.fms.pfc.common.Authority;
+import com.fms.pfc.common.CommonConstants;
+import com.fms.pfc.domain.dto.AlertMessageDto;
+import com.fms.pfc.service.api.base.AlertMessageService;
+import com.fms.pfc.service.api.base.TrxHisService;
+import com.fms.pfc.validation.common.CommonValidation;
+
+@Controller
+@SessionScope
+public class AlertMessageController {
+	
+	private AlertMessageService alertMsgServ;	
+	private CommonValidation commonValServ;	
+	private Authority auth;	
+	private TrxHisService trxHistServ;	
+	private MessageSource msgSource;	
+
+	private Map<String, Object> model = new HashMap<String, Object>();
+
+	@Autowired
+	public AlertMessageController(AlertMessageService alertMsgServ, CommonValidation commonValServ, Authority auth,
+			TrxHisService trxHistServ, MessageSource msgSource) {
+		super();
+		this.alertMsgServ = alertMsgServ;
+		this.commonValServ = commonValServ;
+		this.auth = auth;
+		this.trxHistServ = trxHistServ;
+		this.msgSource = msgSource;
+	}
+
+	@GetMapping("/base/maint/alertList")
+	public ModelAndView getAllAlertList(HttpServletRequest request, HttpServletResponse response) {
+
+		model = auth.onPageLoad(model, request);
+		auth.isAuthUrl(request, response);
+		model.put("alertLists", alertMsgServ.findAll());
+
+		return new ModelAndView("base/maint/alertList", model);
+	}
+
+	@GetMapping("/base/maint/viewAlert")
+	public ModelAndView viewNotification(@RequestParam(name = "alertId") String alertId, HttpServletRequest request,
+			HttpSession session) {
+		
+		model.remove("error");
+		model.remove("success");
+		SimpleDateFormat formatter = new SimpleDateFormat("dd/MM/yyyy hh:mm:ss a");
+		
+		AlertMessageDto alertInfo = alertMsgServ.findOneById(alertId);
+
+		model.put("alertType", alertInfo.getAlertType());
+		model.put("subject", alertInfo.getSubject());
+		model.put("description", alertInfo.getDescription());
+
+		String createdDate = formatter.format(alertInfo.getCreatedDate());
+		String createdMsg = "Created by " + alertInfo.getCreatedBy() + " on " + createdDate;
+		model.put("createdMsg", createdMsg);
+
+		if (alertInfo.getModifiedBy() != null && alertInfo.getLastModifiedDate() != null) {
+			String updatedDate = formatter.format(alertInfo.getLastModifiedDate());
+			String updatedMsg = "Modified by " + alertInfo.getModifiedBy() + " on " + updatedDate;
+			model.put("modifiedMsg", updatedMsg);
+		} else {
+			model.put("modifiedMsg", "Modified by --");
+		}
+
+		trxHistServ.addTrxHistory(new Date(), "View Alert Message", request.getRemoteUser(), CommonConstants.FUNCTION_TYPE_VIEW,
+				alertId, CommonConstants.RECORD_TYPE_ID_ALERT, null);
+
+		return new ModelAndView("base/maint/viewAlert", model);
+	}
+
+	@PostMapping("/base/maint/editAlert")
+	public ModelAndView editNotificationPanel(@RequestParam(name = "alertId") String alertId,
+			HttpServletRequest request) {
+
+		AlertMessageDto alertInfo = alertMsgServ.findOneById(alertId);
+		model.put("alertType", alertInfo.getAlertType());
+		model.put("subject", alertInfo.getSubject());
+		model.put("description", alertInfo.getDescription());
+
+		return new ModelAndView("base/maint/editAlert", model);
+	}
+
+	@PostMapping("/base/maint/editAlertSuccess")
+	public ModelAndView editNotification(@RequestParam(name = "alertType") String alertId,
+			@RequestParam(name = "subject") String subject, @RequestParam(name = "description") String description,
+			HttpServletRequest request, HttpSession session) {
+
+		model.remove("error");
+		model.remove("success");
+		String errorMsg = "";
+
+		errorMsg += commonValServ.validateMandatoryInput(subject, "Subject");
+		errorMsg += commonValServ.validateInputLength(subject, 200, "Subject");
+		errorMsg += commonValServ.validateInputLength(description, 300, "Description");
+
+		if (errorMsg.length() != 0) {
+			model.put("error", errorMsg);
+			model.put("subject", subject);
+			model.put("description", description);
+			return new ModelAndView("base/maint/editAlert", model);
+		} else {
+
+			alertMsgServ.saveAlert(alertId, subject, description, request.getRemoteUser());
+		
+			trxHistServ.addTrxHistory(new Date(), "Update Alert Message", request.getRemoteUser(),
+					CommonConstants.FUNCTION_TYPE_UPDATE, alertId, CommonConstants.RECORD_TYPE_ID_ALERT, null);
+			
+			model.put("success", msgSource.getMessage("msgSuccessUpdate", new Object[] {}, Locale.getDefault()));			
+		}
+
+		model.put("alertLists", alertMsgServ.findAll());
+
+		return new ModelAndView("base/maint/alertList", model);
+	}
+
+	@PostMapping("/base/maint/alertListSrc")
+	public ModelAndView search(HttpServletRequest request, @RequestParam(name = "dateFr") String dateFr,
+			@RequestParam(name = "dateTo") String dateTo, @RequestParam(name = "alertType") String alertType,
+			@RequestParam(name = "subject") String subject, @RequestParam(name = "exp1") String exp1,
+			@RequestParam(name = "exp2") String exp2, HttpSession session) {
+
+		model.remove("error");
+		model.remove("success");
+		
+		String errorMsg = "";
+		errorMsg += commonValServ.validateDateFormat(dateFr, "Date from");
+		errorMsg += commonValServ.validateDateFormat(dateTo, "Date to");
+		errorMsg += commonValServ.validateDateRange(dateFr, dateTo, "Date from", "Date to");
+		errorMsg += commonValServ.validateInputLength(alertType, 100, "Alert type");
+		errorMsg += commonValServ.validateInputLength(subject, 100, "Subject");
+
+		if (errorMsg.length() != 0) {
+			errorMsg += msgSource.getMessage("msgFailSearchRecord", new Object[] {}, Locale.getDefault());
+			model.put("error", errorMsg);
+			model.put("alertLists", alertMsgServ.findAll());
+			return new ModelAndView("/base/maint/alertList", model);
+		}
+
+		model.put("alertLists",
+				alertMsgServ.findByCriteria(dateFr, dateTo, alertType.trim(), subject.trim(), exp1, exp2));
+		model.put("dateFr", dateFr);
+		model.put("dateTo", dateTo);
+		model.put("alertType", alertType);
+		model.put("subject", subject);
+		model.put("exp1", exp1);
+		model.put("exp2", exp2);
+
+		StringBuffer sb = new StringBuffer();
+		sb.append("Search Criteria: ");
+		sb.append("Alert Type=").append(alertType.isEmpty() ? "<ALL>" : alertType).append(", ");
+		sb.append("Subject=").append(subject.isEmpty() ? "<ALL>" : subject).append(", ");
+		sb.append("Date From=").append(dateFr.isEmpty() ? "<ALL>" : dateFr).append(", ");
+		sb.append("Date To=").append(dateTo.isEmpty() ? "<ALL>" : dateTo);
+
+		trxHistServ.addTrxHistory(new Date(), "Search Alert Message", request.getRemoteUser(),
+				CommonConstants.FUNCTION_TYPE_SEARCH, "Search Alert Message", CommonConstants.RECORD_TYPE_ID_ALERT,
+				sb.toString());
+
+		return new ModelAndView("base/maint/alertList", model);
+	}
+
+	@PostMapping("/base/maint/alertListDel")
+	public ModelAndView deleteAlert(HttpServletRequest request, HttpSession session) {
+
+		model.remove("error");
+		model.remove("success");
+		
+		try {
+			if (request.getParameterValues("tableRow") != null) {
+				for (String alertString : request.getParameterValues("tableRow")) {
+					alertMsgServ.deleteById(alertString);
+					trxHistServ.addTrxHistory(new Date(), "Delete Alert Message", request.getRemoteUser(),
+							CommonConstants.FUNCTION_TYPE_DELETE, alertString, CommonConstants.RECORD_TYPE_ID_ALERT,
+							null);
+
+				}
+			}
+			model.put("success", msgSource.getMessage("msgSuccessDelete", new Object[] {}, Locale.getDefault()));
+		} catch (Exception e) {
+			model.put("error", msgSource.getMessage("msgFailDelete", new Object[] {}, Locale.getDefault()));
+		}
+
+		model.put("alertLists", alertMsgServ.findAll());
+
+		return new ModelAndView("base/maint/alertList", model);
+	}
+
+	@GetMapping("/base/maint/addAlert")
+	public ModelAndView addAlertPanel(HttpServletRequest request, HttpSession session) {
+
+		return new ModelAndView("base/maint/addAlert", model);
+	}
+
+	@PostMapping("/base/maint/addAlertSrc")
+	public ModelAndView addAlert(@RequestParam(name = "alertType") String alertType,
+			@RequestParam(name = "subject") String subject, @RequestParam(name = "description") String description,
+			HttpServletRequest request, HttpSession session) {
+
+		model.remove("error");
+		model.remove("success");
+
+		String errorMsg = "";
+
+		errorMsg += commonValServ.validateUniqueAlertId(alertType, "Alert Type"); 
+		errorMsg += commonValServ.validateMandatoryInput(alertType, "Alert Type");
+		errorMsg += commonValServ.validateInputLength(alertType, 20, "Alert Type");
+		errorMsg += commonValServ.validateMandatoryInput(subject, "Subject");
+		errorMsg += commonValServ.validateInputLength(subject, 200, "Subject");
+		errorMsg += commonValServ.validateInputLength(description, 300, "Description");
+
+		if (errorMsg.length() != 0) {
+			model.put("error", errorMsg);
+			model.put("alertType", alertType);
+			model.put("subject", subject);
+			model.put("description", description);
+			return new ModelAndView("base/maint/addAlert", model);
+		} else {
+			alertMsgServ.saveAlert(alertType, subject, description, request.getRemoteUser());
+
+			trxHistServ.addTrxHistory(new Date(), "Insert Alert Message", request.getRemoteUser(),
+					CommonConstants.FUNCTION_TYPE_INSERT, alertType, CommonConstants.RECORD_TYPE_ID_ALERT, null);
+
+			model.put("success", msgSource.getMessage("msgSuccessAdd", new Object[] {}, Locale.getDefault()));
+		}
+
+		model.put("alertLists", alertMsgServ.findAll());
+
+		return new ModelAndView("base/maint/alertList", model);
+	}
+}

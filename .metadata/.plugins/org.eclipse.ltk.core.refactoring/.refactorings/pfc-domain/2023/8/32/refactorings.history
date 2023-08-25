@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<session version="1.0">
+<refactoring comment="Rename type &apos;com.fms.pfc.domain.converter.main.G2ViewConverter&apos; to &apos;G2LotViewConverter&apos;&#x0D;&#x0A;- Original project: &apos;pfc-domain&apos;&#x0D;&#x0A;- Original element: &apos;com.fms.pfc.domain.converter.main.G2ViewConverter&apos;&#x0D;&#x0A;- Renamed element: &apos;com.fms.pfc.domain.converter.main.G2LotViewConverter&apos;&#x0D;&#x0A;- Update references to refactored element&#x0D;&#x0A;- Update textual occurrences in comments and strings" description="Rename type &apos;G2ViewConverter&apos;" flags="589830" id="org.eclipse.jdt.ui.rename.type" input="/src\/main\/java=/optional=/true=/=/maven.pomderived=/true=/&lt;com.fms.pfc.domain.converter.main{G2ViewConverter.java[G2ViewConverter" matchStrategy="1" name="G2LotViewConverter" qualified="false" references="true" similarDeclarations="false" stamp="1691041552123" textual="false" version="1.0"/>
+</session>

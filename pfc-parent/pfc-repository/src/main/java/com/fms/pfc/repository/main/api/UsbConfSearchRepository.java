@@ -1,0 +1,62 @@
+package com.fms.pfc.repository.main.api;
+
+import java.util.List;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+
+import com.fms.pfc.domain.model.main.UsbConfSearch;
+
+public interface UsbConfSearchRepository extends JpaRepository<UsbConfSearch, Integer> {
+
+	@Query(value = "select * from ( "
+			+ "select "
+			+ "	h.*, "
+			+ "	(STUFF( "
+			+ "			( SELECT ',' + CONVERT(NVARCHAR(max), rm.USER_NAME ) "
+			+ "			 from USR rm where 1=1 and rm.USER_ID in ("
+			+ "				select uu.USR_ID from USB_USR uu"
+			+ "				where 1=1 and uu.UCONF_ID = h.UCONF_ID "	
+			+ "				) "
+			+ "			 FOR XML PATH('') "
+			+ "			), 1, LEN(','), '' "
+			+ "		) "
+			+ "	) as USR_NAMES, "
+			+ " h.HPL as HPL_NAME "
+			+ "from USB_CONF h "
+			+ ")t1 "
+			+ "where 1=1 "
+			+ "and (?1 = '' OR ( "
+			+ "		t1.SERIAL_NO like case when ?2 = '1' then concat('%', ?1, '%') "
+			+ "		when ?2 = '2' then concat('%', ?1) "
+			+ "		when ?2 = '3' then ?1 "
+			+ "		when ?2 = '4' then concat(?1, '%') end "
+			+ "	) "
+			+ ") "
+			+ "and (?3 = '' OR ( "
+			+ "		t1.NAME like case when ?4 = '1' then concat('%', ?3, '%') "
+			+ "		when ?4 = '2' then concat('%', ?3) "
+			+ "		when ?4 = '3' then ?3 "
+			+ "		when ?4 = '4' then concat(?3, '%') end "
+			+ "	) "
+			+ ") "
+			+ "and (?5 = '' or t1.HPL = ?5) "
+			+ "and exists ( "
+			+ "	select 1 from USB_USR hm "
+			+ "	where 1=1 and hm.UCONF_ID = t1.UCONF_ID "
+			+ " and exists ("
+			+ "  select 1 from USR us "
+			+ "  where 1=1 and us.USER_ID = hm.USR_ID "
+			+ "	 and (?6 = '' OR ( "
+			+ "	 	us.USER_NAME like case when ?7 = '1' then concat('%', ?6, '%') "
+			+ "	 	when ?7 = '2' then concat('%', ?6) "
+			+ "		when ?7 = '3' then ?6 "
+			+ "		when ?7 = '4' then concat(?6, '%') end "
+			+ "	  ) "
+			+ "  ) "
+			+ " ) "
+			+ ") "
+			, nativeQuery = true)
+	List<UsbConfSearch> searchByCriteria(String serialNo, String serialNoExp, String usbName, String usbNameExp,
+			String group, String assignTo, String assignToExp);
+}

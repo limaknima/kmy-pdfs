@@ -1,0 +1,131 @@
+package com.fms.pfc.controller.base;
+
+import java.security.SecureRandom;
+import java.util.HashMap;
+import java.util.Locale;
+import java.util.Map;
+
+import javax.servlet.http.HttpServletResponse;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.MessageSource;
+import org.springframework.mail.SimpleMailMessage;
+import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.security.authentication.AnonymousAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.servlet.ModelAndView;
+
+import com.fms.pfc.common.AlertDefEnum;
+import com.fms.pfc.domain.model.AlertMessage;
+import com.fms.pfc.domain.model.Usr;
+import com.fms.pfc.service.api.base.AlertMessageService;
+import com.fms.pfc.service.api.base.LoginService;
+
+@Controller
+public class LoginController {
+	
+	private static final Logger logger = LoggerFactory.getLogger(LoginController.class);
+
+	private LoginService logServ;
+
+	private AlertMessageService alertMsgServ;
+
+	private JavaMailSender javaMailSender;
+
+	private MessageSource msgSource;
+
+	@Autowired
+	public LoginController(LoginService logServ, AlertMessageService alertMsgServ, JavaMailSender javaMailSender,
+			MessageSource msgSource) {
+		super();
+		this.logServ = logServ;
+		this.alertMsgServ = alertMsgServ;
+		this.javaMailSender = javaMailSender;
+		this.msgSource = msgSource;
+	}
+
+	@GetMapping("/login")
+	public String loadLogin(HttpServletResponse response) {
+
+		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || authentication instanceof AnonymousAuthenticationToken) {
+            return "login";
+        }
+ 
+        return "redirect:/";
+    }
+
+	@GetMapping("/forgetPass")
+	public ModelAndView loadForgetPass() {
+
+		return new ModelAndView("forgetPass");
+	}
+
+	@PostMapping("/forgetPass")
+	public ModelAndView forgetPass(@RequestParam("user_id") String userId) {
+
+		Map<String, Object> model = new HashMap<String, Object>();
+		boolean valid = false;
+		String randomPass = alphaNumericString(10);
+		Usr usr = logServ.searchUser(userId);
+
+		if (usr != null) {
+			valid = true;
+		} else {
+			model.put("error", msgSource.getMessage("msgInvalidUsr", new Object[] {}, Locale.getDefault()));
+		}
+
+		if (!userId.equals("") && valid) {
+			try {
+
+				BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
+				logServ.updateUserPass(userId, passwordEncoder.encode(randomPass));
+				
+				logger.debug("forgetPass() userId={}, newPass={}", userId, randomPass);
+				
+				sendEmail(usr.getEmail(), usr, randomPass);
+
+				model.put("success", msgSource.getMessage("msgSuccessPwdReset", new Object[] {}, Locale.getDefault()));
+			} catch (Exception e) {
+				model.put("error", msgSource.getMessage("msgFailPwdReset", new Object[] {}, Locale.getDefault()));
+			}
+		}
+
+		return new ModelAndView("/forgetPass", model);
+	}
+
+	public void sendEmail(String email, Usr usr, String randomPass) {
+
+		AlertMessage alertMsg = alertMsgServ.searchAlertById(AlertDefEnum.PASSWORD_RESET.strValue());
+		String content = alertMsg.getDescription().replace("[@UserID]", usr.getUserId())
+				.replace("[@Password]", randomPass).replace("[@UserName]", usr.getUserName());
+
+		SimpleMailMessage msg = new SimpleMailMessage();
+		msg.setTo(email);
+		msg.setSubject(alertMsg.getSubject());
+		msg.setText(content);
+
+		javaMailSender.send(msg);
+	}
+
+	public static String alphaNumericString(int len) {
+
+		String AB = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+		SecureRandom rnd = new SecureRandom();
+
+		StringBuilder sb = new StringBuilder(len);
+		for (int i = 0; i < len; i++) {
+			sb.append(AB.charAt(rnd.nextInt(AB.length())));
+		}
+		return sb.toString();
+	}
+
+}

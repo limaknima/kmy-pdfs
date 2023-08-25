@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<fontFamilies>
+	<fontFamily name="Times">
+		<normal><![CDATA[fonts/Times/times.ttf]]></normal>
+		<bold><![CDATA[fonts/Times/timesbd.ttf]]></bold>
+		<italic><![CDATA[fonts/Times/timesi.ttf]]></italic>
+		<boldItalic><![CDATA[fonts/Times/timesbi.ttf]]></boldItalic>
+		<pdfEmbedded><![CDATA[true]]></pdfEmbedded>
+		<exportFonts/>
+	</fontFamily>
+	<fontFamily name="Calibri">
+		<normal><![CDATA[fonts/Calibri/calibri.ttf]]></normal>
+		<bold><![CDATA[fonts/Calibri/calibrib.ttf]]></bold>
+		<italic><![CDATA[fonts/Calibri/calibrii.ttf]]></italic>
+		<boldItalic><![CDATA[fonts/Calibri/calibril.ttf]]></boldItalic>
+		<pdfEmbedded><![CDATA[true]]></pdfEmbedded>
+		<exportFonts/>
+	</fontFamily>
+	<fontFamily name="Arial">
+		<normal><![CDATA[fonts/Arial/arial.ttf]]></normal>
+		<bold><![CDATA[fonts/Arial/arialbd.ttf]]></bold>
+		<italic><![CDATA[fonts/Arial/ariali.ttf]]></italic>
+		<boldItalic><![CDATA[fonts/Arial/arialbi.ttf]]></boldItalic>
+		<pdfEmbedded><![CDATA[true]]></pdfEmbedded>
+		<exportFonts/>
+	</fontFamily>
+</fontFamilies>

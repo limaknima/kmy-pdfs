@@ -1,0 +1,254 @@
+##### NOTE ########################################################
+# This is properties file for any label,button,message etc.
+# Kindly add and apply to each individual module/page wherever applicable.
+# Each properties can be re-use.
+# 
+# Usage example:
+# 1) UI: <h1 th:text="#{errRuntime1}"></h1>
+# 2) Java: messageSource.getMessage("errRuntime2", new Object[] {}, Locale.getDefault())
+####################################################################
+
+appTitleLong=Production File Comparison System
+appTitleShort=PFC
+
+########## Menu Item/Navigation  ##########
+navMenu=Menu
+navHome=Home
+navMore=More
+navLogin=Login
+navForgetPwd=Forget Password?
+navResetPwd=Reset Password
+navReminder=Reminder
+navClickHere=Click here
+menuReg=Regulation
+menuRM=Raw Material (RM)
+menuPR=Product Recipe (PR)
+menuFinalPerm=Final Permissibility
+menuLetter=Letter
+menuReport=Report
+menuAdmin=Administration
+menuMaint=Maintenance
+menuActLog=Activity Log
+menuTask=Task
+menuNotification=Notification
+menuMyProfile=My Profile
+
+menuProdFile=Production File
+moduleProdFileList=Production File List
+moduleProdFileForm=Production File Form
+moduleOnDemand=On Demand Compare
+moduleOnDemandList=On Demand Compare List
+moduleHplRef=HPL-Reference
+moduleHplRefList=HPL-Reference List
+moduleHplRefForm=HPL-Reference Form
+moduleFoldCatgConf=Folder-Category Configuration
+moduleFoldCatgConfList=Folder-Category Configuration List
+moduleFoldCatgConfForm=Folder-Category Configuration Form
+moduleUsbUsrConf=USB-User Configuration
+moduleUsbUsrConfList=USB-User Configuration List
+moduleUsbUsrConfForm=USB-User Configuration Form
+moduleFileTypeSzConf=File-Type-Size Configuration
+moduleFileTypeSzConfList=File-Type-Size Configuration List
+moduleFileTypeSzConfForm=File-Type-Size Configuration Form
+
+########## Message ##########
+msgWelcome1=Welcome to Production File Comparison System! 
+msgWelcome2=What do you want to do today?
+msgLoggedOut=You have been logged out.
+
+msgReportErr=Report failed to be printed!
+msgReportSuccess=Report successfully printed!
+msgReportNoData=No data found or the data is insufficient to generate the report.
+msgReportMandatory=Product Recipe TS No or Product Recipe Name cannot be empty.
+
+msgFailSearchRecord=Failed to get record.
+msgSuccessUpdate=Record successfully updated!
+msgFailUpdate=Record failed to be updated!
+msgSuccessDelete=Record successfully deleted!
+msgFailDelete=Record failed to be deleted!
+msgSuccessAdd=Record successfully added!
+msgFailAdd=Record failed to be added!
+msgSuccessUnlock=Account successfully unlocked!
+msgFailUnlock=Account failed to be unlocked!
+msgSuccessPwdReset=Password successfully reset! Please check you email.
+msgFailPwdReset=Password failed to reset! Please contact admin for support.
+msgInvalidUsr=Please enter a valid User ID!
+msgSuccessLock=Account successfully locked!
+msgFailLock=Account failed to be locked!
+msgFailSubmit=Record failed to be submitted!
+msgSuccessSubmit=Record successfully submitted!
+
+########## Confirmation ##########
+#FSGS) Faiz 2021/3/4 - change print to preview
+msgReportConfirmHeader=Report preview confirmation
+msgReportConfirm=Are you sure you want to generate this report?
+
+editConfirmHeader=Edit cancellation
+editConfirmMsg=Do you want to cancel edit this record?
+pwdResetConfirmHeader=Password reset confirmation
+pwdResetConfirmMsg=Are you sure you want to reset password for {0}?
+cancelConfirmHeader=Cancel confirmation
+cancelConfirmMsg=Do you want to cancel this record?
+unlockConfirmHeader=Account unlock confirmation
+unlockConfirmMsg=Are you sure you want to unlock {0} account?
+lockConfirmHeader=Account lock confirmation
+lockConfirmMsg=Are you sure you want to lock {0} account?
+
+########## Scheduler activity message ##########
+msgJobStarted=Job Started.
+msgJobCompleted=Job Completed.
+msgJobMisfired=Job Misfired.
+msgJobStoppedBy=Job Stopped by {0}.
+msgJobStartedBy=Job Started by {0}.
+msgJobCreatedBy=Job Created by {0}.
+msgJobModifiedBy=Job Modified by {0}.
+msgJobDeletedBy=Job Deleted by {0}.
+msgJobPausedBy=Job Paused by {0}.
+msgJobResumedBy=Job Resumed by {0}.
+
+########## Form Header ##########
+formUsrProfile=User Profile
+formUsrGrpRole=User Group and User Role
+
+########## Label ##########
+lblTitle=Title
+lblRating=Rating
+lblPriority=Priority
+lblComment=Comment
+lblRemark=Remark
+lblUserId=User ID
+lblPwd=Password
+lblUserName=User Name
+lblEmail=Email Address
+lblOrgName=Organization Name
+lblEffcDate=Effective Date
+lblNotiPref=Notification Preference
+lblInactive=Inactive
+
+## PFC ##
+lblHpl=HPL
+lblHplName=HPL Name
+lblHplModel=HPL Model
+lblHplModelName=HPL Model Name
+lblDescription=Description
+lblYear=Year
+lblMonth=Month
+lblDay=Day
+lblProdLn=Prod Line
+lblSeq=Sequence
+lblFile=File
+lblFileName=File Name
+lblG2LotNo=G2 Lot No
+lblFileFormat=Prod File Format
+lblFilePath=File Path
+lblFilePathFormatEg=<drive>:/<folder1>/<folder2>/<folder3> E.g. D:/DATA/IF/2020
+lblFileNameFormatEg=<drive>:/<folder1>/<folder2>/<folder3> E.g. D:/DATA/IF/2020
+lblFileType=File Type
+lblFileSize=File size
+lblMinSize=Minimum size
+lblMaxSize=Maximum size
+lblUsbSerialNo=USB Serial No
+lblUsbName=USB Name
+lblGrpType=Group/Type
+lblAssignTo=Assign To
+lblSeachCriteria=Search Criteria
+lblSeachCriteriaFor=Search Criteria for
+lblSeachResult=Search Result
+lblNewFileIfReq=New File (If required) 
+lblFromDate=From Date
+lblToDate=To Date
+lblAlertType=Alert Type
+
+########## Button/Action ##########
+btnSubmit=Submit
+btnUpdate=Update
+btnLogin=Login
+btnLogout=Logout
+btnReset=Reset
+btnSearch=Search
+btnDelete=Delete
+btnCancel=Cancel
+btnAction=Action
+btnEdit=Edit
+btnAdd=Add
+btnBrowse=Browse
+btnChooseFile=Choose file
+btnAddToList=Add to list
+btnUpdateToList=Update to list
+btnDeleteFromList=Delete from list
+
+########## Error/Validation Message ##########
+errRuntime1=Oops!
+errRuntime2=This is embarrassing!
+errRuntime3=Please contact our support!
+valMandatory=Mandatory
+valRatingRange=5.0 < Number < 10.0
+valCommentRange=Max. 500 chars
+
+########## Constant value ##########
+vendorType_1=Manufacturer
+vendorType_2=Supplier
+vendorType_3=Manufacturer and Supplier
+
+flag_Y=Yes
+flag_N=No
+
+vfStatus_0=N/A
+vfStatus_1=Permitted
+vfStatus_2=Not Permitted
+vfStatus_3=Not Sure
+#vrStatus_4 changed from Yet to Complete to N/A 23/4/2021
+vfStatus_4=N/A
+
+functionType_1=Insert
+functionType_2=Update
+functionType_3=Delete
+functionType_4=Search
+functionType_5=View
+functionType_6=Purge
+functionType_7=Download
+functionType_8=Copy
+functionType_9=Renew
+functionType_10=Upload
+
+vrStatus_1=Draft
+vrStatus_2=Pending Authorization
+#vrStatus changed from Submitted to Completed 23/4/2021
+vrStatus_3=Completed
+vrStatus_4=Rejected
+vrStatus_5=Rework
+vrStatus_6=Rework Pending Authorization
+vrStatus_7=Pending Confirmation
+vrStatus_8=Changed - Pending Authorization
+vrStatus_9=Changed - Pending Confirmation
+vrStatus_10=Changed - Rework
+vrStatus_11=Pending Deactivate
+vrStatus_12=Deactivated
+vrStatus_13=Pending Activate
+
+mth_1=January
+mth_2=February
+mth_3=March
+mth_4=April
+mth_5=May
+mth_6=June
+mth_7=July
+mth_8=August
+mth_9=September
+mth_10=October
+mth_11=November
+mth_12=December
+
+########## Report file name ##########
+# Activity Report
+RA101=PFC-User_Activity_Report
+RA102=PFC-Function_Executed_Report
+RA103=PFC-Traceability_Report
+
+# Operational Report
+RO201=PFC-Raw_Material_Report
+RO301=PFC-Product_Recipe_Report
+RO302=PFC-Declaration_Letter
+RO401=PFC-Final_Permissibility_Report
+
+

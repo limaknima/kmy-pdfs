@@ -1,0 +1,115 @@
+package com.fms.pfc.repository.main.api;
+
+import java.util.List;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+
+import com.fms.pfc.domain.model.main.G2LotView;
+
+public interface G2LotViewRepository extends JpaRepository<G2LotView, String> {
+
+	@Query(value = "select * from CV22PDF where 1=1 "
+			+ "and ('' = ?1 or LOT = ?1) "
+			+ "and ('' = ?2 or HPL = ?2) "
+			+ "and ('' = ?3 or MODEL = ?3) "
+			+ "and ('' = ?4 or YEAR = ?4) "
+			+ "and ('' = ?5 or MTH = ?5) "
+			+ "and ('' = ?6 or DDAY = ?6) "
+			+ "and ('' = ?7 or PROD_LN = ?7) "
+			+ "and ('' = ?8 or SEQ = ?8) ", nativeQuery = true)
+	List<G2LotView> searchByCriteria(String lot, String hpl, String model, String year, String mth,
+				String day, String prodLn, String seq);
+	
+	@Query(value = "select top 200 from CV22PDF where 1=1 "
+			+ "and ('' = ?1 or LOT = ?1) "
+			+ "and ('' = ?2 or HPL = ?2) "
+			+ "and ('' = ?3 or MODEL = ?3) "
+			+ "and ('' = ?4 or YEAR = ?4) "
+			+ "and ('' = ?5 or MTH = ?5) "
+			+ "and ('' = ?6 or DDAY = ?6) "
+			+ "and ('' = ?7 or PROD_LN = ?7) "
+			+ "and ('' = ?8 or SEQ = ?8) ", nativeQuery = true)
+	List<G2LotView> searchTopXByCriteria(String lot, String hpl, String model, String year, String mth,
+				String day, String prodLn, String seq, String top);
+	
+	@Query(value = "select * from CV22PDF where 1=1 "
+			+ "and (?1 = '' OR ( "
+			+ "		LOT like case when ?11 = '1' then concat('%', ?1, '%') "
+			+ "		when ?11 = '2' then concat('%', ?1) "
+			+ "		when ?11 = '3' then ?1 "
+			+ "		when ?11 = '4' then concat(?1, '%') end "
+			+ "	 ) "
+			+ " ) "
+			+ "and ('' = ?2 or HPL = ?2) "
+			+ "and ('' = ?3 or MODEL = ?3) "
+			+ "and ('' = ?4 or YEAR = ?4) "
+			+ "and ('' = ?5 or MTH = ?5) "
+			+ "and ('' = ?6 or DDAY = ?6) "
+			+ "and (?7 = '' OR ( "
+			+ "		PROD_LN like case when ?9 = '1' then concat('%', ?7, '%') "
+			+ "		when ?9 = '2' then concat('%', ?7) "
+			+ "		when ?9 = '3' then ?7 "
+			+ "		when ?9 = '4' then concat(?7, '%') end "
+			+ "	 ) "
+			+ " ) "
+			+ "and (?8 = '' OR ( "
+			+ "		SEQ like case when ?10 = '1' then concat('%', ?8, '%') "
+			+ "		when ?10 = '2' then concat('%', ?8) "
+			+ "		when ?10 = '3' then ?8 "
+			+ "		when ?10 = '4' then concat(?8, '%') end "
+			+ "	 ) "
+			+ " ) ", nativeQuery = true)
+	List<G2LotView> searchByCriteria2(String lot, String hpl, String model, String year, String mth,
+				String day, String prodLn, String seq, String prodLnExp, String seqExp, String lotExp);
+	
+	@Query(value = "select distinct HPL from CV22PDF where 1=1 "
+			+ "order by HPL ", nativeQuery = true)
+	List<String> hplList();
+	
+	@Query(value = "select distinct MODEL from CV22PDF where 1=1 "
+			+ "and ('' = ?1 or HPL = ?1) "
+			+ "order by MODEL ", nativeQuery = true)
+	List<String> hplModelList (String hpl);
+	
+	@Query(value = "select distinct YEAR from CV22PDF where 1=1 "
+			+ "and ('' = ?1 or HPL = ?1) "
+			+ "and ('' = ?2 or MODEL = ?2) "
+			+ "order by YEAR ", nativeQuery = true)
+	List<String> yearList (String hpl, String model);
+	
+	@Query(value = "select distinct MTH from CV22PDF where 1=1 "
+			+ "and ('' = ?1 or HPL = ?1) "
+			+ "and ('' = ?2 or MODEL = ?2) "
+			+ "and ('' = ?3 or YEAR = ?3) "
+			+ "order by MTH ", nativeQuery = true)
+	List<String> monthList (String hpl, String model, String year);
+	
+	@Query(value = "select distinct DDAY from CV22PDF where 1=1 "
+			+ "and ('' = ?1 or HPL = ?1) "
+			+ "and ('' = ?2 or MODEL = ?2) "
+			+ "and ('' = ?3 or YEAR = ?3) "
+			+ "and ('' = ?4 or MTH = ?4) "
+			+ "order by DDAY ", nativeQuery = true)
+	List<String> dayList (String hpl, String model, String year, String mth);
+	
+	@Query(value = "select distinct PROD_LN from CV22PDF where 1=1 "
+			+ "and ('' = ?1 or HPL = ?1) "
+			+ "and ('' = ?2 or MODEL = ?2) "
+			//+ "and ('' = ?3 or YEAR = ?3) "
+			+ " and ?3 = ?3 "
+			+ "and ('' = ?4 or MTH = ?4) "
+			+ "and ('' = ?5 or DDAY = ?5) "
+			+ "order by PROD_LN ", nativeQuery = true)
+	List<String> prodLnList (String hpl, String model, String year, String mth, String day);
+	
+	@Query(value = "select distinct SEQ from CV22PDF where 1=1 "
+			+ "and ('' = ?1 or HPL = ?1) "
+			+ "and ('' = ?2 or MODEL = ?2) "
+			+ "and ('' = ?3 or YEAR = ?3) "
+			+ "and ('' = ?4 or MTH = ?4) "
+			+ "and ('' = ?5 or DDAY = ?5) "
+			+ "and ('' = ?6 or PROD_LN = ?6) "
+			+ "order by SEQ ", nativeQuery = true)
+	List<String> seqList (String hpl, String model, String year, String mth, String day, String prodLn);
+}

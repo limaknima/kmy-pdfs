@@ -1,0 +1,153 @@
+package com.fms.pfc.common;
+
+import java.io.File;
+import java.io.Serializable;
+import java.nio.file.InvalidPathException;
+import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Collection;
+import java.util.Date;
+import java.util.List;
+
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.fms.pfc.domain.dto.LabelAndValueDto;
+
+public class CommonUtil implements Serializable {
+
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 4428086390273048922L;
+	
+	private static final Logger logger = LoggerFactory.getLogger(CommonUtil.class);
+
+	public static <T> List<T> castList(Class<? extends T> clazz, Collection<?> rawCollection)
+			throws ClassCastException {
+		List<T> result = new ArrayList<>(rawCollection.size());
+		for (Object o : rawCollection) {
+			result.add(clazz.cast(o));
+		}
+		return result;
+	}
+
+	/**
+	 * Get Year select items based on current year as anchor
+	 * 
+	 * @param yearCount
+	 * @return
+	 */
+	public static List<LabelAndValueDto> yearDropdownItems(int yearCount) {
+		Calendar cal = Calendar.getInstance();
+		cal.setTime(new Date());
+		int currentYear = cal.get(Calendar.YEAR);
+
+		LabelAndValueDto dt = new LabelAndValueDto(String.valueOf(currentYear), String.valueOf(currentYear));
+		List<LabelAndValueDto> result = new ArrayList<LabelAndValueDto>();
+		result.add(dt);
+
+		for (int idx = 1; idx <= yearCount; idx++) {
+			LabelAndValueDto d = new LabelAndValueDto(String.valueOf(currentYear - idx),
+					String.valueOf(currentYear - idx));
+			result.add(d);
+		}
+
+		return result;
+	}
+
+	/**
+	 * Get Month select items
+	 * 
+	 * @return
+	 */
+	public static List<LabelAndValueDto> monthDropdownItems() {
+		List<LabelAndValueDto> result = new ArrayList<LabelAndValueDto>();
+		result.add(new LabelAndValueDto("01-January", "1"));
+		result.add(new LabelAndValueDto("02-February", "2"));
+		result.add(new LabelAndValueDto("03-March", "3"));
+		result.add(new LabelAndValueDto("04-April", "4"));
+		result.add(new LabelAndValueDto("05-May", "5"));
+		result.add(new LabelAndValueDto("06-June", "6"));
+		result.add(new LabelAndValueDto("07-July", "7"));
+		result.add(new LabelAndValueDto("08-August", "8"));
+		result.add(new LabelAndValueDto("09-September", "9"));
+		result.add(new LabelAndValueDto("10-October", "10"));
+		result.add(new LabelAndValueDto("11-November", "11"));
+		result.add(new LabelAndValueDto("12-December", "12"));
+
+		return result;
+	}
+
+	/**
+	 * Get Day select items
+	 * @return
+	 */
+	public static List<LabelAndValueDto> dayDropdownItems() {
+		int maxDay = 31;
+		List<LabelAndValueDto> result = new ArrayList<LabelAndValueDto>();
+		for (int idx = 1; idx <= maxDay; idx++) {
+			result.add(new LabelAndValueDto(String.valueOf(idx), String.valueOf(idx)));
+		}
+
+		return result;
+	}
+	
+	public static boolean isPathValid(String path) {
+
+		if (isNullOrEmpty(path)) {
+			logger.error("isPathValid() Path is empty!");
+			return false;
+		}
+
+		// check 1st position - must be drive name e.g. C, D, E etc
+		String first = StringUtils.substring(path, 0, path.indexOf(":"));
+
+		// check 2nd position - must be character ':'
+		int second = path.indexOf(":");
+
+		// check if 1st and 2nd is valid
+		{
+			String strPattern = "^[a-zA-Z]$";
+			boolean alphabetMatch = first.matches(strPattern);
+			if (!alphabetMatch || second != 1) {
+				System.err.println("2. invalid path " + path);
+				logger.error("isPathValid() alphabet match?={}, ':' position={}", alphabetMatch, second);
+				return false;
+			}
+		}
+
+		try {
+			Paths.get(path);
+		} catch (InvalidPathException ex) {
+			logger.error("isPathValid() Invalid path {} ", path);
+			return false;
+		}
+
+		return true;
+	}
+
+	public static boolean isValidFilePath(String filePath) {
+		if (isNullOrEmpty(filePath)) {
+			return false;
+		}
+
+		String path = filePath.trim();
+
+		// Validate publish settings path
+		File file = new File(path);
+		if ((!file.exists()) || file.isDirectory()) {
+			return false;
+		} else {
+			return true;
+		}
+	}
+
+	public static boolean isNullOrEmpty(String value) {
+		return (value == null) || (value.trim().length() == 0);
+
+	}
+
+}

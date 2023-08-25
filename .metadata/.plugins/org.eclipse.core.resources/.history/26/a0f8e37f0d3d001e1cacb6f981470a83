@@ -1,0 +1,31 @@
+package com.fms.pfc.domain.converter;
+
+import java.util.List;
+import java.util.stream.Collectors;
+
+import org.modelmapper.ModelMapper;
+
+import com.fms.pfc.domain.dto.MenuRoleFunctionDto;
+import com.fms.pfc.domain.model.MenuRoleFunction;
+
+public class MenuRoleFunctionConverter {
+	public MenuRoleFunctionDto entityToDto(MenuRoleFunction mrf) {
+		ModelMapper mapper = new ModelMapper();
+		MenuRoleFunctionDto map = mapper.map(mrf, MenuRoleFunctionDto.class);
+		return map;
+	}
+
+	public List<MenuRoleFunctionDto> entityToDtoList(List<MenuRoleFunction> mrf) {
+		return mrf.stream().map(arg0 -> entityToDto(arg0)).collect(Collectors.toList());
+	}
+
+	public MenuRoleFunction dtoToEntity(MenuRoleFunctionDto mrf) {
+		ModelMapper mapper = new ModelMapper();
+		MenuRoleFunction map = mapper.map(mrf, MenuRoleFunction.class);
+		return map;
+	}
+
+	public List<MenuRoleFunction> dtoToEntityList(List<MenuRoleFunctionDto> mrf) {
+		return mrf.stream().map(arg0 -> dtoToEntity(arg0)).collect(Collectors.toList());
+	}
+}

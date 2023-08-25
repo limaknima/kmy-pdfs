@@ -1,0 +1,541 @@
+package com.fms.pfc.controller.base;
+
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.List;
+import java.util.StringTokenizer;
+import java.util.stream.Collectors;
+
+import javax.mail.MessagingException;
+import javax.mail.internet.MimeMessage;
+
+import org.apache.commons.lang.StringUtils;
+import org.quartz.InterruptableJob;
+import org.quartz.JobExecutionContext;
+import org.quartz.JobExecutionException;
+import org.quartz.JobKey;
+import org.quartz.UnableToInterruptJobException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.env.Environment;
+import org.springframework.mail.SimpleMailMessage;
+import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.mail.javamail.MimeMessageHelper;
+import org.springframework.scheduling.quartz.QuartzJobBean;
+
+import com.fms.pfc.common.AlertDefEnum;
+import com.fms.pfc.common.CommonConstants;
+import com.fms.pfc.domain.model.AlertMessage;
+import com.fms.pfc.domain.model.Task;
+import com.fms.pfc.domain.model.UsrProfile;
+import com.fms.pfc.domain.model.UsrRole;
+import com.fms.pfc.domain.model.main.OnDemandSearch;
+import com.fms.pfc.domain.model.main.RmManf;
+import com.fms.pfc.exception.CommonException;
+import com.fms.pfc.service.api.base.AlertMessageService;
+import com.fms.pfc.service.api.base.AlertService;
+import com.fms.pfc.service.api.base.ManufacturerService;
+import com.fms.pfc.service.api.base.TaskService;
+import com.fms.pfc.service.api.base.UserProfileService;
+import com.fms.pfc.service.api.base.UsrRoleService;
+import com.fms.pfc.service.api.main.FileCompareJobProcess;
+import com.fms.pfc.service.api.main.OnDemandSearchService;
+import com.fms.pfc.service.api.main.ProductRecipeService;
+import com.fms.pfc.service.api.main.RawMaterialService;
+import com.fms.pfc.service.api.main.RmManfService;
+
+public class CronJob extends QuartzJobBean implements InterruptableJob {
+
+	private final Logger logger = LoggerFactory.getLogger(CronJob.class);
+
+	@Autowired
+	private JavaMailSender javaMailSender;
+	@Autowired
+	private RmManfService rmManfService;
+	@Autowired
+	private UserProfileService usrProfileService;
+	@Autowired
+	private AlertService alertService;
+	@Autowired
+	private ManufacturerService vendorService;
+	@Autowired
+	private RawMaterialService rmService;
+	@Autowired
+	private AlertMessageService alertMsgServ;
+	@Autowired
+	private TaskService taskServ;
+	@Autowired
+	private UsrRoleService usrRoleServ;
+	@Autowired
+	private ProductRecipeService prServ;
+	@Autowired
+	private Environment env;
+	@Autowired
+	private FileCompareJobProcess fcjProc;
+		
+	private boolean isHtml = false;
+
+	@Override
+	protected void executeInternal(JobExecutionContext jobExecutionContext) throws JobExecutionException {
+		JobKey key = jobExecutionContext.getJobDetail().getKey();
+		logger.info("Cron Job started with Key: {}, Group :{}, Thread Name :{}, Time now :{}", key.getName(),
+				key.getGroup(), Thread.currentThread().getName(), new Date());
+
+		//doRenewalReminder(key.getName());
+		//doTaskReminder(key.getName());
+		doFileCompare(key.getName());
+
+		logger.info("Cron Job {} with thread {} ended.", key.getName(), Thread.currentThread().getName());
+	}		
+
+	@Override
+	public void interrupt() throws UnableToInterruptJobException {
+
+	}
+	
+	private void doFileCompare(String name) {
+		if (!StringUtils.containsIgnoreCase(name, "compare"))
+			return;
+
+		fcjProc.process();
+	}
+	
+	private void doTaskReminder(String name) {
+		
+		if(!StringUtils.containsIgnoreCase(name, "overdue"))
+			return;
+		
+		// TODO Auto-generated method stub
+		//Get all pending task by individual
+		//Get all pending task by role
+		//Check retention period e.g. 7 days
+		//If retention period same or greater than WF_TASK.START_DATETIME and WF_TASK.END_DATETIME is still null
+		//then send reminder to that role cc task creator
+		
+		// Current date
+		LocalDate crrDate = LocalDate.now();
+		String asOfDateStr = crrDate.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
+		int retention = Integer.valueOf(env.getProperty("task.reminder.retention"));
+		String roles = env.getProperty("task.reminder.roles"); 
+		AlertMessage alertMsg = alertMsgServ.searchAlertById(AlertDefEnum.TASK_OVERDUE.strValue());
+		isHtml = true;
+		
+		if (retention == 0 || StringUtils.isEmpty(roles))
+			throw new CommonException("TASK REMINDER: Setting Incomplete!");
+
+		doIndividualReminder(crrDate, asOfDateStr, retention, alertMsg);
+
+		doGroupReminder(crrDate, asOfDateStr, retention, roles, alertMsg);
+		
+		isHtml = false;
+	}
+
+	private void doGroupReminder(LocalDate crrDate, String asOfDateStr, int retention, String roles,
+			AlertMessage alertMsg) {
+		logger.debug("doGroupReminder() START");
+		
+		StringTokenizer token = new StringTokenizer(roles, ",");
+		while (token.hasMoreElements()) {
+			String role = token.nextToken();
+			List<Task> allOverdue = taskServ.searchOverdueTask("", 0, role, 0);
+			List<Task> tmp = new ArrayList<Task>();
+			allOverdue.forEach(task -> {
+				LocalDate assignedDue = task.getDateAssigned().toInstant().atZone(ZoneId.systemDefault()).toLocalDate()
+						.plusDays(retention);
+				if (assignedDue.isBefore(crrDate)) {
+					task.setOverdue(true);
+					Long diff = ChronoUnit.DAYS.between(
+							task.getDateAssigned().toInstant().atZone(ZoneId.systemDefault()).toLocalDate(), crrDate);
+					task.setDiffDate(diff.intValue());
+				}
+			});
+
+			if (allOverdue != null && !allOverdue.isEmpty()) {
+				tmp = allOverdue.stream().filter(task -> task.isOverdue()).collect(Collectors.toList());
+
+				List<UsrProfile> userProfiles = usrProfileService.findUsersByGroup(CommonConstants.GROUP_ID_FR).stream()
+						.filter(usr -> usr.getDisabledFlag().equals(String.valueOf(CommonConstants.FLAG_NO)))
+						.collect(Collectors.toList());
+
+				if (!tmp.isEmpty()) {
+					String tblStr = genEmailBody(tmp);
+					String[] cc = getCcList(tmp);
+					for (UsrProfile usr : userProfiles) {
+
+						List<UsrRole> usrRoleList = usrRoleServ.searchUserRole(usr.getUserId());
+						if (!usrRoleList.stream().map(UsrRole::getRoleId).anyMatch(role::contains))
+							continue;
+
+						String subject = alertMsg.getSubject().replace("[@AsOfDate]", asOfDateStr);
+						String content = alertMsg.getDescription().replace("[@Name]", usr.getUserName())
+								.replace("[@Table]", tblStr);
+
+						// sendAlertAndEmail(systemEmail, null, usr, subject, content);
+						sendEmail(usr.getEmail(), subject, content, cc);
+					}
+				}
+
+			}
+		}
+		logger.debug("doGroupReminder() END");
+	}
+
+	private void doIndividualReminder(LocalDate crrDate, String asOfDateStr, int retention, AlertMessage alertMsg) {
+		logger.debug("doIndividualReminder() START");
+		
+		List<Task> indOverdue = taskServ.searchOverdueTask("", 0, "", CommonConstants.ACTOR_TYPE_USER);
+		List<Task> tmp = new ArrayList<Task>();
+		indOverdue.forEach(task -> {
+			LocalDate assignedDue = task.getDateAssigned().toInstant().atZone(ZoneId.systemDefault()).toLocalDate()
+					.plusDays(retention);
+			if (assignedDue.isBefore(crrDate)) {
+				task.setOverdue(true);
+				Long diff = ChronoUnit.DAYS.between(
+						task.getDateAssigned().toInstant().atZone(ZoneId.systemDefault()).toLocalDate(), crrDate);
+				task.setDiffDate(diff.intValue());
+			}
+		});
+
+		if (!indOverdue.isEmpty()) {
+			tmp = indOverdue.stream().filter(task -> task.isOverdue()).collect(Collectors.toList());
+
+			for (Task task2 : tmp) {
+				String tblStr = generateEmailBodySingleRow(task2);
+				String to = task2.getAssignedTo();
+				String cc = task2.getCreatorId();
+
+				if (StringUtils.equalsIgnoreCase(to, CommonConstants.USER_ID_SYSTEM))
+					continue;
+
+				// find to usrprofile
+				List<UsrProfile> usrTo = usrProfileService.searchUserProfile("", to, "", "", "", "",
+						String.valueOf(CommonConstants.SEARCH_OPTION_EXACT), "", "");
+
+				if (usrTo == null || usrTo.isEmpty())
+					continue;
+
+				UsrProfile usr = usrTo.get(0);
+				if (usr == null)
+					continue;
+
+				// find cc usrprofile
+				List<UsrProfile> usrCc = usrProfileService.searchUserProfile("", cc, "", "", "", "",
+						String.valueOf(CommonConstants.SEARCH_OPTION_EXACT), "", "");
+
+				String[] ccs = null;
+				if (usrCc != null && !usrCc.isEmpty()) {
+					UsrProfile usrC = usrCc.get(0);
+					if (usrC != null && usrC.getEmail() != null) {
+						ccs = new String[] { usrC.getEmail() };
+					}
+				}
+
+				String subject = alertMsg.getSubject().replace("[@AsOfDate]", asOfDateStr);
+				String content = alertMsg.getDescription().replace("[@Name]", usr.getUserName()).replace("[@Table]",
+						tblStr);
+
+				sendEmail(usr.getEmail(), subject, content, ccs);
+			}
+		}
+		logger.debug("doIndividualReminder() END");
+	}
+
+	private void doRenewalReminder(String jobName) {
+		List<RmManf> rmManfList = rmManfService.searchRenewaldate();
+		DateFormat ddMMyyyyFormat = new SimpleDateFormat("dd/MM/yyyy");
+		DateTimeFormatter localDateFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+		String systemEmail = "pfc - System";
+		String usrGrpVipd = env.getProperty("remind.to.group.vipd"); 
+		String usrGrpDecl = env.getProperty("remind.to.group.decl"); 
+		int vipdYearsExpiry =  Integer.parseInt(env.getProperty("vipd.exp.year"));
+		int decLetterYearsExpiry = Integer.parseInt(env.getProperty("decl.exp.year"));
+		int monthToRemindBeforeExpiry = Integer.parseInt(env.getProperty("month.to.remind"));
+
+		for (RmManf rmManf : rmManfList) {
+
+			if (null == rmManf.getVipdDate())
+				continue;
+			if (null == rmManf.getVipdAnnex2Date())
+				continue;
+
+			rmManf.setRawMatName(rmService.searchRawMaterial("", "", rmManf.getRawMatlId(), 0).get(0).getRawMatlName());
+			rmManf.setVendorName(vendorService.searchManufacturerList("", "", "", "", "", rmManf.getManfId()).get(0)
+					.getVendorName());
+
+			// Get VIPD date
+			String vipdDateStr = ddMMyyyyFormat.format(rmManf.getVipdDate());
+			// Get Declare Letter date
+			String declareDateStr = ddMMyyyyFormat.format(rmManf.getVipdAnnex2Date());
+			// Current date
+			LocalDate crrDate = LocalDate.now();
+			// Reminder date
+			//LocalDate vipdRemindExpDate = rmManf.getVipdDate().toInstant().atZone(ZoneId.systemDefault()).toLocalDate()
+			//		.plusYears(vipdYearsExpiry).minusMonths(monthToRemindBeforeExpiry);
+			//LocalDate decLetterRemindExpDate = rmManf.getVipdAnnex2Date().toInstant().atZone(ZoneId.systemDefault())
+			//		.toLocalDate().plusYears(decLetterYearsExpiry).minusMonths(monthToRemindBeforeExpiry);
+			// Expiring VIPD date
+			LocalDate vipdDate = LocalDate.parse(vipdDateStr, localDateFormatter);
+			// Expiring Declare Letter date
+			LocalDate letterDate = LocalDate.parse(declareDateStr, localDateFormatter);
+
+			if (jobName.toLowerCase().contains("vipd"))
+				doVipdReminder(systemEmail, usrGrpVipd, rmManf, crrDate, monthToRemindBeforeExpiry, vipdDate, vipdYearsExpiry);
+
+			if (jobName.toLowerCase().contains("declaration"))
+				doDeclLetterReminder(systemEmail, usrGrpDecl, rmManf, crrDate, monthToRemindBeforeExpiry, letterDate, decLetterYearsExpiry);
+
+		}
+	}
+
+	private void doVipdReminder(String systemEmail, String usrGrpVipd, RmManf rmManf, LocalDate crrDate,
+			int monthToRemindBeforeExpiry, LocalDate vipdDate, int vipdYearsExpiry) {
+		LocalDate vipdRemindExpDate = null;
+		boolean sendAlert = false;
+		int diff = 0;
+		for (int i = monthToRemindBeforeExpiry; i >= 0; i--) {
+			vipdRemindExpDate = rmManf.getVipdDate().toInstant().atZone(ZoneId.systemDefault()).toLocalDate()
+					.plusYears(vipdYearsExpiry).minusMonths(i);
+			diff = crrDate.compareTo(vipdRemindExpDate);
+			if (diff == 0) {
+				logger.debug(
+						"doVipdReminder() found");
+				sendAlert = true;
+				break;
+			}
+		}
+
+		LocalDate vipdExpDate = vipdDate.plusYears(vipdYearsExpiry);
+		AlertMessage alertMsg = alertMsgServ.searchAlertById(AlertDefEnum.RM_RENEW_VIPD.strValue());
+		
+		if (sendAlert) {
+			logger.debug(
+					"doVipdReminder() Current date:{}, vipdDate:{}, vipdExpDate={}, vipdRemindExpDate:{}, rm={}, vendor={}, diff={}",
+					crrDate, vipdDate, vipdExpDate, vipdRemindExpDate, rmManf.getRawMatName(), rmManf.getVendorName(),
+					diff);
+			
+			List<UsrProfile> userProfilesV = usrProfileService.findUsersByGroup(usrGrpVipd).stream()
+					.filter(usr -> usr.getDisabledFlag().equals(String.valueOf(CommonConstants.FLAG_NO)))
+					.collect(Collectors.toList());
+
+			for (UsrProfile usr : userProfilesV) {
+				String subject = alertMsg.getSubject();
+				String content = alertMsg.getDescription().replace("[@Name]", usr.getUserName())
+						.replace("[@RmName]", rmManf.getRawMatName())
+						.replace("[@ExpiryDate]", vipdExpDate.format(DateTimeFormatter.ofPattern("dd/MM/yyyy")))
+						.replace("[@ManfName]", rmManf.getVendorName());
+
+				sendAlertAndEmail(systemEmail, rmManf, usr, subject, content);
+			}
+		}
+	}
+
+	private void doDeclLetterReminder(String systemEmail, String usrGrpDecl, RmManf rmManf,
+			LocalDate crrDate, int monthToRemindBeforeExpiry, LocalDate letterDate, int decLetterYearsExpiry) {
+
+		LocalDate decLetterRemindExpDate = null;
+		boolean sendAlert = false;
+		int diff = 0;
+		for (int i = monthToRemindBeforeExpiry; i >= 0; i--) {
+			decLetterRemindExpDate = rmManf.getVipdAnnex2Date().toInstant().atZone(ZoneId.systemDefault()).toLocalDate()
+					.plusYears(decLetterYearsExpiry).minusMonths(i);
+			diff = crrDate.compareTo(decLetterRemindExpDate);
+			if (diff == 0) {
+				logger.debug(
+						"doDeclLetterReminder() found");
+				sendAlert = true;
+				break;
+			}
+		}
+
+		LocalDate letterExpDate = letterDate.plusYears(decLetterYearsExpiry);
+		AlertMessage alertMsg = alertMsgServ.searchAlertById(AlertDefEnum.RM_RENEW_LETTER.strValue());
+
+		if (sendAlert) {
+			logger.debug(
+					"doDeclLetterReminder() Current date:{}, letterDate:{}, letterExpDate={}, decLetterRemindExpDate:{}, rm={}, vendor={}, diff={}",
+					crrDate, letterDate, letterExpDate, decLetterRemindExpDate, rmManf.getRawMatName(),
+					rmManf.getVendorName(), diff);
+			
+			List<UsrProfile> userProfilesD = usrProfileService.findUsersByGroup(usrGrpDecl).stream()
+					.filter(usr -> usr.getDisabledFlag().equals(String.valueOf(CommonConstants.FLAG_NO)))
+					.collect(Collectors.toList());
+
+			for (UsrProfile usr : userProfilesD) {
+				String subject = alertMsg.getSubject();
+				String content = alertMsg.getDescription().replace("[@Name]", usr.getUserName())
+						.replace("[@RmName]", rmManf.getRawMatName())
+						.replace("[@ExpiryDate]", letterExpDate.format(DateTimeFormatter.ofPattern("dd/MM/yyyy")))
+						.replace("[@ManfName]", rmManf.getVendorName());
+
+				sendAlertAndEmail(systemEmail, rmManf, usr, subject, content);
+			}
+		}
+	}
+
+	private void sendAlertAndEmail(String systemEmail, RmManf rmManf, UsrProfile usr, String subject, String content) {
+		String rm = "";
+		if (rmManf != null)
+			rm = String.valueOf(rmManf.getRawMatlId());
+
+		if (usr.getAlertPre() == CommonConstants.MESSAGE_PREF_EMAIL) {
+
+			sendEmail(usr.getEmail(), subject, content, null);
+		} else if (usr.getAlertPre() == CommonConstants.MESSAGE_PREF_NOTIFICATION) {
+
+			alertService.addAlert(subject, content, systemEmail, rm, CommonConstants.RECORD_TYPE_ID_RAW_MATL,
+					usr.getUserId());
+
+		} else if (usr.getAlertPre() == CommonConstants.MESSAGE_PREF_EMAIL_NOTIFICATION) {
+
+			alertService.addAlert(subject, content, systemEmail, rm, CommonConstants.RECORD_TYPE_ID_RAW_MATL,
+					usr.getUserId());
+			sendEmail(usr.getEmail(), subject, content, null);
+		}
+	}
+
+	private void sendEmail(String to, String subject, String content, String[] cc) {
+
+		if (!isHtml) {
+
+			SimpleMailMessage msg = new SimpleMailMessage();
+			msg.setTo(to);
+			msg.setSubject(subject);
+			msg.setText(content);
+
+			javaMailSender.send(msg);
+		} else {
+			send(to, subject, content, cc);
+		}
+	}
+	
+	private void send(String sendTo, String subject, String htmlMsg, String[] cc)  {
+        MimeMessage message = javaMailSender.createMimeMessage();
+        try {
+            MimeMessageHelper helper = new MimeMessageHelper(message, false, "utf-8");
+            message.setContent(htmlMsg, "text/html");
+            helper.setTo(sendTo);
+            helper.setCc(cc);
+            helper.setSubject(subject);
+            javaMailSender.send(message);
+        } catch (MessagingException e) {
+            logger.error(e.toString());
+        }
+    }
+	
+	private StringBuffer generateCommonHtmlHead() {
+		StringBuffer stringBuffer = new StringBuffer();
+
+		return stringBuffer.append("<head>").append("</head>").append("<body>").append("<table border=1>")
+				.append("<tr>")
+				.append("<th>No.</th><th>Reference</th><th>Reference Type</th><th>Assigned to</th><th>Assinged date</th><th>Days overdue</th><th>Initiator</th><th>Description</th>")
+				.append("</tr>");
+	}
+
+	private void generateCommonFooter(StringBuffer stringBuffer) {
+		stringBuffer.append("</table></body>");
+	}
+    
+    private String genEmailBody(List<Task> tasks) {
+    	StringBuffer stringBuffer = generateCommonHtmlHead();
+    	int rowno = 1;
+         for (Task task : tasks) {
+        	 generateTdData(stringBuffer, rowno, task);
+        	 rowno++;
+         }
+         
+         generateCommonFooter(stringBuffer);
+         return stringBuffer.toString();
+    }
+
+	private void generateTdData(StringBuffer stringBuffer, int rowno, Task task) {
+		stringBuffer.append("<tr>");
+		stringBuffer.append("<td align ='right'>").append(rowno).append("</td>");
+		stringBuffer.append("<td>").append(getRefName(task.getRecordTypeId(), Integer.parseInt(task.getReferenceNum())))
+				.append("</td>");
+		stringBuffer.append("<td align ='center'>").append(getRecTypeDesc(task.getRecordTypeId())).append("</td>");
+		stringBuffer.append("<td align ='center'>").append(task.getAssignedTo()).append("</td>");
+		stringBuffer.append("<td>").append(new SimpleDateFormat("dd/MM/yyyy hh:mm:ss a").format(task.getDateAssigned()))
+				.append("</td>");
+		stringBuffer.append("<td align ='center'>").append(task.getDiffDate()).append("</td>");
+		stringBuffer.append("<td>").append(task.getCreatorId()).append("</td>");
+		stringBuffer.append("<td>").append(task.getSubject()).append("</td>");
+		stringBuffer.append("</tr>");
+	}
+	
+	private String generateEmailBodySingleRow(Task task) {
+		StringBuffer stringBuffer = generateCommonHtmlHead();
+		int rowno = 1;
+		generateTdData(stringBuffer, rowno, task);
+		generateCommonFooter(stringBuffer);
+        return stringBuffer.toString();
+	}
+    
+	private String getRefName(int recType, int ref) {
+		String result = "";
+		if (recType == CommonConstants.RECORD_TYPE_ID_RAW_MATL) {
+			result = rmService.searchRawMaterial("", "", ref, 0).get(0).getRawMatlName();
+		} else if (recType == CommonConstants.RECORD_TYPE_ID_PROD_RECP) {
+			result = prServ.searchProductName(ref, "3").get(0).getPrName();
+		}
+
+		return result;
+	}
+
+	private String getRecTypeDesc(int recType) {
+		String result = "";
+		if (recType == CommonConstants.RECORD_TYPE_ID_RAW_MATL) {
+			result = "Raw Material";
+		} else if (recType == CommonConstants.RECORD_TYPE_ID_PROD_RECP) {
+			result = "Product Recipe";
+		}
+
+		return result;
+	}
+	
+	private String[] getCcList(List<Task> tmp) {
+		List<String> cc = new ArrayList<String>();
+		String[] ccArr = null;
+
+		if (tmp.isEmpty())
+			return ccArr;
+
+		// loop pending task to find creator/initiator
+		for (Task t : tmp) {
+			if (t.getCreatorId() == null || StringUtils.isEmpty(t.getCreatorId()))
+				continue;
+
+			// get email from user profile based on user id
+			//UsrProfile u = usrProfileService.searchUserProfile("", t.getCreatorId(), "", "", "", "",
+			//		String.valueOf(CommonConstants.SEARCH_OPTION_EXACT), "", "").get(0);
+			
+			List<UsrProfile> listUsr = usrProfileService.searchUserProfile("", t.getCreatorId(), "", "", "", "",
+					String.valueOf(CommonConstants.SEARCH_OPTION_EXACT), "", "");
+			
+			if(listUsr == null || listUsr.isEmpty())
+				continue;
+			
+			UsrProfile u = listUsr.get(0);			
+			cc.add(u.getEmail());
+		}
+
+		// remove duplicates
+		cc = cc.stream().distinct().collect(Collectors.toList());
+
+		if (cc.isEmpty())
+			return ccArr;
+
+		// convert List<String> to String[]
+		ccArr = cc.stream().toArray(String[]::new);
+
+		return ccArr;
+	}
+
+}

@@ -1,0 +1,25 @@
+package com.fms.pfc.domain.dto.main;
+
+import java.util.Date;
+
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
+public class OnDemandSearchDto {
+	private String g2Lot;
+	private Integer hplId;
+	private String fileName;
+	private String filePath;
+	private Integer fileSize;
+	private Integer alertType;
+	private Date compareFromDatetime;
+	private Date compareToDatetime;
+	private String creatorId;
+	private Date createdDatetime;
+	private String modifierId;
+	private Date modifiedDatetime;
+}

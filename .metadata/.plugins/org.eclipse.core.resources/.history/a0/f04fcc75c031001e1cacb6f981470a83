@@ -1,0 +1,5 @@
+package com.fms.pfc.domain.dto.main;
+
+public class G2LotViewDto {
+
+}

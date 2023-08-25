@@ -1,0 +1,664 @@
+package com.fms.pfc.controller.main;
+
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Objects;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
+import javax.validation.Valid;
+
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.MessageSource;
+import org.springframework.stereotype.Controller;
+import org.springframework.validation.BindingResult;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.context.annotation.SessionScope;
+import org.springframework.web.servlet.ModelAndView;
+
+import com.fms.pfc.common.Authority;
+import com.fms.pfc.common.CommonConstants;
+import com.fms.pfc.domain.dto.main.HplDto;
+import com.fms.pfc.domain.dto.main.HplModelDto;
+import com.fms.pfc.domain.model.main.HplSearch;
+import com.fms.pfc.service.api.base.TrxHisService;
+import com.fms.pfc.service.api.main.HplService;
+import com.fms.pfc.validation.common.CommonValidation;
+
+@Controller
+@SessionScope
+public class HplController {
+	private static final Logger logger = LoggerFactory.getLogger(HplController.class);
+
+	private Authority auth;
+	private CommonValidation commonValServ;
+	private MessageSource msgSource;
+	private HplService hplServ;
+	private TrxHisService trxHistServ;
+
+	private Map<String, Object> model = new HashMap<String, Object>();
+	private String screenMode = "";
+
+	private static String HPL_TXT = "";
+	private static String DESC_TXT = "";
+	private static String MODULE_NAME = "";
+	private static final int DESC_MAX_LENGTH = 1000;
+	private static final String ERR_MSG_UNIQUE = " already exist ";
+	private static final String breakline = ".<br />";
+
+	@Autowired
+	public HplController(Authority auth, CommonValidation commonValServ, MessageSource msgSource, HplService hplServ,
+			TrxHisService trxHistServ) {
+		super();
+		this.auth = auth;
+		this.commonValServ = commonValServ;
+		this.msgSource = msgSource;
+		this.hplServ = hplServ;
+		this.trxHistServ = trxHistServ;
+		
+		getAllLabels();
+	}
+
+	/**
+	 * Display initial screen
+	 * 
+	 * @param request
+	 * @param response
+	 * @return
+	 */
+	@GetMapping("/main/pfc/hplList")
+	public ModelAndView searchListing(HttpServletRequest request, HttpServletResponse response) {
+
+		removeAlert(model);
+		model = auth.onPageLoad(model, request);
+		auth.isAuthUrl(request, response);
+		// model.put("hplAllItems", hplServ.findAllDto());
+		model.put("hplAllItems", hplServ.searchByCriteria2("", "", "", ""));
+
+		return new ModelAndView("/main/pfc/hplList", model);
+	}
+
+	/**
+	 * View form
+	 * 
+	 * @param request
+	 * @param ltContId
+	 * @return
+	 */
+	@RequestMapping("/main/pfc/hplFormView")
+	public ModelAndView viewForm(HttpServletRequest request, @RequestParam(name = "pkHplId") Integer pkHplId) {
+
+		removeAlert(model);
+
+		HplDto dto = hplServ.findDtoById(pkHplId);
+		trxHistServ.addTrxHistory(new Date(), "View " + MODULE_NAME, request.getRemoteUser(),
+				CommonConstants.FUNCTION_TYPE_VIEW, dto.getPkHplId().toString(), CommonConstants.RECORD_TYPE_ID_HPL,
+				null);
+
+		// Set mode
+		screenMode = CommonConstants.SCREEN_MODE_VIEW;
+		model.put("mode", screenMode);
+		model.put("btnSaveSts", true);
+
+		// Set form header
+		model.put("header", "View " + MODULE_NAME);
+
+		// Set confirmation message
+		model.put("confirmHeader", "Edit cancellation");
+		model.put("confirmMsg", "Do you want to cancel Edit this record ?");
+
+		manageHplModelButton(true, true, true, model);
+
+		// Put model to HTML
+		if (dto != null) {
+
+			logger.debug("viewForm > id > {}", dto.getPkHplId());
+
+			model.put("pkHplId", dto.getPkHplId());
+			model.put("hplItem", dto);
+			model.put("hplItemCurrItem", dto);
+
+			List<HplModelDto> hplModelList = dto.getHplModelList();
+
+			logger.debug("hplModelList > size > {}", hplModelList.size());
+
+			model.put("hplModelList", hplModelList);
+
+			model.put("createdUser", dto.getCreatorId());
+			model.put("modifiedUser", dto.getModifierId());
+
+			SimpleDateFormat formatter = new SimpleDateFormat("dd/MM/yyy hh:mm:ss a");
+			try {
+				String createdInfo = "Created by " + dto.getCreatorId() + " on "
+						+ formatter.format(dto.getCreatedDatetime());
+				model.put("createdInfo", createdInfo);
+			} catch (Exception e) {
+			}
+
+			String modifiedInfo = "";
+			try {
+				modifiedInfo = "Modified by " + dto.getModifierId() + " on "
+						+ formatter.format(dto.getModifiedDatetime());
+			} catch (Exception e) {
+				modifiedInfo = "Modified by --";
+			}
+			model.put("modifiedInfo", modifiedInfo);
+		}
+
+		return new ModelAndView("/main/pfc/hplForm", model);
+	}
+
+	/**
+	 * Load add form
+	 * 
+	 * @param request
+	 * @return
+	 */
+	@GetMapping("/main/pfc/hplForm")
+	public ModelAndView loadNewForm(HttpServletRequest request) {
+		removeAlert(model);
+
+		// Set mode
+		screenMode = CommonConstants.SCREEN_MODE_ADD;
+		model.put("mode", screenMode);
+
+		// Set fields
+		model.put("hplItem", new HplDto());
+		model.put("hplModelList", new ArrayList<HplModelDto>());
+
+		// Set form header
+		model.put("header", "Add " + MODULE_NAME);
+		// Set confirmation message
+		model.put("confirmHeader", "Cancel confirmation");
+		model.put("confirmMsg", "Do you want to cancel this record ?");
+
+		model.put("btnEdit", true);
+		model.put("btnSaveSts", false);
+		model.put("btnAction", false);
+		model.put("btnSave", "Save");
+
+		manageHplModelButton(false, true, true, model);
+
+		return new ModelAndView("/main/pfc/hplForm", model);
+	}
+
+	/**
+	 * Save form
+	 * 
+	 * @param dto
+	 * @param request
+	 * @param bindingResult
+	 * @param session
+	 * @return
+	 * @throws Exception
+	 */
+	@PostMapping(value = "/main/pfc/hplFormSave", params = "action=save")
+	public ModelAndView saveForm(@Valid HplDto dto, HttpServletRequest request, BindingResult bindingResult,
+			HttpSession session) throws Exception {
+
+		removeAlert(model);
+		String mode = screenMode;
+
+		List<HplModelDto> hplModelList = (List<HplModelDto>) model.get("hplModelList");
+
+		model.put("hplItem", dto);
+
+		logger.debug("saveHpl > id > {} > name > {} > mode > {} ", dto.getPkHplId(), dto.getHplName(), mode);
+
+		String errorMsg = validateForm(dto);
+
+		if (errorMsg.length() != 0) {
+			model.put("error", errorMsg);
+			model.remove("success");
+			model.put("hplItem", dto);
+
+			if (mode.equals(CommonConstants.SCREEN_MODE_EDIT)) {
+				screenMode = CommonConstants.SCREEN_MODE_EDIT;
+				// Set mode to HTML header
+				model.put("mode", screenMode);
+				model.put("header", "Edit " + MODULE_NAME);
+				// Set confirmation message
+				model.put("confirmHeader", "Edit cancellation");
+				model.put("confirmMsg", "Do you want to cancel edit this record ?");
+			}
+			return new ModelAndView("/main/pfc/hplForm", model);
+		}
+
+		if (mode.equals(CommonConstants.SCREEN_MODE_ADD)) {
+
+			try {
+				// If no error proceed to save add form
+				// Add form
+				// ltServ.saveLetterConf(null, dto.getLtId(), dto.getSec1Desc(),
+				// dto.getSec2Desc(),
+				// dto.getSec3Desc(), dto.getCountryId(), request.getRemoteUser(), prIds);
+
+				Integer result = hplServ.save(dto, request.getRemoteUser(), hplModelList);
+
+				// Print add success
+				model.put("success", "Record added successfully.");
+				model.remove("error");
+				model.put("hplItem", new HplDto());
+
+				trxHistServ.addTrxHistory(new Date(), "Insert " + MODULE_NAME, request.getRemoteUser(),
+						CommonConstants.FUNCTION_TYPE_INSERT,
+						Objects.nonNull(result) ? result.toString() : dto.getHplName(),
+						CommonConstants.RECORD_TYPE_ID_HPL, null);
+
+			} catch (Exception e) {
+				// Print DB exception
+				e.printStackTrace();
+				model.put("error", "Record failed to be added.");
+				model.remove("success");
+			}
+
+		} else if (mode.equals(CommonConstants.SCREEN_MODE_EDIT)) {
+			// Set mode to HTML header
+			screenMode = CommonConstants.SCREEN_MODE_VIEW;
+			model.put("mode", screenMode);
+			model.put("header", MODULE_NAME);
+
+			try {
+				// Update form
+				// ltServ.saveLetterConf((int) model.get("ltContId"), dto.getLtId(),
+				// dto.getSec1Desc(),
+				// dto.getSec2Desc(), dto.getSec3Desc(), dto.getCountryId(),
+				// request.getRemoteUser(),
+				// prIds);
+
+				Integer result = hplServ.save(dto, request.getRemoteUser(), hplModelList);
+
+				// Print update success
+				model.put("success", "Record updated successfully.");
+				model.remove("error");
+
+				trxHistServ.addTrxHistory(new Date(), "Update " + MODULE_NAME, request.getRemoteUser(),
+						CommonConstants.FUNCTION_TYPE_UPDATE,
+						Objects.nonNull(result) ? result.toString() : dto.getHplName(),
+						CommonConstants.RECORD_TYPE_ID_HPL, null);
+
+			} catch (Exception e) {
+				// Print DB exception
+				e.printStackTrace();
+				model.put("error", "Record failed to update.");
+				model.remove("success");
+			}
+		}
+
+		model.put("btnEdit", false);
+		model.put("hplAllItems", hplServ.searchByCriteria2("", "", "", ""));
+
+		return new ModelAndView("/main/pfc/hplList", model);
+	}
+
+	/**
+	 * Construct error message based on validation result
+	 * 
+	 * @param dto
+	 * @return
+	 */
+	private String validateForm(HplDto dto) {
+		String errorMsg = "";
+		errorMsg += commonValServ.validateMandatoryInput(dto.getHplName(), HPL_TXT);
+		errorMsg += commonValServ.validateMandatoryInput(dto.getHplDesc(), DESC_TXT);
+		errorMsg += commonValServ.validateInputLength(dto.getHplDesc(), DESC_MAX_LENGTH, DESC_TXT);
+
+		if (screenMode == CommonConstants.SCREEN_MODE_ADD) {
+			errorMsg += validateDuplicateHpl(dto.getHplName());
+		} else {
+
+			if (null != model.get("hplCurrItem")) {
+				HplDto currDto = (HplDto) model.get("hplCurrItem");
+
+				logger.debug("validateForm cur name=" + currDto.getHplName() + "; new name=" + dto.getHplName());
+				if (!StringUtils.equalsIgnoreCase(currDto.getHplName(), dto.getHplName())) {
+					// check if current name value modified
+					errorMsg += validateDuplicateHpl(dto.getHplName());
+
+				}
+			}
+		}
+
+		logger.debug("validateForm() ... errorMsg = {}", errorMsg);
+
+		return errorMsg;
+	}
+
+	/**
+	 * Delete item
+	 * 
+	 * @param request
+	 * @param check
+	 * @param session
+	 * @return
+	 */
+	@RequestMapping("/main/pfc/hplFormDel")
+	public ModelAndView deleteBatch(HttpServletRequest request,
+			@RequestParam(value = "tableRow") String[] check, HttpSession session) {
+
+		model.remove("error");
+		model.remove("success");
+		try {
+			// Delete form
+			for (int i = 0; i < check.length; i++) {
+
+//				if (1==1) {
+//					// Print delete failed
+//					model.put("error", "Letter Content is in used and it is not allow to delete from the system.");
+//				} else {
+				hplServ.delete(Integer.parseInt(check[i]));
+				// Print delete success`
+				model.put("success", msgSource.getMessage("msgSuccessDelete", new Object[] {}, Locale.getDefault()));
+
+				trxHistServ.addTrxHistory(new Date(), "Delete " + MODULE_NAME, request.getRemoteUser(),
+						CommonConstants.FUNCTION_TYPE_DELETE, check[i], CommonConstants.RECORD_TYPE_ID_HPL, null);
+//				}
+			}
+
+		} catch (Exception e) {
+			// Print DB exception
+			model.put("error", msgSource.getMessage("msgFailDelete", new Object[] {}, Locale.getDefault()));
+			e.printStackTrace();
+		}
+
+		model.put("hplAllItems", hplServ.searchByCriteria2("", "", "", ""));
+
+		return new ModelAndView(("/main/pfc/hplList"), model);
+	}
+
+	/**
+	 * Do search
+	 * 
+	 * @param prName
+	 * @param ltType
+	 * @param prNameExp
+	 * @param session
+	 * @return
+	 */
+	@PostMapping("/main/pfc/hplSearch")
+	public ModelAndView doSearch(HttpServletRequest request, @RequestParam(name = "hplName") String hplName,
+			@RequestParam(name = "hplNameExp") String hplNameExp,
+			@RequestParam(name = "hplModelName") String hplModelName,
+			@RequestParam(name = "hplModelNameExp") String hplModelNameExp, HttpSession session) {
+
+		boolean hasError = false;
+
+		removeAlert(model);
+		String errorMsg = "";
+
+		model.put("hplName", hplName);
+		model.put("hplNameExp", hplNameExp);
+		model.put("hplModelName", hplModelName);
+		model.put("hplModelNameExp", hplModelNameExp);
+
+		try {
+			if (errorMsg.length() == 0) {
+
+				List<HplSearch> items = hplServ.searchByCriteria2(hplName, hplNameExp, hplModelName, hplModelNameExp);
+				model.put("hplAllItems", items);
+
+				StringBuffer sb = new StringBuffer();
+				sb.append("Search Criteria: ");
+				sb.append("HPL Name=").append(hplName.isEmpty() ? "<ALL>" : hplName);
+				sb.append("HPL Model Name=").append(hplModelName.isEmpty() ? "<ALL>" : hplName);
+
+				trxHistServ.addTrxHistory(new Date(), "Search " + MODULE_NAME, request.getRemoteUser(),
+						CommonConstants.FUNCTION_TYPE_SEARCH, "Search " + MODULE_NAME,
+						CommonConstants.RECORD_TYPE_ID_HPL, sb.toString());
+
+			} else {
+				hasError = true;
+			}
+
+		} catch (Exception e) {
+			e.printStackTrace();
+			hasError = true;
+			errorMsg += "Failed to get record.";
+			errorMsg += e.toString();
+
+		} finally {
+			if (hasError == true) {
+				model.put("error", errorMsg);
+				model.remove("success");
+				// return back user input
+				model.put("hplAllItems", hplServ.searchByCriteria("", "", "", ""));
+			}
+		}
+
+		return new ModelAndView("/main/pfc/hplList", model);
+	}
+
+	@SuppressWarnings("unchecked")
+	@PostMapping(value = "/main/pfc/hplFormSave", params = "hmAction=add")
+	public ModelAndView addToList(HttpServletRequest request, HplDto hplDto,
+			@RequestParam(name = "pkHplModelId", required = false) Integer pkHplModelId,
+			@RequestParam(name = "hplModelName", required = false) String hplModelName,
+			@RequestParam(name = "hplModelDesc", required = false) String hplModelDesc, HttpSession session) {
+
+		model.remove("error");
+		List<HplModelDto> hplModelList = (List<HplModelDto>) model.get("hplModelList");
+
+		holdValue(hplDto, model, screenMode, hplModelName, hplModelDesc);
+
+		// validation
+		{
+			String errorMsg = "";
+			
+			if(StringUtils.isEmpty(hplModelName) || StringUtils.isEmpty(hplModelDesc)) {
+				errorMsg += "Please key in HPL Model Name and HPL Model Description.";
+				model.put("error", errorMsg);
+				return new ModelAndView("/main/pfc/hplForm", model);
+			}
+
+			// if hplModel duplicate
+			List<HplModelDto> checkList = hplModelList;
+			for (HplModelDto hplModelDto : checkList) {
+				logger.debug("addToInfoList() loop name = " + hplModelDto.getHplModelName());
+				if (hplModelDto.getHplModelName() == hplModelName) {
+					logger.debug("addToInfoList() loop id={},hplModelName={}" + hplModelDto.getHplModelName(),
+							hplModelName);
+					errorMsg += "Hpl Model " + hplModelDto.getHplModelName() + " already in the list.";
+					model.put("error", errorMsg);
+					return new ModelAndView("/main/pfc/hplForm", model);
+				}
+			}
+		}
+
+		int row = hplModelList.size();
+		HplModelDto dto = new HplModelDto();
+		dto.setFkHplId(hplDto.getPkHplId());
+		dto.setHplModelName(hplModelName);
+		dto.setHplModelDesc(hplModelDesc);
+		dto.setRowNo(row);
+		dto.setIndicator("new");
+		hplModelList.add(dto);
+
+		model.put("hplModelList", hplModelList);
+		manageHplModelButton(false, true, true, model);
+		clearHplModelForm(model);
+
+		return new ModelAndView("/main/pfc/hplForm", model);
+	}
+
+	@SuppressWarnings("unchecked")
+	@PostMapping(value = "/main/pfc/hplFormSave", params = "hmAction=delete")
+	public ModelAndView deleteFromList(HttpServletRequest request, HplDto hplDto,
+			@RequestParam(name = "rowNo") int rowNo, @RequestParam(name = "hplModelName") String hplModelName,
+			@RequestParam(name = "hplModelDesc") String hplModelDesc, HttpSession session) {
+
+		logger.debug("deleteFromInfoList() ... ");
+
+		holdValue(hplDto, model, screenMode, hplModelName, hplModelDesc);
+
+		List<HplModelDto> hplModelList = (List<HplModelDto>) model.get("hplModelList");
+		hplModelList.remove(rowNo);
+
+		int reDoRowNo = 0;
+		for (int row = 0; row < hplModelList.size(); row++) {
+			hplModelList.get(row).setRowNo(reDoRowNo);
+			reDoRowNo++;
+		}
+
+		model.put("hplModelList", hplModelList);
+		manageHplModelButton(false, true, true, model);
+		clearHplModelForm(model);
+
+		return new ModelAndView("/main/pfc/hplForm", model);
+	}
+
+	@PostMapping(value = "/main/pfc/hplFormSave", params = "action=edit")
+	public ModelAndView editHplForm(HttpServletRequest request, HttpSession session) {
+
+		screenMode = CommonConstants.SCREEN_MODE_EDIT;
+		model.put("mode", screenMode);
+		manageHplModelButton(false, true, true, model);
+		model.put("btnEdit", true);
+		model.put("btnSaveSts", false);
+		model.put("btnSave", "Save");
+		model.put("header", "Edit Hpl Form");
+		model.remove("success");
+		model.remove("error");
+		clearHplModelForm(model);
+
+		return new ModelAndView("/main/pfc/hplForm", model);
+	}
+
+	@SuppressWarnings("unchecked")
+	@GetMapping("/main/pfc/hplModelFormGetData")
+	public ModelAndView retrieveFilefTableData(HttpServletRequest request, @RequestParam(name = "rowNo") int rowNo,
+			HplModelDto hplModelDto, BindingResult result, HttpSession session) {
+
+		String mode = model.get("mode").toString();
+		model.remove("error");
+
+		List<HplModelDto> hplModelList = (List<HplModelDto>) model.get("hplModelList");
+		hplModelList.forEach(obj -> {
+			if (obj.getRowNo() == rowNo) {
+				model.put("pkHplModelId", obj.getPkHplModelId());
+				model.put("hplModelName", obj.getHplModelName());
+				model.put("hplModelDesc", obj.getHplModelDesc());
+				model.put("rowNo", obj.getRowNo());
+			}
+		});
+
+		if (!StringUtils.equals(mode, CommonConstants.SCREEN_MODE_VIEW)) {
+			manageHplModelButton(false, false, false, model);
+		}
+
+		return new ModelAndView("/main/pfc/hplForm", model);
+	}
+
+	@SuppressWarnings("unchecked")
+	@PostMapping(value = "/main/pfc/hplFormSave", params = "hmAction=update")
+	public ModelAndView updateToList(HttpServletRequest request, HplDto hplDto,
+			@RequestParam(name = "rowNo") int rowNo, @RequestParam(name = "hplModelName") String hplModelName,
+			@RequestParam(name = "hplModelDesc") String hplModelDesc, HttpSession session) {
+
+		model.remove("error");
+		holdValue(hplDto, model, screenMode, hplModelName, hplModelDesc);
+		List<HplModelDto> hplModelList = (List<HplModelDto>) model.get("hplModelList");
+
+		// validation
+		{
+			String errorMsg = "";
+			// if Hpl Model duplicate
+			List<HplModelDto> checkList = hplModelList;
+			for (HplModelDto hplModelDto : checkList) {
+				if (hplModelDto.getRowNo() != rowNo && hplModelDto.getHplModelName() == hplModelName) {
+					errorMsg += "Hpl Model " + hplModelDto.getHplModelName() + " already in the list.";
+					model.put("error", errorMsg);
+					return new ModelAndView("/main/pfc/hplForm", model);
+				}
+			}
+		}
+
+		for (HplModelDto obj : hplModelList) {
+			if (obj.getRowNo() == rowNo) {
+				obj.setHplModelName(hplModelName);
+				obj.setHplModelDesc(hplModelDesc);
+			}
+		}
+
+		model.put("hplModelList", hplModelList);
+		manageHplModelButton(false, true, true, model);
+		clearHplModelForm(model);
+
+		return new ModelAndView("/main/pfc/hplForm", model);
+	}
+
+	private Map<String, Object> removeAlert(Map<String, Object> model) {
+		model.remove("error");
+		model.remove("success");
+
+		return model;
+	}
+
+	private Map<String, Object> manageHplModelButton(boolean hplModelAdd, boolean hplModelUpdate,
+			boolean hplModelDelete, Map<String, Object> model) {
+		model.put("hplModelAdd", hplModelAdd);
+		model.put("hplModelUpdate", hplModelUpdate);
+		model.put("hplModelDelete", hplModelDelete);
+
+		return model;
+	}
+
+	private Map<String, Object> clearHplModelForm(Map<String, Object> model) {
+		model.remove("rowNo");
+		model.remove("hplModelName");
+		model.remove("hplModelDesc");
+		model.remove("pkHplModelId");
+
+		return model;
+	}
+
+	private Map<String, Object> holdValue(HplDto hplDto, Map<String, Object> model, String screenMode,
+			String hplModelName, String hplModelDesc) {
+
+		model.put("mode", screenMode);
+		model.put("hplItem", hplDto);
+
+		model.put("hplModelName", hplModelName);
+		model.put("hplModelDesc", hplModelDesc);
+
+		return model;
+	}
+
+	/**
+	 * Name must be unique
+	 * 
+	 * @param hplName
+	 * @return
+	 */
+	private String validateDuplicateHpl(String hplName) {
+		HplDto hplItem = hplServ.findByName(hplName);
+
+		if (null != hplItem) {
+
+			logger.debug("validateDuplicateHpl " + hplItem.getHplName());
+
+			return HPL_TXT + ERR_MSG_UNIQUE + hplName + breakline;
+		}
+
+		return "";
+	}
+	
+	private void getAllLabels() {
+		HPL_TXT = msgSource.getMessage("lblHplName", null, Locale.getDefault());
+		DESC_TXT = msgSource.getMessage("lblDescription", null, Locale.getDefault());
+		MODULE_NAME = msgSource.getMessage("moduleHplRef", null, Locale.getDefault());
+
+	}
+
+}

@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+<title>PFC - Status History List</title>
+<link rel="icon" type="image/ico" th:href="@{/static/favicon.ico}">
+<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.0/css/all.css">
+<link rel="stylesheet" type="text/css" th:href="@{/css/styles.css}" />
+<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css">
+<link rel="stylesheet" type="text/css" href="//cdn.datatables.net/1.10.20/css/dataTables.material.css">
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/js/all.min.js"></script>
+<script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.datatables.net/1.10.20/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.10.20/js/dataTables.bootstrap4.min.js"></script>
+	
+<script src="//cdnjs.cloudflare.com/ajax/libs/moment.js/2.8.4/moment.min.js"></script>
+<script src="//cdn.datatables.net/plug-ins/1.10.22/sorting/datetime-moment.js"></script>
+</head>
+
+<body class="sb-nav-fixed">
+	<div th:replace="/header :: navBar"></div>
+	<div id="layoutSidenav">
+		<div th:replace="/header :: sideNavBar"></div>
+		<div id="layoutSidenav_content">
+			<main>
+				<div class="container-fluid" id="content">
+					<br />
+					<div class="card">
+						<div class="card-header" id="headingTwo">Status History</div>
+						<div class="card-body">
+
+							<div class="form-group row">
+								<label class="col-sm-2 col-form-label" th:text="${lblName}"></label>
+								<label class="col-form-label">:</label>
+								<div class="row col-sm-7">
+									<div class="col">
+										<input type="text" class="form-control-plaintext" disabled
+											th:value="${txtText}">
+									</div>
+								</div>
+							</div>
+
+							<div class="form-group row">
+								<label class="col-sm-2 col-form-label">Created by</label> <label
+									class="col-form-label">:</label>
+								<div class="row col-sm-9">
+									<div class="row col-sm-6">
+										<div class="col">
+											<input type="text" class="form-control-plaintext" disabled
+												th:value="${createdBy}">
+										</div>
+									</div>
+									<label class="col-sm-2 col-form-label"
+										style="margin-right: 5px;">Created on</label> <label
+										class="col-form-label">:</label>
+									<div class="row col-sm-4">
+										<div class="col">
+											<input type="text" class="form-control-plaintext" disabled
+												th:value="${createdOn}">
+										</div>
+									</div>
+								</div>
+							</div>
+
+							<div class="form-group row">
+								<label class="col-sm-2 col-form-label">Submitted by
+									Checker</label> <label class="col-form-label">:</label>
+								<div class="row col-sm-9">
+									<div class="row col-sm-6">
+										<div class="col">
+											<input type="text" class="form-control-plaintext" disabled
+												th:value="${submittedTo}">
+										</div>
+									</div>
+									<label class="col-sm-2 col-form-label"
+										style="margin-right: 5px;">Submitted by Checker on</label> <label
+										class="col-form-label">:</label>
+									<div class="row col-sm-4">
+										<div class="col">
+											<input type="text" class="form-control-plaintext" disabled
+												th:value="${submittedOn}">
+										</div>
+									</div>
+								</div>
+							</div>
+
+							<table class="table table-bordered" id="idTableNoFeature">
+								<thead>
+									<tr>
+										<th class="text-left">Date Assigned</th>
+										<th class="text-left">Action Required</th>
+										<th class="text-left">Assigned to (Group or Individual)</th>
+										<th class="text-left">Action taken on</th>
+										<th class="text-left">Action by (Individual)</th>
+										<th class="text-left">Action taken</th>
+									</tr>
+								</thead>
+								<tbody>
+									<tr th:each="task: ${taskList}">
+										<td ><a href='javascript:;' th:text="${#dates.format(task.dateAssigned, 'dd/MM/yyy hh:mm:ss a')}"
+											th:attr="onclick='onHistoryDetail(\'' + ${task.dateAssigned} + '\')'"></a></td>
+										<td th:text="${task.subject}"></td>
+										<td th:text="${task.assignedTo}"></td>
+										<td th:text="${#dates.format(task.endedDate, 'dd/MM/yyy hh:mm:ss a')}"></td>
+										<td th:text="${task.actorId}"></td>
+										<td>
+											<span th:if="${task.taskStatus==1}">Submit</span>
+											<span th:if="${task.taskStatus==2}">Reject</span>
+											<span th:if="${task.taskStatus==3}">Rework</span>
+											<span th:if="${task.taskStatus==4}">Rework - Submit</span>
+											<span th:if="${task.taskStatus==5}">Cancel</span>
+											<span th:if="${task.taskStatus==6}">Forward</span>
+											<span th:if="${task.taskStatus==7}">Deactivate</span>
+											<span th:if="${task.taskStatus==8}">Activate</span>
+										</td>
+									</tr>
+								</tbody>
+							</table>
+							
+							<div class="modal fade" id="taskDetailDialog" tabindex="-1"
+								role="dialog" aria-hidden="true">
+								<div class="modal-dialog modal-dialog-centered" role="document" style="max-width: 900px;">
+									<div class="modal-content">
+										<div class="modal-header">
+											<h5 class="modal-title">Status Detail</h5>
+											<button type="button" class="close" data-dismiss="modal"
+												aria-label="Close">
+												<span aria-hidden="true">&times;</span>
+											</button>
+										</div>
+										<div class="modal-body">
+											<div class="form-group row">
+												<label class="col-sm-3 col-form-label" th:text="${lblName}"></label>
+												<label class="col-form-label">:</label>
+												<div class="row col-sm-7">
+													<div class="col">
+														<input type="text" class="form-control-plaintext" disabled
+															th:value="${txtText}">
+													</div>
+												</div>
+											</div>
+											<div class="form-group row">
+												<label class="col-sm-3 col-form-label">Task Status</label>
+												<label class="col-form-label">:</label>
+												<div class="row col-sm-7">
+													<div class="col">
+														<input type="text" class="form-control-plaintext" disabled
+															id="taskStatus">
+													</div>
+												</div>
+											</div>
+											
+											<br />
+											
+											<div class="card">
+												<div class="card-header" id="headingTwo">Action Required Details:</div>
+												<div class="card-body">
+													<div class="form-group row">
+														<label class="col-sm-3 col-form-label">Date Assigned</label>
+														<label class="col-form-label">:</label>
+														<div class="row col-sm-7">
+															<div class="col">
+																<input type="text" class="form-control-plaintext" disabled
+																	id="dateAssigned">
+															</div>
+														</div>
+													</div>
+													<div class="form-group row">
+														<label class="col-sm-3 col-form-label">Assigned to (Group or Individual)</label>
+														<label class="col-form-label">:</label>
+														<div class="row col-sm-7">
+															<div class="col">
+																<input type="text" class="form-control-plaintext" disabled
+																	id="assignedTo">
+															</div>
+														</div>
+													</div>
+													<div class="form-group row">
+														<label class="col-sm-3 col-form-label">Action required</label>
+														<label class="col-form-label">:</label>
+														<div class="row col-sm-7">
+															<div class="col">
+																<input type="text" class="form-control-plaintext" disabled
+																	id="assignedReq">
+															</div>
+														</div>
+													</div>
+												</div>
+											</div>
+											
+											<br />
+											
+											<div class="card">
+												<div class="card-header" id="headingTwo">Action Taken Details:</div>
+												<div class="card-body">
+													<div class="form-group row">
+														<label class="col-sm-3 col-form-label">Action taken on</label>
+														<label class="col-form-label">:</label>
+														<div class="row col-sm-7">
+															<div class="col">
+																<input type="text" class="form-control-plaintext" disabled
+																	id="actionTakenOn">
+															</div>
+														</div>
+													</div>
+													<div class="form-group row">
+														<label class="col-sm-3 col-form-label">Action by (Individual)</label>
+														<label class="col-form-label">:</label>
+														<div class="row col-sm-7">
+															<div class="col">
+																<input type="text" class="form-control-plaintext" disabled
+																	id="assignedBy">
+															</div>
+														</div>
+													</div>
+													<div class="form-group row">
+														<label class="col-sm-3 col-form-label">Action taken</label>
+														<label class="col-form-label">:</label>
+														<div class="row col-sm-7">
+															<div class="col">
+																<input type="text" class="form-control-plaintext" disabled
+																	id="actionTaken">
+															</div>
+														</div>
+													</div>
+													<div class="form-group row">
+														<label class="col-sm-3 col-form-label">Remark</label>
+														<label class="col-form-label">:</label>
+														<div class="row col-sm-7">
+															<div class="col">
+																<input type="text" class="form-control-plaintext" disabled
+																	id="remark">
+															</div>
+														</div>
+													</div>
+												</div>
+											</div>
+											
+											
+										</div>
+										<div class="modal-footer">
+											<button type="button" class="btn btn-secondary"
+												data-dismiss="modal">Close</button>
+										</div>
+									</div>
+								</div>
+							</div>
+
+						</div>
+					</div>
+					<br />
+					<div class="form-group row">
+						<div class="row col-sm-12">
+							<div class="col">
+								<a class="btn btn-primary" style="width: 90px;" th:if="${rawMatlId}"
+									th:href="@{/main/material/rawMatlFormView(matlId=${rawMatlId})}">Close</a>
+								<a class="btn btn-primary" style="width: 90px;" th:if="${prId}"
+									th:href="@{/main/product/productFormView(prId=${prId})}">Close</a>
+							</div>
+						</div>
+					</div>
+				</div>
+			</main>
+		</div>
+	</div>
+
+	<script type="text/javascript" src="../../js/scripts.js"></script>
+	<script type="text/javascript">
+		function onHistoryDetail(dateAssigned) {
+			var ctx = "[[@{/}]]"; /*20210519 - do not hard-code context path*/
+			$.ajax({
+			    url: ctx+"main/common/statusHistoryListDetail?date=" + dateAssigned,
+			    type: "GET",
+			    success: function(data) {
+			    	var taskItems = data.taskData;
+			    	var taskActionDesc = "";
+
+			    	if (taskItems.taskStatus === 1) {
+			    		taskActionDesc = "Submit";
+			    	} else if (taskItems.taskStatus === 2) {
+			    		taskActionDesc = "Reject";
+			    	} else if (taskItems.taskStatus === 3) {
+			    		taskActionDesc = "Rework";
+			    	} else if (taskItems.taskStatus === 4) {
+			    		taskActionDesc = "Rework - Submit";
+			    	} else if (taskItems.taskStatus === 5) {
+			    		taskActionDesc = "Cancel";
+			    	} else if (taskItems.taskStatus === 6) {
+			    		taskActionDesc = "Forward";
+			    	} else if (taskItems.taskStatus === 7) {
+			    		taskActionDesc = "Deactivate";
+			    	} else if (taskItems.taskStatus === 8) {
+			    		taskActionDesc = "Activate";
+			    	}
+			    	
+			    	if (taskItems.endedDate) {
+			    		document.getElementById("taskStatus").value = "Completed";
+			    	} else {
+			    		document.getElementById("taskStatus").value = "Pending";
+			    	}
+			    	
+			    	document.getElementById("dateAssigned").value = taskItems.assignedFormattedDate;
+			    	document.getElementById("assignedTo").value = taskItems.assignedTo;
+			    	document.getElementById("assignedReq").value = taskItems.subject;
+			    	document.getElementById("actionTakenOn").value = taskItems.takenOnFormattedDate;
+			    	document.getElementById("assignedBy").value = taskItems.actorId;
+			    	document.getElementById("actionTaken").value = taskActionDesc;
+			    	document.getElementById("remark").value = taskItems.taskRemarks;
+			    	
+			    	$('#taskDetailDialog').modal('show');
+			    }
+			});
+		}
+	</script>
+
+</body>
+<style>
+.dataTables_length {
+	margin-top: -30px;
+}
+</style>
+</html>

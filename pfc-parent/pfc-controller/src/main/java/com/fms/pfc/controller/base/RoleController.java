@@ -1,0 +1,328 @@
+package com.fms.pfc.controller.base;
+
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.stream.Collectors;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
+import javax.validation.Valid;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.validation.BindingResult;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.context.annotation.SessionScope;
+import org.springframework.web.servlet.ModelAndView;
+
+import com.fms.pfc.common.Authority;
+import com.fms.pfc.common.CommonConstants;
+import com.fms.pfc.domain.dto.RoleDto;
+import com.fms.pfc.service.api.base.MenuRoleFunctionService;
+import com.fms.pfc.service.api.base.RoleService;
+import com.fms.pfc.service.api.base.TrxHisService;
+import com.fms.pfc.service.api.base.UserProfileService;
+import com.fms.pfc.validation.common.CommonValidation;
+
+@Controller
+@SessionScope
+public class RoleController {
+	
+	private final Logger logger = LoggerFactory.getLogger(RoleController.class);
+	
+	private RoleService roleServ;	
+	private UserProfileService usrProfServ;	
+	private CommonValidation commonValServ;	
+	private Authority auth;
+	private TrxHisService trxHistServ;
+	private MenuRoleFunctionService mrfServ;
+
+	private final String ROLE_ID_TXT = "Role ID";
+	private final String ROLE_NAME_TXT = "Role Name";
+	private final String DESC_TXT = "Description";
+	private final String ERR_MSG_IS_USED = " is used in User Profile.";
+	private final String breakline = ".<br />";
+	private static final int MENU_ITEM_ID = 704;
+
+	private String screenMode = "";	
+	private Map<String, Object> model = new HashMap<String, Object>();
+
+	@Autowired
+	public RoleController(RoleService roleServ, UserProfileService usrProfServ, CommonValidation commonValServ,
+			Authority auth, TrxHisService trxHistServ, MenuRoleFunctionService mrfServ) {
+		super();
+		this.roleServ = roleServ;
+		this.usrProfServ = usrProfServ;
+		this.commonValServ = commonValServ;
+		this.auth = auth;
+		this.trxHistServ = trxHistServ;
+		this.mrfServ = mrfServ;
+	}
+
+	// Check if field is currently used in User Profile
+	private String validateUsage(String usrId, String fieldname) {
+		int usrProfileCount = usrProfServ.getUserProfileCountByUsr(usrId);
+
+		if (usrProfileCount > 0)
+			return fieldname + " " + usrId + ERR_MSG_IS_USED + breakline;
+		else
+			return "";
+	}
+
+	@GetMapping("/base/admin/userRole/addUserRole")
+	public ModelAndView getAddUserRole(HttpServletRequest request, HttpSession session) {
+		screenMode = CommonConstants.SCREEN_MODE_ADD;
+		model.put("userRole", new RoleDto());
+
+		return new ModelAndView("/base/admin/userRole/addUserRole", model);
+	}
+
+	@PostMapping("/base/admin/userRole/saveUserRole")
+	public ModelAndView addUserRole(@Valid RoleDto uR, BindingResult bindingResult, HttpServletRequest request,
+			HttpSession session) {
+
+		model.remove("error");
+		model.remove("success");
+		String errorMsg = "";
+
+		try {
+			// validation
+			errorMsg = commonValServ.validateUniqueRoleId(uR.getRoleId(), ROLE_ID_TXT);
+			errorMsg += commonValServ.validateMandatoryInput(uR.getRoleId(), ROLE_ID_TXT);
+			errorMsg += commonValServ.validateMandatoryInput(uR.getRoleName(), ROLE_NAME_TXT);
+			errorMsg += commonValServ.validateInputLength(uR.getRoleId(), 20, ROLE_ID_TXT);
+			errorMsg += commonValServ.validateInputLength(uR.getRoleName(), 100, ROLE_NAME_TXT);
+			errorMsg += commonValServ.validateInputLength(uR.getRoleDesc(), 200, DESC_TXT);
+
+			if (errorMsg.length() == 0) {
+				uR.setOrgId((String) model.get("loggedUserOrg"));
+				roleServ.saveRole(uR, request.getRemoteUser());
+
+				model.put("success", "Record added successfully.");
+
+				trxHistServ.addTrxHistory(new Date(), "Insert User Role", request.getRemoteUser(),
+						CommonConstants.FUNCTION_TYPE_INSERT, uR.getRoleName(),
+						CommonConstants.RECORD_TYPE_ID_USER_ROLE, null);
+			} else {
+				model.put("error", errorMsg);
+				model.put("userRole", uR); // return back user input
+				return new ModelAndView("/base/admin/userRole/addUserRole", model);
+			}
+		} catch (Exception e) {
+			model.put("", "Record failed to be added.");
+			model.put("userRole", uR); // return back user input
+			return new ModelAndView("/base/admin/userRole/addUserRole", model);
+
+		}
+
+		model.put("userRoleItems", roleServ.findAll().stream()
+				.filter(arg0 -> arg0.getOrgId().equals((String) model.get("loggedUserOrg")))
+				.collect(Collectors.toList()));
+		return new ModelAndView("/base/admin/userRole/listUserRole", model);
+	}
+
+	@GetMapping("/base/admin/userRole/editUserRole")
+	public ModelAndView getEditUserRole(@RequestParam(name = "roleId") String roleId, HttpServletRequest request,
+			HttpServletResponse response, HttpSession session) {
+
+		screenMode = CommonConstants.SCREEN_MODE_EDIT;
+		RoleDto ur = roleServ.findOneById(roleId); 
+
+		model.put("userRole", ur);
+
+		return new ModelAndView("/base/admin/userRole/editUserRole", model);
+	}
+
+	@PostMapping("/base/admin/userRole/updateUserRole")
+	public ModelAndView updateUserRole(@Valid RoleDto userRole, BindingResult bindingResult, HttpServletRequest request,
+			HttpSession session) {
+
+		model.remove("error");
+		model.remove("success");
+		String errorMsg = "";
+
+		try {
+			// validation
+			errorMsg += commonValServ.validateMandatoryInput(userRole.getRoleName(), ROLE_NAME_TXT);
+			errorMsg += commonValServ.validateInputLength(userRole.getRoleId(), 20, ROLE_ID_TXT);
+			errorMsg += commonValServ.validateInputLength(userRole.getRoleName(), 100, ROLE_NAME_TXT);
+			errorMsg += commonValServ.validateInputLength(userRole.getRoleDesc(), 200, DESC_TXT);
+
+			if (errorMsg.length() == 0) {
+				userRole.setOrgId((String) model.get("loggedUserOrg"));
+				roleServ.saveRole(userRole, request.getRemoteUser());
+
+				model.put("success", "Record updated successfully.");
+
+				trxHistServ.addTrxHistory(new Date(), "Update User Role", request.getRemoteUser(),
+						CommonConstants.FUNCTION_TYPE_UPDATE, userRole.getRoleName(),
+						CommonConstants.RECORD_TYPE_ID_USER_ROLE, null);
+			} else {
+				model.put("error", errorMsg);
+				model.put("userRole", userRole); // return back user input
+			}
+
+		} catch (Exception e) {
+			model.put("error", "Record failed to be updated.");
+			model.put("userRole", userRole); // return back user input
+
+			return new ModelAndView("/base/admin/userRole/editUserRole", model);
+		}
+
+		model.put("userRoleItems", roleServ.findAll().stream()
+				.filter(arg0 -> arg0.getOrgId().equals((String) model.get("loggedUserOrg")))
+				.collect(Collectors.toList()));
+		return new ModelAndView("/base/admin/userRole/listUserRole", model);
+	}
+
+	@GetMapping("/base/admin/userRole/listUserRole")
+	public ModelAndView getUserRoleList(HttpServletRequest request, HttpServletResponse response, HttpSession session) {
+
+		model = auth.onPageLoad(model, request);
+		auth.isAuthUrl(request, response);
+		mrfServ.menuRoleFunction(model, MENU_ITEM_ID, (String) model.get("loggedUser"));
+		model.put("userRoleItems", roleServ.findAll().stream()
+				.filter(arg0 -> arg0.getOrgId().equals((String) model.get("loggedUserOrg")))
+				.collect(Collectors.toList())); 
+		
+		return new ModelAndView("/base/admin/userRole/listUserRole", model);
+	}
+
+	@PostMapping("/base/admin/userRole/listUserRole")
+	public ModelAndView searchUserRole(HttpServletRequest request, @RequestParam(name = "roleId") String roleId,
+			@RequestParam(name = "roleIdWildcard") String roleIdWildcard,
+			@RequestParam(name = "roleName") String roleName,
+			@RequestParam(name = "roleNameWildcard") String roleNameWildcard, HttpSession session) {
+		
+		StringBuffer sb = new StringBuffer();
+		sb.append("Search Criteria: ");
+		sb.append("Role ID=").append(roleId.isEmpty() ? "<ALL>" : roleId).append(", ");
+		sb.append("Role Name=").append(roleName.isEmpty() ? "<ALL>" : roleName);
+
+		trxHistServ.addTrxHistory(new Date(), "Search User Role", request.getRemoteUser(), CommonConstants.FUNCTION_TYPE_SEARCH,
+				"Search User Role", CommonConstants.RECORD_TYPE_ID_USER_ROLE, sb.toString());
+
+		model.put("userRoleItems",
+				roleServ.findByCriteria(roleId.trim(), roleIdWildcard, roleName.trim(), roleNameWildcard)
+				.stream()
+				.filter(arg0 -> arg0.getOrgId().equals((String) model.get("loggedUserOrg")))
+				.collect(Collectors.toList()));
+
+		return new ModelAndView("/base/admin/userRole/listUserRole", model);
+	}
+
+	@GetMapping("/base/admin/userRole/viewUserRole")
+	public ModelAndView getViewUserRoleData(@RequestParam(name = "roleId") String roleId, HttpServletRequest request,
+			HttpServletResponse response, HttpSession session) {
+		
+		String errorMsg = "";
+
+		try {
+			// validation
+			errorMsg += commonValServ.validateInputLength(roleId, 20, ROLE_ID_TXT);
+
+			if (errorMsg.length() == 0) {
+				RoleDto ur = roleServ.findOneById(roleId);
+
+				model.put("roleId", ur.getRoleId());
+				model.put("roleName", ur.getRoleName());
+				model.put("roleDesc", ur.getRoleDesc());
+				model.put("systemUseFlag", ur.getSystemUseFlag());
+
+				DateFormat formatter = new SimpleDateFormat("dd/MM/yyy hh:mm:ss a");
+
+				try {
+					String createdInfo = "Created by " + ur.getCreatorId() + " on "
+							+ formatter.format(ur.getCreatedDateTime());
+					model.put("createdInfo", createdInfo);
+				} catch (Exception e) {
+				}
+
+				String modifiedInfo = "";
+				try {
+					modifiedInfo = "Modified by " + ur.getModifierId() + " on "
+							+ formatter.format(ur.getModifiedDateTime());
+				} catch (Exception e) {
+					modifiedInfo = "Modified by --";
+				}
+				model.put("modifiedInfo", modifiedInfo);
+
+				if (!"edit".equals(screenMode)) {
+					// FSGS) Kent 26/2/2021 Add/changed - Add Function executed log START
+					trxHistServ.addTrxHistory(new Date(), "View User Role", request.getRemoteUser(),
+							CommonConstants.FUNCTION_TYPE_VIEW, ur.getRoleName(),
+							CommonConstants.RECORD_TYPE_ID_USER_ROLE, null);
+					// FSGS) Kent 26/2/2021 Add/changed - Add Function executed log END
+				}
+			} else {
+				model.put("error", "Failed to get record.");
+				model.put("userRoleItems", roleServ.findAll().stream()
+						.filter(arg0 -> arg0.getOrgId().equals((String) model.get("loggedUserOrg")))
+						.collect(Collectors.toList()));
+
+				return new ModelAndView("/base/admin/userRole/listUserRole", model);
+			}
+
+		} catch (Exception e) {
+			e.printStackTrace();
+			model.put("error", "Failed to get record.");
+			model.put("userRoleItems", roleServ.findAll().stream()
+					.filter(arg0 -> arg0.getOrgId().equals((String) model.get("loggedUserOrg")))
+					.collect(Collectors.toList()));
+
+			return new ModelAndView("/base/admin/userRole/listUserRole", model);
+		}
+
+		return new ModelAndView("/base/admin/userRole/viewUserRole", model);
+	}
+
+	@PostMapping("/base/admin/userRole/listUserRoleDelete")
+	public ModelAndView deleteGroupBatch(HttpServletRequest request,
+			@RequestParam(name = "tableRow") String[] userRoleIdList, HttpSession session) {
+
+		model.remove("error");
+		model.remove("success");
+		boolean hasError = false;
+		String errorMsg = "";
+
+		try {
+			for (int i = 0; i < userRoleIdList.length; i++) {
+				// validation
+				errorMsg += commonValServ.validateInputLength(userRoleIdList[i], 20, ROLE_ID_TXT + " " + userRoleIdList[i]);
+				errorMsg += validateUsage(userRoleIdList[i], ROLE_ID_TXT);
+
+				if (errorMsg.length() == 0) {
+					hasError = false;
+					roleServ.deleteById(userRoleIdList[i]);
+					trxHistServ.addTrxHistory(new Date(), "Delete User Role", request.getRemoteUser(),
+							CommonConstants.FUNCTION_TYPE_DELETE, userRoleIdList[i],
+							CommonConstants.RECORD_TYPE_ID_USER_ROLE, null);
+				} else
+					hasError = true;
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+			hasError = true;
+			errorMsg += e.toString();
+		} finally {
+			if (hasError == true) {
+				errorMsg += "Record(s) failed to be deleted.";
+				model.put("error", errorMsg);
+			} else
+				model.put("success", "Record(s) deleted successfully.");
+		}
+
+		model.put("userRoleItems", roleServ.findAll().stream()
+				.filter(arg0 -> arg0.getOrgId().equals((String) model.get("loggedUserOrg")))
+				.collect(Collectors.toList())); // 1 means anything
+		return new ModelAndView("/base/admin/userRole/listUserRole", model);
+	}
+}

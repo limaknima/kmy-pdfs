@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<session version="1.0">
+<refactoring comment="Rename local variable &apos;day&apos; in &apos;com.fms.pfc.common.CommonUtil.monthConversionFromFileName(...)&apos; to &apos;month&apos;&#x0D;&#x0A;- Original project: &apos;pfc-common&apos;&#x0D;&#x0A;- Original element: &apos;com.fms.pfc.common.CommonUtil.monthConversionFromFileName(String, String).day&apos;&#x0D;&#x0A;- Renamed element: &apos;day&apos;&#x0D;&#x0A;- Update references to refactored element" description="Rename local variable &apos;day&apos;" id="org.eclipse.jdt.ui.rename.local.variable" input="/src\/main\/java=/optional=/true=/=/maven.pomderived=/true=/&lt;com.fms.pfc.common{CommonUtil.java[CommonUtil~monthConversionFromFileName~QString;~QString;@day!8395!8404!8402!8404!QString;!0!true" name="month" references="true" stamp="1691136196320" version="1.0"/>
+</session>

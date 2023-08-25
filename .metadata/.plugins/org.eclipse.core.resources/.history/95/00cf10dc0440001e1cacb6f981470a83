@@ -1,0 +1,498 @@
+package com.fms.pfc.controller.base;
+
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.stream.Collectors;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
+import javax.validation.Valid;
+
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.MessageSource;
+import org.springframework.stereotype.Controller;
+import org.springframework.validation.BindingResult;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.context.annotation.SessionScope;
+import org.springframework.web.servlet.ModelAndView;
+
+import com.fms.pfc.common.Authority;
+import com.fms.pfc.common.CommonConstants;
+import com.fms.pfc.domain.dto.MenuRoleFunctionDto;
+import com.fms.pfc.domain.model.UsrRole;
+import com.fms.pfc.service.api.base.MenuRoleFunctionService;
+import com.fms.pfc.service.api.base.TrxHisService;
+import com.fms.pfc.validation.common.CommonValidation;
+
+@Controller
+@SessionScope
+public class MenuRoleFunctionController {
+	private final Logger logger = LoggerFactory.getLogger(MenuRoleFunctionController.class);
+
+	private Authority auth;
+	private CommonValidation commonValServ;
+	private MessageSource msgSource;
+	private TrxHisService trxHistServ;
+	private MenuRoleFunctionService mrfServ;
+
+	private List<MenuRoleFunctionDto> mrf = new ArrayList<MenuRoleFunctionDto>();
+	private Map<String, Object> model = new HashMap<String, Object>();
+	private String screenMode = "";
+
+	private static String MENU_LBL = "";
+	private static String ROLE_LBL = "";
+	private static String FUNCTION_LBL = "";
+	private static String MODULE_NAME = "";
+	private static final String ERR_MSG_UNIQUE = " already exist ";
+	private static final String BREAKLINE = ".<br />";
+	private static final int MENU_ITEM_ID = 705;
+
+	@Autowired
+	public MenuRoleFunctionController(Authority auth, CommonValidation commonValServ, MessageSource msgSource,
+			TrxHisService trxHistServ, MenuRoleFunctionService mrfServ) {
+		super();
+		this.auth = auth;
+		this.commonValServ = commonValServ;
+		this.msgSource = msgSource;
+		this.trxHistServ = trxHistServ;
+		this.mrfServ = mrfServ;
+
+		getAllLabels();
+	}
+
+	/**
+	 * Display initial screen
+	 * 
+	 * @param request
+	 * @param response
+	 * @return
+	 */
+	@GetMapping("/base/admin/menuRoleFuncList")
+	public ModelAndView initListing(HttpServletRequest request, HttpServletResponse response) {
+
+		removeAlert(model);
+		model = auth.onPageLoad(model, request);
+		auth.isAuthUrl(request, response);
+		model.put("mrfItems", mrfServ.findAllDto(true));
+		model.put("menuItems", mrfServ.getMenuItemsList());
+		model.put("funcItems", mrfServ.getFunctionList());
+		model.put("roleItems", mrfServ.getRoleList());
+
+		menuRoleFunction();
+
+		return new ModelAndView("/base/admin/menuRoleFunctionList", model);
+	}
+
+	/**
+	 * 
+	 */
+	private void menuRoleFunction() {
+		this.mrf = (List<MenuRoleFunctionDto>) model.get("MRF" + MENU_ITEM_ID);
+		List<UsrRole> userRoles = mrfServ.searchUserRole((String) model.get("loggedUser"));
+		logger.debug("menuRoleFunction() size={}, userRoles() size={}", mrf.size(), userRoles.size());
+		for (MenuRoleFunctionDto menuRole : mrf) {
+			for (UsrRole role : userRoles) {
+				logger.debug("menurole={}, role={}, function={}", menuRole.getRoleId(), role.getRoleId(),
+						menuRole.getFunctionType());
+				if (StringUtils.equals(menuRole.getRoleId(), role.getRoleId())) {
+					model.put("hidFunctionType_" + menuRole.getFunctionType(), false);
+				} else {
+					model.put("hidFunctionType_" + menuRole.getFunctionType(), true);
+				}
+			}
+		}
+	}
+
+	/**
+	 * View form
+	 * 
+	 * @param request
+	 * @param ltContId
+	 * @return
+	 */
+	@RequestMapping("/base/admin/menuRoleFuncFormView")
+	public ModelAndView viewForm(HttpServletRequest request, @RequestParam(name = "pkMrfId") Integer pkMrfId) {
+
+		logger.debug("viewForm ()");
+
+		removeAlert(model);
+
+		MenuRoleFunctionDto dto = mrfServ.findDtoById(pkMrfId);
+		trxHistServ.addTrxHistory(new Date(), "View " + MODULE_NAME, request.getRemoteUser(),
+				CommonConstants.FUNCTION_TYPE_VIEW, dto.getPkMrfId().toString(),
+				CommonConstants.RECORD_TYPE_ID_MENU_ROLE_FUNC, null);
+
+		// Set mode
+		screenMode = CommonConstants.SCREEN_MODE_VIEW;
+		model.put("mode", screenMode);
+		model.put("btnSaveSts", true);
+
+		// Set form header
+		model.put("header", "View " + MODULE_NAME);
+
+		// Set confirmation message
+		model.put("confirmHeader", "Edit cancellation");
+		model.put("confirmMsg", "Do you want to cancel Edit this record ?");
+
+		// Put model to HTML
+		if (dto != null) {
+
+			model.put("pkFtypeId", dto.getPkMrfId());
+			model.put("menuRoleFuncItem", dto);
+			model.put("menuRoleFuncItemCurrItem", dto);
+
+			model.put("createdUser", dto.getCreatorId());
+			model.put("modifiedUser", dto.getModifierId());
+
+			SimpleDateFormat formatter = new SimpleDateFormat("dd/MM/yyy hh:mm:ss a");
+			try {
+				String createdInfo = "Created by " + dto.getCreatorId() + " on "
+						+ formatter.format(dto.getCreatedDatetime());
+				model.put("createdInfo", createdInfo);
+			} catch (Exception e) {
+			}
+
+			String modifiedInfo = "";
+			try {
+				modifiedInfo = "Modified by " + dto.getModifierId() + " on "
+						+ formatter.format(dto.getModifiedDatetime());
+			} catch (Exception e) {
+				modifiedInfo = "Modified by --";
+			}
+			model.put("modifiedInfo", modifiedInfo);
+		}
+
+		return new ModelAndView("/base/admin/menuRoleFunctionForm", model);
+	}
+
+	/**
+	 * Load add form
+	 * 
+	 * @param request
+	 * @return
+	 */
+	@GetMapping("/base/admin/menuRoleFuncForm")
+	public ModelAndView loadNewForm(HttpServletRequest request) {
+
+		logger.debug("loadNewForm ()");
+
+		removeAlert(model);
+
+		// Set mode
+		screenMode = CommonConstants.SCREEN_MODE_ADD;
+		model.put("mode", screenMode);
+
+		// Set fields
+		model.put("menuRoleFuncItem", new MenuRoleFunctionDto());
+		model.put("menuItems", mrfServ.getMenuItemsList());
+		model.put("funcItems", mrfServ.getFunctionList());
+		model.put("roleItems", mrfServ.getRoleList());
+
+		// Set form header
+		model.put("header", "Add " + MODULE_NAME);
+		// Set confirmation message
+		model.put("confirmHeader", "Cancel confirmation");
+		model.put("confirmMsg", "Do you want to cancel this record ?");
+
+		model.put("btnEdit", true);
+		model.put("btnSaveSts", false);
+		model.put("btnAction", false);
+		model.put("btnSave", "Save");
+
+		return new ModelAndView("/base/admin/menuRoleFunctionForm", model);
+	}
+
+	/**
+	 * Save form
+	 * 
+	 * @param dto
+	 * @param request
+	 * @param bindingResult
+	 * @param session
+	 * @return
+	 * @throws Exception
+	 */
+	@PostMapping(value = "/base/admin/menuRoleFuncFormSave", params = "action=save")
+	public ModelAndView saveForm(@Valid MenuRoleFunctionDto dto, HttpServletRequest request,
+			BindingResult bindingResult, HttpSession session) throws Exception {
+
+		logger.debug("saveForm ()");
+
+		removeAlert(model);
+		String mode = screenMode;
+
+		model.put("menuRoleFuncItem", dto);
+
+		String errorMsg = validateForm(dto);
+
+		if (errorMsg.length() != 0) {
+			model.put("error", errorMsg);
+			model.remove("success");
+			model.put("menuRoleFuncItem", dto);
+
+			if (mode.equals(CommonConstants.SCREEN_MODE_EDIT)) {
+				screenMode = CommonConstants.SCREEN_MODE_EDIT;
+				// Set mode to HTML header
+				model.put("mode", screenMode);
+				model.put("header", "Edit " + MODULE_NAME);
+				// Set confirmation message
+				model.put("confirmHeader", "Edit cancellation");
+				model.put("confirmMsg", "Do you want to cancel edit this record ?");
+			}
+			return new ModelAndView("/base/admin/menuRoleFunctionForm", model);
+		}
+
+		if (mode.equals(CommonConstants.SCREEN_MODE_ADD)) {
+
+			try {
+				// If no error proceed to save add form
+				// Add form
+				Integer result = mrfServ.save(dto, request.getRemoteUser());
+
+				// Print add success
+				model.put("success", "Record added successfully.");
+				model.remove("error");
+				model.put("menuRoleFuncItem", new MenuRoleFunctionDto());
+
+				trxHistServ.addTrxHistory(new Date(), "Insert " + MODULE_NAME, request.getRemoteUser(),
+						CommonConstants.FUNCTION_TYPE_INSERT, result != null ? result.toString() : "",
+						CommonConstants.RECORD_TYPE_ID_MENU_ROLE_FUNC, null);
+
+			} catch (Exception e) {
+				// Print DB exception
+				e.printStackTrace();
+				model.put("error", "Record failed to be added.");
+				model.remove("success");
+			}
+
+		} else if (mode.equals(CommonConstants.SCREEN_MODE_EDIT)) {
+			// Set mode to HTML header
+			screenMode = CommonConstants.SCREEN_MODE_VIEW;
+			model.put("mode", screenMode);
+			model.put("header", MODULE_NAME);
+
+			try {
+				// Update form
+				// ltServ.saveLetterConf((int) model.get("ltContId"), dto.getLtId(),
+				Integer result = mrfServ.save(dto, request.getRemoteUser());
+
+				// Print update success
+				model.put("success", "Record updated successfully.");
+
+				trxHistServ.addTrxHistory(new Date(), "Update " + MODULE_NAME, request.getRemoteUser(),
+						CommonConstants.FUNCTION_TYPE_UPDATE, result != null ? result.toString() : "",
+						CommonConstants.RECORD_TYPE_ID_MENU_ROLE_FUNC, null);
+
+			} catch (Exception e) {
+				// Print DB exception
+				e.printStackTrace();
+				model.put("error", "Record failed to update.");
+				model.remove("success");
+			}
+		}
+
+		model.put("btnEdit", false);
+		model.put("mrfItems", mrfServ.findAllDto(true));
+
+		return new ModelAndView("/base/admin/menuRoleFunctionList", model);
+	}
+
+	/**
+	 * Construct error message based on validation result
+	 * 
+	 * @param dto
+	 * @return
+	 */
+	private String validateForm(MenuRoleFunctionDto dto) {
+		String errorMsg = "";
+		errorMsg += commonValServ
+				.validateMandatoryInput(dto.getMenuItemId() == null ? "" : dto.getMenuItemId().toString(), MENU_LBL);
+		errorMsg += commonValServ.validateMandatoryInput(dto.getRoleId(), ROLE_LBL);
+		errorMsg += commonValServ.validateMandatoryInput(
+				dto.getFunctionType() == null ? "" : dto.getFunctionType().toString(), FUNCTION_LBL);
+
+		if (screenMode == CommonConstants.SCREEN_MODE_ADD) {
+			errorMsg += validateDuplicate(dto.getMenuItemId(), dto.getRoleId(), dto.getFunctionType());
+		} else {
+
+			if (null != model.get("menuRoleFuncItemCurrItem")) {
+				MenuRoleFunctionDto currDto = (MenuRoleFunctionDto) model.get("menuRoleFuncItemCurrItem");
+
+				if (currDto.getMenuItemId() != dto.getMenuItemId()) {
+					errorMsg += validateDuplicate(dto.getMenuItemId(), dto.getRoleId(), dto.getFunctionType());
+				}
+
+				if (!StringUtils.equalsIgnoreCase(currDto.getRoleId(), dto.getRoleId())) {
+					// check if current name value modified
+					errorMsg += validateDuplicate(dto.getMenuItemId(), dto.getRoleId(), dto.getFunctionType());
+				}
+
+				if (currDto.getFunctionType() != dto.getFunctionType()) {
+					errorMsg += validateDuplicate(dto.getMenuItemId(), dto.getRoleId(), dto.getFunctionType());
+				}
+			}
+		}
+
+		return errorMsg;
+	}
+
+	private String validateDuplicate(Integer menu, String role, Integer func) {
+		List<MenuRoleFunctionDto> dtos = mrfServ.findAllDto(false);
+		dtos = dtos.stream().filter(arg0 -> (arg0.getMenuItemId() == menu && StringUtils.equals(arg0.getRoleId(), role)
+				&& arg0.getFunctionType() == func)).collect(Collectors.toList());
+		return !dtos.isEmpty() ? "Config for Menu, Role and Function " + ERR_MSG_UNIQUE : "";
+	}
+
+	/**
+	 * Delete item
+	 * 
+	 * @param request
+	 * @param check
+	 * @param session
+	 * @return
+	 */
+	@RequestMapping("/base/admin/menuRoleFuncFormDel")
+	public ModelAndView deleteBatch(HttpServletRequest request, @RequestParam(value = "tableRow") String[] check,
+			HttpSession session) {
+
+		model.remove("error");
+		model.remove("success");
+		try {
+			// Delete form
+			for (int i = 0; i < check.length; i++) {
+
+//				if (1==1) {
+//					// Print delete failed
+//					model.put("error", "Letter Content is in used and it is not allow to delete from the system.");
+//				} else {
+				mrfServ.delete(Integer.parseInt(check[i]));
+				// Print delete success`
+				model.put("success", msgSource.getMessage("msgSuccessDelete", new Object[] {}, Locale.getDefault()));
+				model.remove("error");
+
+				trxHistServ.addTrxHistory(new Date(), "Delete " + MODULE_NAME, request.getRemoteUser(),
+						CommonConstants.FUNCTION_TYPE_DELETE, check[i], CommonConstants.RECORD_TYPE_ID_MENU_ROLE_FUNC,
+						null);
+//				}
+			}
+
+		} catch (Exception e) {
+			// Print DB exception
+			model.put("error", msgSource.getMessage("msgFailDelete", new Object[] {}, Locale.getDefault()));
+			model.remove("success");
+			e.printStackTrace();
+		}
+
+		model.put("mrfItems", mrfServ.findAllDto(true));
+
+		return new ModelAndView(("/base/admin/menuRoleFunctionList"), model);
+	}
+
+	/**
+	 * Do search
+	 * 
+	 * @param prName
+	 * @param ltType
+	 * @param prNameExp
+	 * @param session
+	 * @return
+	 */
+	@PostMapping("/base/admin/menuRoleFuncSearch")
+	public ModelAndView search(HttpServletRequest request, @RequestParam(name = "menu") Integer menu,
+			@RequestParam(name = "role") String role, @RequestParam(name = "funcType") Integer funcType,
+			HttpSession session) {
+
+		boolean hasError = false;
+
+		removeAlert(model);
+		String errorMsg = "";
+
+		model.put("menu", menu);
+		model.put("role", role);
+		model.put("funcType", funcType);
+
+		try {
+			if (errorMsg.length() == 0) {
+
+				List<MenuRoleFunctionDto> items = mrfServ.searchByCriteria(menu, role, 0, funcType, true);
+				model.put("mrfItems", items);
+
+				StringBuffer sb = new StringBuffer();
+				sb.append("Search Criteria: ");
+				sb.append(MENU_LBL).append("=").append(menu == 0 || menu == null ? "<ALL>" : menu.toString())
+						.append(", ");
+				sb.append(ROLE_LBL).append("=").append(StringUtils.isEmpty(role) ? "<ALL>" : role).append(", ");
+				sb.append(FUNCTION_LBL).append("=")
+						.append(funcType == 0 || funcType == null ? "<ALL>" : funcType.toString());
+
+				trxHistServ.addTrxHistory(new Date(), "Search " + MODULE_NAME, request.getRemoteUser(),
+						CommonConstants.FUNCTION_TYPE_SEARCH, "Search " + MODULE_NAME,
+						CommonConstants.RECORD_TYPE_ID_MENU_ROLE_FUNC, sb.toString());
+
+			} else {
+				hasError = true;
+			}
+
+		} catch (Exception e) {
+			e.printStackTrace();
+			hasError = true;
+			errorMsg += "Failed to get record.";
+			errorMsg += e.toString();
+
+		} finally {
+			if (hasError == true) {
+				model.put("error", errorMsg);
+				model.remove("success");
+				// return back user input
+				// model.put("hplAllItems", hplServ.searchByCriteria("", "", "", ""));
+			}
+		}
+
+		return new ModelAndView("/base/admin/menuRoleFunctionList", model);
+	}
+
+	@PostMapping(value = "/base/admin/menuRoleFuncFormSave", params = "action=edit")
+	public ModelAndView editForm(HttpServletRequest request, HttpSession session) {
+
+		logger.debug("editForm ()");
+
+		screenMode = CommonConstants.SCREEN_MODE_EDIT;
+		model.put("mode", screenMode);
+
+		model.put("btnEdit", true);
+		model.put("btnSaveSts", false);
+		model.put("btnSave", "Save");
+		model.put("header", "Edit " + MODULE_NAME);
+		model.remove("success");
+		model.remove("error");
+
+		return new ModelAndView("/base/admin/menuRoleFunctionForm", model);
+	}
+
+	private Map<String, Object> removeAlert(Map<String, Object> model) {
+		model.remove("error");
+		model.remove("success");
+
+		return model;
+	}
+
+	private void getAllLabels() {
+		MENU_LBL = msgSource.getMessage("navMenu", null, Locale.getDefault());
+		ROLE_LBL = msgSource.getMessage("lblRole", null, Locale.getDefault());
+		FUNCTION_LBL = msgSource.getMessage("lblFuncType", null, Locale.getDefault());
+		MODULE_NAME = msgSource.getMessage("moduleMenuRoleFunction", null, Locale.getDefault());
+	}
+
+}

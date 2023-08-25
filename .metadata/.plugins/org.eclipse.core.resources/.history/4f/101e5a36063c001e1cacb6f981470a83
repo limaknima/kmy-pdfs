@@ -1,0 +1,407 @@
+package com.fms.pfc.controller.main;
+
+import java.io.IOException;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.stream.Collectors;
+
+import javax.servlet.ServletOutputStream;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
+
+import org.apache.commons.lang.StringUtils;
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.CellStyle;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.xssf.usermodel.XSSFFont;
+import org.apache.poi.xssf.usermodel.XSSFSheet;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.MessageSource;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.context.annotation.SessionScope;
+import org.springframework.web.servlet.ModelAndView;
+
+import com.fms.pfc.common.AlertDefEnum;
+import com.fms.pfc.common.Authority;
+import com.fms.pfc.common.CommonConstants;
+import com.fms.pfc.common.SendAlertAndEmailService;
+import com.fms.pfc.domain.model.AlertMessage;
+import com.fms.pfc.domain.model.UsrProfile;
+import com.fms.pfc.domain.model.main.OnDemandSearch;
+import com.fms.pfc.service.api.base.AlertMessageService;
+import com.fms.pfc.service.api.base.TrxHisService;
+import com.fms.pfc.service.api.base.UserProfileService;
+import com.fms.pfc.service.api.main.G2LotViewService;
+import com.fms.pfc.service.api.main.OnDemandSearchService;
+import com.fms.pfc.validation.common.CommonValidation;
+
+@Controller
+@SessionScope
+public class OnDemandSearchController {
+
+	private static final Logger logger = LoggerFactory.getLogger(OnDemandSearchController.class);
+
+	private Authority auth;
+	private CommonValidation commonValServ;
+	private MessageSource msgSource;
+	private OnDemandSearchService odsServ;
+	private TrxHisService trxHistServ;
+	private G2LotViewService g2LotServ;
+	private UserProfileService usrProfServ;
+	private AlertMessageService alertMsgServ;
+	private SendAlertAndEmailService sendServ;
+
+	private Map<String, Object> model = new HashMap<String, Object>();
+	private XSSFWorkbook workbook;
+	private XSSFSheet sheet;
+
+	private static String LBL_HPL = "";
+	private static String LBL_G2LOT = "";
+	private static String LBL_FILENAME = "";
+	private static String LBL_FILESIZE = "";
+	private static String LBL_FILEPATH = "";
+	private static String LBL_ALERTTYPE = "";
+	private static String LBL_FROMDATE = "";
+	private static String LBL_TODATE = "";
+	private static String MODULE_NAME = "";
+	private static final int EMAIL_LIST_LIMIT = 50;
+	private static final String FROM_EMAIL = "PDFS - System";
+
+	@Autowired
+	public OnDemandSearchController(Authority auth, CommonValidation commonValServ, MessageSource msgSource,
+			OnDemandSearchService odsServ, TrxHisService trxHistServ, G2LotViewService g2LotServ,
+			UserProfileService usrProfServ, SendAlertAndEmailService sendServ) {
+		super();
+		this.auth = auth;
+		this.commonValServ = commonValServ;
+		this.msgSource = msgSource;
+		this.odsServ = odsServ;
+		this.trxHistServ = trxHistServ;
+		this.g2LotServ = g2LotServ;
+		this.usrProfServ = usrProfServ;
+		this.sendServ = sendServ;
+
+		getAllLabels();
+	}
+
+	/**
+	 * Display initial screen
+	 * 
+	 * @param request
+	 * @param response
+	 * @return
+	 */
+	@GetMapping("/main/pfc/onDemandList")
+	public ModelAndView initListing(HttpServletRequest request, HttpServletResponse response) {
+
+		removeAlert(model);
+		model = auth.onPageLoad(model, request);
+		auth.isAuthUrl(request, response);
+		model.put("hplItems", g2LotServ.hplList());
+
+		//List<OnDemandSearch> searchByCriteria = odsServ.searchByCriteria("", "", "", "", "", "", "", "", "");
+		List<OnDemandSearch> searchByCriteria = new ArrayList<OnDemandSearch>();
+		model.put("odsAllItems", searchByCriteria);
+
+		if (!searchByCriteria.isEmpty()) {
+			model.put("btnNotifyHid", false);
+			model.put("btnExportHid", false);
+		} else {
+			model.put("btnNotifyHid", true);
+			model.put("btnExportHid", true);
+		}
+
+		return new ModelAndView("/main/pfc/onDemandSearch", model);
+	}
+
+	/**
+	 * Do search
+	 * 
+	 * @param prName
+	 * @param ltType
+	 * @param prNameExp
+	 * @param session
+	 * @return
+	 */
+	@PostMapping("/main/pfc/onDemandSearch")
+	public ModelAndView search(HttpServletRequest request, @RequestParam(name = "hpl") String hpl,
+			@RequestParam(name = "g2LotNo") String g2LotNo, @RequestParam(name = "g2LotNoExp") String g2LotNoExp,
+			@RequestParam(name = "fileName") String fileName, @RequestParam(name = "fileNameExp") String fileNameExp,
+			@RequestParam(name = "path") String path, @RequestParam(name = "pathExp") String pathExp,
+			@RequestParam(name = "fromDate") String fromDate, @RequestParam(name = "toDate") String toDate,
+			HttpSession session) {
+
+		boolean hasError = false;
+
+		removeAlert(model);
+
+		model.put("hpl", hpl);
+		model.put("g2LotNo", g2LotNo);
+		model.put("g2LotNoExp", g2LotNoExp);
+		model.put("fileName", fileName);
+		model.put("fileNameExp", fileNameExp);
+		model.put("path", path);
+		model.put("pathExp", pathExp);
+		model.put("fromDate", fromDate);
+		model.put("toDate", toDate);
+
+		String errorMsg = "";
+		errorMsg += commonValServ.validateDateFormat(fromDate, LBL_FROMDATE);
+		errorMsg += commonValServ.validateDateFormat(toDate, LBL_TODATE);
+		errorMsg += commonValServ.validateDateRange(fromDate, toDate, LBL_FROMDATE, LBL_TODATE);
+
+		try {
+			if (errorMsg.length() == 0) {
+
+				List<OnDemandSearch> items = odsServ.searchByCriteria(hpl, g2LotNo, g2LotNoExp, fileName, fileNameExp,
+						path, pathExp, fromDate, toDate);
+				model.put("odsAllItems", items);
+
+				if (!items.isEmpty()) {
+					model.put("btnNotifyHid", false);
+					model.put("btnExportHid", false);
+				} else {
+					model.put("btnNotifyHid", true);
+					model.put("btnExportHid", true);
+				}
+
+				StringBuffer sb = new StringBuffer();
+				sb.append("Search Criteria: ");
+				sb.append(LBL_HPL).append("=").append(hpl == null ? "<ALL>" : hpl.toString()).append(", ");
+				sb.append(LBL_G2LOT).append("=").append(g2LotNo.isEmpty() ? "<ALL>" : g2LotNo).append(", ");
+				sb.append(LBL_FILENAME).append("=").append(fileName.isEmpty() ? "<ALL>" : fileName).append(", ");
+				sb.append(LBL_FILEPATH).append("=").append(path.isEmpty() ? "<ALL>" : path).append(", ");
+				sb.append(LBL_FROMDATE).append("=").append(fromDate == null ? "<ALL>" : fromDate).append(", ");
+				sb.append(LBL_TODATE).append("=").append(toDate == null ? "<ALL>" : toDate);
+
+				trxHistServ.addTrxHistory(new Date(), "Search " + MODULE_NAME, request.getRemoteUser(),
+						CommonConstants.FUNCTION_TYPE_SEARCH, "Search " + MODULE_NAME,
+						CommonConstants.RECORD_TYPE_ID_ON_DEMAND, sb.toString());
+
+			} else {
+				hasError = true;
+			}
+
+		} catch (Exception e) {
+			e.printStackTrace();
+			hasError = true;
+			errorMsg += "Failed to get record.";
+			errorMsg += e.toString();
+
+		} finally {
+			if (hasError == true) {
+				model.put("error", errorMsg);
+				// return back user input
+				model.put("odsAllItems", new ArrayList<OnDemandSearch>());
+			}
+		}
+
+		return new ModelAndView("/main/pfc/onDemandSearch", model);
+	}
+
+	@PostMapping(value = "/main/pfc/onDemandSearchAction", params = "action=notify")
+	@ResponseBody
+	public ModelAndView sendNotification(HttpServletRequest request, HttpServletResponse response, HttpSession session,
+			@RequestParam(value = "tableRow") int[] tableRow) {
+		logger.debug("sendNotification() ..");
+		AlertMessage alertMsg = alertMsgServ.searchAlertById(AlertDefEnum.FILE_COMPARE.strValue());
+
+		for (int i = 0; i < tableRow.length; i++) {
+			logger.debug("sendNotification() Selected id={}", tableRow[i]);
+		}
+
+		List<OnDemandSearch> searchList = (List<OnDemandSearch>) model.get("odsAllItems");
+		// distinct hpl list
+		List<String> hplList = searchList.stream().map(arg0 -> arg0.getHpl()).distinct().collect(Collectors.toList());
+		// loop each hpl
+		for (String hpl : hplList) {
+			// filter list based on hpl
+			searchList = searchList.stream().filter(arg0 -> StringUtils.equals(arg0.getHpl(), hpl))
+					.limit(EMAIL_LIST_LIMIT).collect(Collectors.toList());
+			// find user list based on group = hpl
+			List<UsrProfile> userProfiles = usrProfServ.findUsersByGroup(hpl).stream()
+					.filter(usr -> usr.getDisabledFlag().equals(String.valueOf(CommonConstants.FLAG_NO)))
+					.collect(Collectors.toList());
+
+			if (!searchList.isEmpty()) {
+				String tblStr = genEmailBody(searchList);
+				String[] cc = null;
+				for (UsrProfile usr : userProfiles) {
+					String subject = alertMsg.getSubject();
+					String content = alertMsg.getDescription().replace("[@Name]", usr.getUserName()).replace("[@Table]",
+							tblStr);
+
+					sendServ.sendAlertAndEmail(FROM_EMAIL, hpl, usr, subject, content, true);
+					// sendEmailHtml(usr.getEmail(), subject, content, cc);
+				}
+			}
+		}
+
+		return new ModelAndView("/main/pfc/onDemandSearch", model);
+	}
+
+	@PostMapping(value = "/main/pfc/onDemandSearchAction", params = "action=export")
+	@ResponseBody
+	public ModelAndView exportToFile(HttpServletRequest request, HttpServletResponse response, HttpSession session,
+			@RequestParam(value = "tableRow") int[] tableRow) {
+		logger.debug("exportToFile() ..");
+
+		response.setContentType("application/octet-stream");
+		DateFormat dateFormatter = new SimpleDateFormat("yyyyMMddHHmmss");
+		String currentDateTime = dateFormatter.format(new Date());
+
+		String reportName = msgSource.getMessage(CommonConstants.REPORT_ID_ON_DEMD_SR, new Object[] {},
+				Locale.getDefault());
+		String headerKey = "Content-Disposition";
+		String headerValue = "attachment; filename=" + reportName + "_" + currentDateTime + "."
+				+ CommonConstants.REPORT_FORMAT_XLSX.toLowerCase();
+		response.setHeader(headerKey, headerValue);
+
+		for (int i = 0; i < tableRow.length; i++) {
+			logger.debug("exportToFile() Selected id={}", tableRow[i]);
+		}
+
+		List<OnDemandSearch> searchList = (List<OnDemandSearch>) model.get("odsAllItems");
+		export(response, searchList);
+
+		return new ModelAndView("/main/pfc/onDemandSearch", model);
+	}
+
+	private void export(HttpServletResponse response, List<OnDemandSearch> searchList) {
+		writeHeaderLine();
+		writeDataLines(searchList);
+		try {
+			ServletOutputStream outputStream = response.getOutputStream();
+			workbook.write(outputStream);
+			workbook.close();
+
+			outputStream.close();
+
+			model.put("success", "Export completed!");
+		} catch (IOException e) {
+			e.printStackTrace();
+			model.put("error", "Export failed! " + e.getMessage());
+		}
+	}
+
+	private void writeHeaderLine() {
+		workbook = new XSSFWorkbook();
+		sheet = workbook
+				.createSheet(msgSource.getMessage(CommonConstants.REPORT_ID_ON_DEMD_SR, null, Locale.getDefault()));
+
+		Row row = sheet.createRow(0);
+		CellStyle style = workbook.createCellStyle();
+		XSSFFont font = workbook.createFont();
+		font.setBold(true);
+		font.setFontHeight(12);
+		style.setFont(font);
+
+		createCell(row, 0, LBL_HPL, style);
+		createCell(row, 1, LBL_G2LOT, style);
+		createCell(row, 2, LBL_FILENAME, style);
+		createCell(row, 3, LBL_FILESIZE, style);
+		createCell(row, 4, LBL_FILEPATH, style);
+		createCell(row, 5, LBL_ALERTTYPE, style);
+
+	}
+
+	private void writeDataLines(List<OnDemandSearch> searchList) {
+		CellStyle style = workbook.createCellStyle();
+		XSSFFont font = workbook.createFont();
+		font.setFontHeight(11);
+		style.setFont(font);
+
+		int rowCount = 1;
+		for (OnDemandSearch obj : searchList) {
+			Row row = sheet.createRow(rowCount++);
+			int columnCount = 0;
+			createCell(row, columnCount++, obj.getHpl(), style);
+			createCell(row, columnCount++, obj.getLot(), style);
+			createCell(row, columnCount++, obj.getFileName(), style);
+			createCell(row, columnCount++, obj.getFileSize(), style);
+			createCell(row, columnCount++, obj.getFilePath(), style);
+			createCell(row, columnCount++, obj.getAlert(), style);
+		}
+	}
+
+	private void createCell(Row row, int columnCount, Object value, CellStyle style) {
+		sheet.autoSizeColumn(columnCount);
+		Cell cell = row.createCell(columnCount);
+		if (value instanceof Integer) {
+			cell.setCellValue((Integer) value);
+		} else if (value instanceof Boolean) {
+			cell.setCellValue((Boolean) value);
+		} else {
+			cell.setCellValue((String) value);
+		}
+		cell.setCellStyle(style);
+	}
+
+	private String genEmailBody(List<OnDemandSearch> searchList) {
+		StringBuffer stringBuffer = generateCommonHtmlHead();
+		int rowno = 1;
+		for (OnDemandSearch ods : searchList) {
+			generateTdData(stringBuffer, rowno, ods);
+			rowno++;
+		}
+		generateCommonFooter(stringBuffer);
+		return stringBuffer.toString();
+	}
+
+	private StringBuffer generateCommonHtmlHead() {
+		StringBuffer stringBuffer = new StringBuffer();
+		return stringBuffer.append("<head>").append("</head>").append("<body>").append("<table border=1>")
+				.append("<tr>").append("<th>").append(LBL_HPL).append("</th>").append("<th>").append(LBL_G2LOT)
+				.append("</th>").append("<th>").append(LBL_FILENAME).append("</th>").append("<th>").append(LBL_FILESIZE)
+				.append(" (KB) ").append("</th>").append("<th>").append(LBL_FILEPATH).append("</th>").append("<th>")
+				.append(LBL_ALERTTYPE).append("</th>").append("</tr>");
+	}
+
+	private void generateCommonFooter(StringBuffer stringBuffer) {
+		stringBuffer.append("</table></body>");
+	}
+
+	private void generateTdData(StringBuffer stringBuffer, int rowno, OnDemandSearch ods) {
+		stringBuffer.append("<tr>");
+		stringBuffer.append("<td align ='right'>").append(rowno).append("</td>");
+		stringBuffer.append("<td align ='center'>").append(ods.getHpl()).append("</td>");
+		stringBuffer.append("<td>").append(ods.getLot()).append("</td>");
+		stringBuffer.append("<td>").append(ods.getFileName()).append("</td>");
+		stringBuffer.append("<td align ='center'>").append(ods.getFileSize()).append("</td>");
+		stringBuffer.append("<td>").append(ods.getFilePath()).append("</td>");
+		stringBuffer.append("<td>").append(ods.getAlert()).append("</td>");
+		stringBuffer.append("</tr>");
+	}
+
+	private Map<String, Object> removeAlert(Map<String, Object> model) {
+		model.remove("error");
+		model.remove("success");
+		return model;
+	}
+
+	private void getAllLabels() {
+		LBL_HPL = msgSource.getMessage("lblHpl", null, Locale.getDefault());
+		LBL_G2LOT = msgSource.getMessage("lblG2LotNo", null, Locale.getDefault());
+		LBL_FILENAME = msgSource.getMessage("lblFileName", null, Locale.getDefault());
+		LBL_FILESIZE = msgSource.getMessage("lblFileSize", null, Locale.getDefault());
+		LBL_FILEPATH = msgSource.getMessage("lblFilePath", null, Locale.getDefault());
+		LBL_ALERTTYPE = msgSource.getMessage("lblAlertType", null, Locale.getDefault());
+		LBL_FROMDATE = msgSource.getMessage("lblFromDate", null, Locale.getDefault());
+		LBL_TODATE = msgSource.getMessage("lblToDate", null, Locale.getDefault());
+		MODULE_NAME = msgSource.getMessage("moduleOnDemand", null, Locale.getDefault());
+	}
+}

@@ -1,0 +1,56 @@
+package com.fms.pfc.service.api.main;
+
+import java.util.List;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import com.fms.pfc.domain.converter.main.G2LotViewConverter;
+import com.fms.pfc.domain.dto.main.G2LotViewDto;
+import com.fms.pfc.domain.model.main.G2LotView;
+import com.fms.pfc.repository.main.api.G2LotViewRepository;
+
+@Service
+public class G2LotViewService {
+	private final Logger logger = LoggerFactory.getLogger(G2LotViewService.class);
+	
+	private G2LotViewRepository g2Repo;
+	private G2LotViewConverter g2Conv;
+	
+	@Autowired
+	public G2LotViewService(G2LotViewRepository g2Repo, G2LotViewConverter g2Conv) {
+		super();
+		this.g2Repo = g2Repo;
+		this.g2Conv = g2Conv;
+	}
+	
+	/**
+	 * Find Entity by id
+	 * @param id
+	 * @return
+	 */
+	public G2LotView findById(String id) {
+		return g2Repo.findById(id).orElse(null);
+	}
+
+	/**
+	 * Find DTO by id
+	 * @param id
+	 * @return
+	 */
+	public G2LotViewDto findDtoById(String id) {
+		G2LotView rel = findById(id);
+		return g2Conv.entityToDto(rel);
+	}
+
+	/**
+	 * Find list of DTO
+	 * @return
+	 */
+	public List<G2LotViewDto> findAllDto() {
+		List<G2LotView> models = g2Repo.findAll();
+		return g2Conv.entityToDtoList(models);
+	}
+}

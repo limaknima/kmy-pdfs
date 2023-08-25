@@ -1,0 +1,404 @@
+package com.fms.pfc.controller.base;
+
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
+import javax.validation.Valid;
+
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.MessageSource;
+import org.springframework.stereotype.Controller;
+import org.springframework.validation.BindingResult;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.context.annotation.SessionScope;
+import org.springframework.web.servlet.ModelAndView;
+
+import com.fms.pfc.common.Authority;
+import com.fms.pfc.common.CommonConstants;
+import com.fms.pfc.domain.dto.MenuRoleFunctionDto;
+import com.fms.pfc.domain.model.Group;
+import com.fms.pfc.domain.model.UsrRole;
+import com.fms.pfc.service.api.base.GroupService;
+import com.fms.pfc.service.api.base.MenuRoleFunctionService;
+import com.fms.pfc.service.api.base.OrganizationService;
+import com.fms.pfc.service.api.base.TrxHisService;
+import com.fms.pfc.service.api.base.UserProfileService;
+import com.fms.pfc.validation.common.CommonValidation;
+
+@Controller
+@SessionScope
+public class GroupController {
+	
+	private final Logger logger = LoggerFactory.getLogger(GroupController.class);
+	
+	private GroupService grpServ;	
+	private OrganizationService orgServ;	
+	private UserProfileService usrProfServ;	
+	private CommonValidation commonValServ;	
+	private Authority auth;	
+	private TrxHisService trxHistServ;
+	private MessageSource msgSource;
+	private MenuRoleFunctionService mrfServ;
+
+	private final String ORG_ID_TXT = "Organisation ID";
+	private final String GROUP_ID_TXT = "Group ID";
+	private final String GROUP_NAME_TXT = "Group Name";
+	private final String DESC_TXT = "Description";
+
+	private final String ERR_MSG_IS_USED = " is used in User Profile.";
+	private final String breakline = ".<br />";
+	private static final int MENU_ITEM_ID = 703;
+	
+	private List<MenuRoleFunctionDto> mrf = new ArrayList<MenuRoleFunctionDto>();
+	private Map<String, Object> model = new HashMap<String, Object>();
+
+	@Autowired
+	public GroupController(GroupService grpServ, OrganizationService orgServ, UserProfileService usrProfServ,
+			CommonValidation commonValServ, Authority auth, TrxHisService trxHistServ, MessageSource msgSource, MenuRoleFunctionService mrfServ) {
+		super();
+		this.grpServ = grpServ;
+		this.orgServ = orgServ;
+		this.usrProfServ = usrProfServ;
+		this.commonValServ = commonValServ;
+		this.auth = auth;
+		this.trxHistServ = trxHistServ;
+		this.msgSource = msgSource;
+		this.mrfServ = mrfServ;
+	}
+
+	// Check if field is currently used in User Profile
+	private String validateUsage(String groupId, String fieldname) {
+		int usrProfileCount = usrProfServ.getUserProfileCountByGrp(groupId);
+
+		if (usrProfileCount > 0)
+			return fieldname + " " + groupId + ERR_MSG_IS_USED + breakline;
+		else
+			return "";
+	}
+
+	@GetMapping("/base/admin/group/addGroup")
+	public ModelAndView getAddGroup(HttpServletRequest request, HttpServletResponse response, HttpSession session) {
+
+		//Map<String, Object> model = new HashMap<String, Object>();
+
+		//model = auth.onPageLoad(model, request);
+		// auth.isAuthUrl(request, response);
+		model.put("organizationItems", orgServ.searchOrganization("", "", "", "", ""));
+		model.put("group", new Group());
+
+		//request.getSession().setAttribute("sessionModel", model);
+
+		return new ModelAndView("/base/admin/group/addGroup", model);
+	}
+
+	@PostMapping("/base/admin/group/saveGroup")
+	public ModelAndView addGroup(@Valid Group gr, BindingResult bindingResult, HttpServletRequest request,
+			HttpSession session) {
+
+		//Map<String, Object> model = (Map<String, Object>) session.getAttribute("sessionModel");
+
+		model.remove("error");
+		model.remove("success");
+		String errorMsg = "";
+
+		try {
+			// validation
+			errorMsg = commonValServ.validateUniqueGroupId(gr.getGroupId(), GROUP_ID_TXT);
+			errorMsg += commonValServ.validateMandatoryInput(gr.getOrgId(), ORG_ID_TXT);
+			errorMsg += commonValServ.validateMandatoryInput(gr.getGroupId(), GROUP_ID_TXT);
+			errorMsg += commonValServ.validateMandatoryInput(gr.getGroupName(), GROUP_NAME_TXT);
+			errorMsg += commonValServ.validateInputLength(gr.getOrgId(), 200, ORG_ID_TXT);
+			errorMsg += commonValServ.validateInputLength(gr.getGroupId(), 20, GROUP_ID_TXT);
+			errorMsg += commonValServ.validateInputLength(gr.getGroupName(), 100, GROUP_NAME_TXT);
+			errorMsg += commonValServ.validateInputLength(gr.getDescription(), 200, DESC_TXT);
+
+			if (errorMsg.length() == 0) {
+				grpServ.addGroup(gr.getOrgId(), gr.getGroupId(), gr.getGroupName(), gr.getDescription(),
+						request.getRemoteUser());
+
+				model.put("success", msgSource.getMessage("msgSuccessAdd", new Object[] {}, Locale.getDefault()));
+
+				// FSGS) Kent 26/2/2021 Add/changed - Add Function executed log START
+				trxHistServ.addTrxHistory(new Date(), "Insert User Group", request.getRemoteUser(),
+						CommonConstants.FUNCTION_TYPE_INSERT, gr.getGroupId(),
+						CommonConstants.RECORD_TYPE_ID_USER_GROUP, null);
+				// FSGS) Kent 26/2/2021 Add/changed - Add Function executed log END
+			} else {
+				model.put("error", errorMsg);
+				return new ModelAndView("/base/admin/group/addGroup", model);
+			}
+
+		} catch (Exception e) {
+			model.put("error", msgSource.getMessage("msgFailAdd", new Object[] {}, Locale.getDefault()));
+			model.put("group", gr); // return back user input
+			return new ModelAndView("/base/admin/group/addGroup", model);
+		}
+
+		model.put("groupItems", grpServ.searchGroup("", ""));
+		return new ModelAndView("/base/admin/group/listGroup", model);
+	}
+
+	@GetMapping("/base/admin/group/editGroup")
+	public ModelAndView getEditGroup(@RequestParam(name = "orgId") String orgId,
+			@RequestParam(name = "groupId") String groupId, HttpServletRequest request, HttpSession session) {
+
+		//Map<String, Object> model = new HashMap<String, Object>();
+
+		//model = auth.onPageLoad(model, request);
+		Group g = grpServ.searchGroup(orgId, groupId).get(0);
+
+		model.put("group", g);
+
+		//request.getSession().setAttribute("sessionModel", model);
+
+		return new ModelAndView("/base/admin/group/editGroup", model);
+	}
+
+	@PostMapping("/base/admin/group/updateGroup")
+	public ModelAndView updateGroup(@Valid Group gr, BindingResult bindingResult, HttpServletRequest request,
+			HttpSession session) {
+
+		//Map<String, Object> model = (Map<String, Object>) session.getAttribute("sessionModel");
+
+		model.remove("error");
+		model.remove("success");
+		String errorMsg = "";
+
+		try {
+			// validation
+			errorMsg += commonValServ.validateMandatoryInput(gr.getGroupName(), GROUP_NAME_TXT);
+			errorMsg += commonValServ.validateInputLength(gr.getOrgId(), 200, ORG_ID_TXT);
+			errorMsg += commonValServ.validateInputLength(gr.getGroupId(), 20, GROUP_ID_TXT);
+			errorMsg += commonValServ.validateInputLength(gr.getGroupName(), 100, GROUP_NAME_TXT);
+			errorMsg += commonValServ.validateInputLength(gr.getDescription(), 200, DESC_TXT);
+
+			if (errorMsg.length() == 0) {
+				grpServ.updateGroup(gr.getGroupName(), gr.getDescription(), request.getRemoteUser(), gr.getOrgId(),
+						gr.getGroupId());
+
+				model.put("success", msgSource.getMessage("msgSuccessUpdate", new Object[] {}, Locale.getDefault()));
+
+				// FSGS) Kent 26/2/2021 Add/changed - Add Function executed log START
+				trxHistServ.addTrxHistory(new Date(), "Update User Group", request.getRemoteUser(),
+						CommonConstants.FUNCTION_TYPE_UPDATE, gr.getGroupId(),
+						CommonConstants.RECORD_TYPE_ID_USER_GROUP, null);
+				// FSGS) Kent 26/2/2021 Add/changed - Add Function executed log END
+			} else {
+				model.put("error", errorMsg);
+				model.put("group", gr); // return back user input
+				return new ModelAndView("/base/admin/group/editGroup", model);
+			}
+
+		} catch (Exception e) {
+			model.put("error", msgSource.getMessage("msgFailUpdate", new Object[] {}, Locale.getDefault()));
+			model.put("group", gr); // return back user input
+			return new ModelAndView("/base/admin/group/editGroup", model);
+
+		}
+
+		model.put("groupItems", grpServ.searchGroup("", ""));
+		return new ModelAndView("/base/admin/group/listGroup", model);
+	}
+
+	@GetMapping("/base/admin/group/listGroup")
+	public ModelAndView getGroupList(HttpServletRequest request, HttpSession session,HttpServletResponse response) {
+
+		//Map<String, Object> model = new HashMap<String, Object>();
+
+		model = auth.onPageLoad(model, request);
+		auth.isAuthUrl(request, response);
+		model.put("groupItems", grpServ.searchGroup("", ""));
+
+		//request.getSession().setAttribute("sessionModel", model);
+
+		return new ModelAndView("/base/admin/group/listGroup", model);
+	}
+	
+	/**
+	 * 
+	 */
+	private void menuRoleFunction() {
+		this.mrf = (List<MenuRoleFunctionDto>) model.get("MRF" + MENU_ITEM_ID);
+		List<UsrRole> userRoles = mrfServ.searchUserRole((String) model.get("loggedUser"));
+		logger.debug("menuRoleFunction() size={}, userRoles() size={}", mrf.size(), userRoles.size());
+		for (MenuRoleFunctionDto menuRole : mrf) {
+			for (UsrRole role : userRoles) {
+				logger.debug("menurole={}, role={}, function={}", menuRole.getRoleId(), role.getRoleId(),
+						menuRole.getFunctionType());
+				if (StringUtils.equals(menuRole.getRoleId(), role.getRoleId())) {
+					model.put("hidFunctionType_" + menuRole.getFunctionType(), false);
+				} else {
+					model.put("hidFunctionType_" + menuRole.getFunctionType(), true);
+				}
+			}
+		}
+	}
+
+	@PostMapping("/base/admin/group/listGroup")
+	public ModelAndView searchGroup(HttpServletRequest request, @RequestParam(name = "orgName") String orgName,
+			@RequestParam(name = "orgNameWildcard") String orgNameWildcard,
+			@RequestParam(name = "groupId") String groupId,
+			@RequestParam(name = "groupIdWildcard") String groupIdWildcard,
+			@RequestParam(name = "groupName") String groupName,
+			@RequestParam(name = "groupNameWildcard") String groupNameWildcard, HttpSession session) {
+
+		//Map<String, Object> model = (Map<String, Object>) session.getAttribute("sessionModel");
+
+		model.remove("error");
+		model.remove("success");
+		// FSGS) Hani 10/3/2021 Add/Change .trim() to search criteria START
+		model.put("groupItems", grpServ.searchGroupList(orgName.trim(), orgNameWildcard, groupId.trim(), groupIdWildcard,
+				groupName.trim(), groupNameWildcard));
+		// FSGS) Hani 10/3/2021 Add/Change .trim() to search criteria END
+
+		// FSGS) Kent 26/2/2021 Add/changed - Add Function executed log START
+		StringBuffer sb = new StringBuffer();
+		sb.append("Search Criteria: ");
+		sb.append("Organization Name=").append(orgName.isEmpty() ? "<ALL>" : orgName).append(", ");
+		sb.append("Group ID=").append(groupId.isEmpty() ? "<ALL>" : groupId).append(", ");
+		sb.append("Group Name=").append(groupName.isEmpty() ? "<ALL>" : groupName);
+
+		trxHistServ.addTrxHistory(new Date(), "Search User Group", request.getRemoteUser(), CommonConstants.FUNCTION_TYPE_SEARCH,
+				"Search User Group", CommonConstants.RECORD_TYPE_ID_USER_GROUP, sb.toString());
+		// FSGS) Kent 26/2/2021 Add/changed - Add Function executed log END
+
+		return new ModelAndView("/base/admin/group/listGroup", model);
+	}
+
+	@GetMapping("/base/admin/group/viewGroup")
+	public ModelAndView getViewGroupData(@RequestParam(name = "orgId") String orgId,
+			@RequestParam(name = "groupId") String groupId, HttpServletRequest request, HttpSession session) {
+
+		//Map<String, Object> model = new HashMap<String, Object>();
+
+		//model = auth.onPageLoad(model, request);
+		model.remove("error");
+		model.remove("success");
+		String errorMsg = "";
+
+		try {
+			// validation
+			errorMsg += commonValServ.validateInputLength(orgId, 200, ORG_ID_TXT);
+			errorMsg += commonValServ.validateInputLength(groupId, 20, GROUP_ID_TXT);
+
+			if (errorMsg.length() == 0) {
+				Group g = grpServ.searchGroup(orgId, groupId).get(0);
+
+				model.put("orgName", g.getOrgName());
+				model.put("orgId", g.getOrgId());
+				model.put("groupId", g.getGroupId());
+				model.put("groupName", g.getGroupName());
+				model.put("description", g.getDescription());
+				model.put("systemUseFlag", g.getSystemUseFlag());
+				model.put("creatorId", g.getCreatorId());
+
+				// FSGS) Kent 26/2/2021 Add/changed - Add Function executed log START
+				trxHistServ.addTrxHistory(new Date(), "View User Group", request.getRemoteUser(),
+						CommonConstants.FUNCTION_TYPE_VIEW, groupId, CommonConstants.RECORD_TYPE_ID_USER_GROUP, null);
+				// FSGS) Kent 26/2/2021 Add/changed - Add Function executed log END
+
+				DateFormat formatter = new SimpleDateFormat("dd/MM/yyy hh:mm:ss a");
+
+				try {
+					String createdInfo = "Created by " + g.getCreatorId() + " on "
+							+ formatter.format(g.getCreatedDateTime());
+					model.put("createdInfo", createdInfo);
+				} catch (Exception e) {
+				}
+
+				String modifiedInfo = "";
+				try {
+					modifiedInfo = "Modified by " + g.getModifierId() + " on "
+							+ formatter.format(g.getModifiedDateTime());
+				} catch (Exception e) {
+					modifiedInfo = "Modified by --";
+				}
+				model.put("modifiedInfo", modifiedInfo);
+
+			} else {
+				model.put("error", msgSource.getMessage("msgFailSearchRecord", new Object[] {}, Locale.getDefault()));
+				model.put("groupItems", grpServ.searchGroup("", "")); // return back user input
+
+				return new ModelAndView("/base/admin/group/listGroup", model);
+			}
+
+		} catch (Exception e) {
+			model.put("error", msgSource.getMessage("msgFailSearchRecord", new Object[] {}, Locale.getDefault()));
+			model.put("groupItems", grpServ.searchGroup("", "")); // return back user input
+
+			return new ModelAndView("/base/admin/group/listGroup", model);
+
+		}
+
+		//request.getSession().setAttribute("sessionModel", model);
+
+		return new ModelAndView("/base/admin/group/viewGroup", model);
+	}
+
+	@PostMapping("/base/admin/group/listGroupDelete")
+	public ModelAndView deleteGroupBatch(HttpServletRequest request,
+			@RequestParam(name = "tableRow") String[] groupPkList, HttpSession session) {
+
+		//Map<String, Object> model = (Map<String, Object>) session.getAttribute("sessionModel");
+
+		model.remove("error");
+		model.remove("success");
+		boolean hasError = false;
+		String errorMsg = "";
+
+		try {
+			for (int i = 0; i < groupPkList.length; i++) {
+				String[] groupPk = groupPkList[i].split("%-%");
+
+				// validation
+				errorMsg += commonValServ.validateInputLength(groupPk[0], 20,
+						ORG_ID_TXT + " " + groupPk[0] + " with Group ID " + groupPk[1]); // groupPk[0] is orgId
+				errorMsg += commonValServ.validateInputLength(groupPk[1], 20, GROUP_ID_TXT + " " + groupPk[1]);// groupPk[1] is
+																									// groupId
+				errorMsg += validateUsage(groupPk[1], GROUP_ID_TXT);// groupPk[1] is groupId
+
+				if (errorMsg.length() == 0) {
+					hasError = false;
+
+					grpServ.deleteGroupBatch(groupPk[0], groupPk[1]); // groupPk[0] is orgId, groupPk[1] is groupId
+
+					// FSGS) Kent 26/2/2021 Add/changed - Add Function executed log START
+					trxHistServ.addTrxHistory(new Date(), "Delete User Group", request.getRemoteUser(),
+							CommonConstants.FUNCTION_TYPE_DELETE, groupPkList[i],
+							CommonConstants.RECORD_TYPE_ID_USER_GROUP, null);
+					// FSGS) Kent 26/2/2021 Add/changed - Add Function executed log END
+				} else
+					hasError = true;
+			}
+
+		} catch (Exception e) {
+			e.printStackTrace();
+			hasError = true;
+			errorMsg += e.toString();
+		} finally {
+			if (hasError == true) {
+				errorMsg += msgSource.getMessage("msgFailDelete", new Object[] {}, Locale.getDefault());
+				model.put("error", errorMsg);
+			} else
+				model.put("success", msgSource.getMessage("msgSuccessDelete", new Object[] {}, Locale.getDefault()));
+		}
+
+		model.put("groupItems", grpServ.searchGroup("", ""));
+		return new ModelAndView("/base/admin/group/listGroup", model);
+	}
+
+}

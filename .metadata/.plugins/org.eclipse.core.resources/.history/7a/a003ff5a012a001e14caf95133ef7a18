@@ -1,0 +1,74 @@
+package com.fms.pfc.service.api.main;
+
+import java.util.Date;
+import java.util.List;
+import java.util.Objects;
+
+import javax.transaction.Transactional;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import com.fms.pfc.domain.converter.main.ProdFileConverter;
+import com.fms.pfc.domain.dto.main.ProdFileDto;
+import com.fms.pfc.domain.model.main.ProdFile;
+import com.fms.pfc.repository.main.api.ProdFileRepository;
+
+@Service
+public class ProdFileService {
+
+	private final Logger logger = LoggerFactory.getLogger(ProdFileService.class);
+
+	private ProdFileRepository prodFileRepo;
+	private ProdFileConverter prodFileConv;
+
+	@Autowired
+	public ProdFileService(ProdFileRepository prodFileRepo, ProdFileConverter prodFileConv) {
+		super();
+		this.prodFileRepo = prodFileRepo;
+		this.prodFileConv = prodFileConv;
+	}
+
+	public ProdFile findById(Integer id) {
+		return prodFileRepo.findById(id).orElse(null);
+	}
+
+	public ProdFileDto findDtoById(Integer id) {
+		ProdFile rel = findById(id);
+		return prodFileConv.entityToDto(rel);
+	}
+
+	public List<ProdFileDto> findAllDto() {
+		List<ProdFile> models = prodFileRepo.findAll();
+		return prodFileConv.entityToDtoList(models);
+	}
+
+	@Transactional
+	public Integer save(ProdFileDto dto, String userId) {
+		Date currentDate = new Date();
+		// save parent
+		if (Objects.isNull(dto.getPkPfileId()) || 0 == dto.getPkPfileId()) {
+			dto.setCreatorId(userId);
+			dto.setCreatedDatetime(currentDate);
+		} else {
+			ProdFileDto existing = findDtoById(dto.getPkPfileId());
+			dto.setCreatorId(existing.getCreatorId());
+			dto.setCreatedDatetime(existing.getCreatedDatetime());
+			dto.setModifierId(userId);
+			dto.setModifiedDatetime(currentDate);
+		}
+
+		ProdFile entity = prodFileConv.dtoToEntity(dto);
+		prodFileRepo.saveAndFlush(entity);
+		
+		return entity.getPkPfileId();
+	}
+
+	@Transactional
+	public void delete(Integer id) {
+		prodFileRepo.deleteById(id);
+	}
+
+}

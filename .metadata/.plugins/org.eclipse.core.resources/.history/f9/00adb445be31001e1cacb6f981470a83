@@ -1,0 +1,38 @@
+package com.fms.pfc.domain.model.main;
+
+import java.io.Serializable;
+import java.util.Date;
+
+import javax.persistence.Entity;
+import javax.persistence.Table;
+
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+import lombok.ToString;
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@ToString
+@EqualsAndHashCode
+@Entity
+@Table(name = "CV22PDF")
+public class G2LotView  implements Serializable{
+
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 3814781762929596296L;
+	
+	private String lot;
+	private String hpl;
+	private String model;
+	private String year;
+	private String mth;
+	private String day;
+	private String prodLn;
+	private String seq;
+
+}

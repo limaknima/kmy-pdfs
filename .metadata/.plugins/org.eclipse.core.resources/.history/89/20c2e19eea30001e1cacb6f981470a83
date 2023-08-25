@@ -1,0 +1,68 @@
+package com.fms.pfc.domain.model.main;
+
+import java.io.Serializable;
+import java.util.Date;
+
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.Id;
+import javax.persistence.Table;
+
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+import lombok.ToString;
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@ToString
+@EqualsAndHashCode
+@Entity
+@Table(name = "ON_DEMAND_SEARCH")
+public class OnDemandSearch implements Serializable {
+
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -1167508760128675601L;
+
+	@Id
+	@Column(name = "G2_LOT")
+	private String g2Lot;
+
+	@Column(name = "HPL_ID")
+	private Integer hplId;
+
+	@Column(name = "FILE_NAME")
+	private String fileName;
+
+	@Column(name = "FILE_PATH")
+	private String filePath;
+
+	@Column(name = "FILE_SIZE")
+	private Integer fileSize;
+
+	@Column(name = "ALERT_TYPE")
+	private Integer alertType;
+	
+	@Column(name = "COMPARE_FORM_DATETIME")
+	private Date compareFromDatetime;
+	
+	@Column(name = "COMPARE_TO_DATETIME")
+	private Date compareToDatetime;
+	
+	@Column(name = "CREATOR_ID")
+	private String creatorId;
+
+	@Column(name = "CREATED_DATETIME")
+	private Date createdDatetime;
+
+	@Column(name = "MODIFIER_ID")
+	private String modifierId;
+
+	@Column(name = "MODIFIED_DATETIME")
+	private Date modifiedDatetime;
+
+}

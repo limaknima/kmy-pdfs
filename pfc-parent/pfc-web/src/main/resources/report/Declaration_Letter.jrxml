@@ -1,0 +1,213 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Created with Jaspersoft Studio version 6.11.0.final using JasperReports Library version 6.11.0-0c4056ccaa4d25a5a8c45672d2f764ea3498bebb  -->
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="Declaration_Letter" pageWidth="595" pageHeight="842" columnWidth="555" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" uuid="92fab94f-48bc-465e-8575-021465723cf4">
+	<property name="com.jaspersoft.studio.data.sql.tables" value=""/>
+	<property name="com.jaspersoft.studio.data.defaultdataadapter" value="rmppsdb"/>
+	<parameter name="address" class="java.lang.String"/>
+	<parameter name="product" class="java.lang.String"/>
+	<parameter name="orgName" class="java.lang.String"/>
+	<parameter name="logo" class="java.lang.String"/>
+	<parameter name="tel" class="java.lang.String"/>
+	<parameter name="fax" class="java.lang.String"/>
+	<parameter name="countryName" class="java.lang.String"/>
+	<parameter name="status" class="java.lang.String"/>
+	<parameter name="date" class="java.lang.String"/>
+	<queryString language="SQL">
+		<![CDATA[select * from organization]]>
+	</queryString>
+	<field name="countryName" class="java.lang.String"/>
+	<field name="statusName" class="java.lang.String"/>
+	<background>
+		<band splitType="Stretch"/>
+	</background>
+	<title>
+		<band height="111" splitType="Stretch">
+			<property name="com.jaspersoft.studio.unit.height" value="pixel"/>
+			<staticText>
+				<reportElement x="30" y="100" width="370" height="0" uuid="e078ad1c-e594-4434-8486-dbc9c6451978">
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+				</reportElement>
+				<box>
+					<pen lineWidth="0.5" lineStyle="Solid"/>
+				</box>
+				<textElement>
+					<font size="12" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Static Text]]></text>
+			</staticText>
+			<textField>
+				<reportElement x="30" y="67" width="370" height="15" uuid="85e76cd1-6978-4fc0-b8e6-28afab645365">
+					<property name="com.jaspersoft.studio.unit.y" value="px"/>
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+				</reportElement>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Times" size="10"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{address}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="215" y="82" width="100" height="12" uuid="c5116468-96d7-48ce-8b72-95e999f0ea7c">
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+					<printWhenExpression><![CDATA[!($P{tel}.isEmpty())]]></printWhenExpression>
+				</reportElement>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Times" size="9"/>
+				</textElement>
+				<textFieldExpression><![CDATA["TEL NO: "+$P{tel}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="315" y="82" width="85" height="12" uuid="ea479538-799a-4712-9caa-59fefd70a067">
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+					<printWhenExpression><![CDATA[!($P{fax}.isEmpty())]]></printWhenExpression>
+				</reportElement>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Times" size="9"/>
+				</textElement>
+				<textFieldExpression><![CDATA["FAX: "+$P{fax}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="30" y="52" width="370" height="15" uuid="54eb07b1-84c0-408a-87f7-5325237f5f82">
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+				</reportElement>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Times" size="11.5" isBold="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{orgName}]]></textFieldExpression>
+			</textField>
+			<image>
+				<reportElement x="410" y="10" width="140" height="90" uuid="d68d50a1-5dcc-4517-aa07-0044125798e9">
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+				</reportElement>
+				<imageExpression><![CDATA[new java.io.ByteArrayInputStream(org.apache.commons.codec.binary.Base64.decodeBase64($P{logo}.getBytes()))]]></imageExpression>
+			</image>
+		</band>
+	</title>
+	<pageHeader>
+		<band height="54" splitType="Stretch">
+			<staticText>
+				<reportElement x="30" y="0" width="150" height="20" uuid="7a15e035-4848-4eb1-af61-a72545bd3fdf"/>
+				<textElement>
+					<font fontName="Calibri" size="12"/>
+				</textElement>
+				<text><![CDATA[To Whom It May Concern:]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="30" y="29" width="520" height="20" uuid="e52c2d3e-e8f1-49e8-a044-5d396cde48d0"/>
+				<textElement>
+					<font fontName="Calibri" size="12" isBold="true" isUnderline="true"/>
+				</textElement>
+				<text><![CDATA[PERMISSIBILITY DECLARATION / SUITABILITY DECLARATION]]></text>
+			</staticText>
+			<textField>
+				<reportElement x="450" y="0" width="100" height="20" uuid="e643ea35-c2a7-4207-9b7c-b1eccefea725"/>
+				<textElement>
+					<font fontName="Calibri" size="12"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{date}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement x="410" y="0" width="40" height="20" uuid="8754cf9a-8467-409e-81b0-bab4d47e93b7"/>
+				<textElement>
+					<font fontName="Calibri" size="12"/>
+				</textElement>
+				<text><![CDATA[Date:]]></text>
+			</staticText>
+		</band>
+	</pageHeader>
+	<columnHeader>
+		<band height="90" splitType="Prevent">
+			<staticText>
+				<reportElement x="60" y="70" width="70" height="20" uuid="0cdd98ff-d34e-4aa9-9290-dddc0aef5b8f"/>
+				<textElement>
+					<font fontName="Calibri" size="12" isBold="true"/>
+				</textElement>
+				<text><![CDATA[COUNTRY]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="312" y="70" width="210" height="20" uuid="b54f960f-b510-4c63-b6d2-c3d3808c7df2"/>
+				<textElement>
+					<font fontName="Calibri" size="12" isBold="true"/>
+				</textElement>
+				<text><![CDATA[PERMISSIBILITY STATUS]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="30" y="22" width="520" height="40" uuid="6ce23798-752c-473a-82a1-2a02417afc62"/>
+				<textElement textAlignment="Justified">
+					<font fontName="Calibri" size="12"/>
+				</textElement>
+				<text><![CDATA[We hereby state that to the best of our current knowledge and based on supplier's information, the permissibility of the above-mentioned product in the following countries:]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="30" y="-1" width="100" height="22" uuid="a7ab8e7d-f861-46b7-a4be-fa54188d9700"/>
+				<textElement>
+					<font fontName="Calibri" size="12"/>
+				</textElement>
+				<text><![CDATA[Product Name:]]></text>
+			</staticText>
+			<textField>
+				<reportElement x="130" y="-1" width="420" height="22" uuid="32dfcdac-9092-490c-a11d-ffb00afa2299"/>
+				<textElement>
+					<font fontName="Calibri" size="12"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{product}]]></textFieldExpression>
+			</textField>
+		</band>
+	</columnHeader>
+	<detail>
+		<band height="20" splitType="Immediate">
+			<textField>
+				<reportElement stretchType="RelativeToTallestObject" x="60" y="0" width="200" height="20" uuid="57f3ae36-33b5-4f5e-9858-bf5f35152d91">
+					<property name="com.jaspersoft.studio.spreadsheet.connectionID" value="d2870eee-a26e-4f6e-b12c-200313dccd51"/>
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+				</reportElement>
+				<textElement>
+					<font fontName="Calibri" size="12"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{countryName}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement stretchType="RelativeToTallestObject" x="346" y="0" width="100" height="20" uuid="0d9df2ca-db50-40aa-b60e-d43dcc6b116d">
+					<property name="com.jaspersoft.studio.spreadsheet.connectionID" value="d2870eee-a26e-4f6e-b12c-200313dccd51"/>
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+				</reportElement>
+				<textElement>
+					<font fontName="Calibri" size="12"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{statusName}]]></textFieldExpression>
+			</textField>
+		</band>
+	</detail>
+	<columnFooter>
+		<band height="93" splitType="Stretch">
+			<staticText>
+				<reportElement stretchType="RelativeToBandHeight" x="30" y="0" width="520" height="22" uuid="b8d1aa28-bdb8-42ca-80d3-cbc7b0a1a4c8"/>
+				<textElement textAlignment="Justified">
+					<font fontName="Calibri" size="12"/>
+				</textElement>
+				<text><![CDATA[The permissibility of the product is verified solely based on the product's ingredients.]]></text>
+			</staticText>
+			<staticText>
+				<reportElement stretchType="RelativeToBandHeight" x="30" y="26" width="520" height="64" uuid="96e1e03e-75d9-41f9-8cff-89226ce1a769"/>
+				<textElement textAlignment="Justified">
+					<font fontName="Calibri" size="12"/>
+				</textElement>
+				<text><![CDATA[It is customer responsibility to ensure that the usage of our product is permitted according to the local and exporting countries regulations based on the final application permitted limit and food category. The information in the document is subject to change without prior notice, thus it is the responsibility of the recipient to confirm the validity.]]></text>
+			</staticText>
+		</band>
+	</columnFooter>
+	<pageFooter>
+		<band height="53" splitType="Stretch">
+			<staticText>
+				<reportElement x="30" y="32" width="520" height="16" uuid="147c2dcc-37ee-46e2-8bcb-8fd8173f92a3"/>
+				<textElement>
+					<font fontName="Calibri" size="12"/>
+				</textElement>
+				<text><![CDATA[This document is generated by computer and consequently not signed.]]></text>
+			</staticText>
+		</band>
+	</pageFooter>
+</jasperReport>

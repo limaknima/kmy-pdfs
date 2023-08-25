@@ -1,0 +1,9 @@
+package com.fms.pfc.repository.main.api;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+
+import com.fms.pfc.domain.model.main.FoldCatgConfSearch;
+
+public interface FoldCatgConfSearchRepository extends JpaRepository<FoldCatgConfSearch, Integer> {
+
+}

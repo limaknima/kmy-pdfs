@@ -1,0 +1,980 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Created with Jaspersoft Studio version 6.11.0.final using JasperReports Library version 6.11.0-0c4056ccaa4d25a5a8c45672d2f764ea3498bebb  -->
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="PRReport" pageWidth="842" pageHeight="595" orientation="Landscape" whenNoDataType="NoDataSection" columnWidth="802" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" uuid="b9dd05a2-a2f9-41ed-a653-282c2d74a922">
+	<property name="com.jaspersoft.studio.data.sql.tables" value=""/>
+	<property name="com.jaspersoft.studio.data.defaultdataadapter" value="local-mssql"/>
+	<style name="Table_TH" mode="Opaque" backcolor="#F0F8FF">
+		<box>
+			<pen lineWidth="0.5" lineColor="#000000"/>
+			<topPen lineWidth="0.5" lineColor="#000000"/>
+			<leftPen lineWidth="0.5" lineColor="#000000"/>
+			<bottomPen lineWidth="0.5" lineColor="#000000"/>
+			<rightPen lineWidth="0.5" lineColor="#000000"/>
+		</box>
+	</style>
+	<style name="Table_CH" mode="Opaque" backcolor="#BFE1FF">
+		<box>
+			<pen lineWidth="0.5" lineColor="#000000"/>
+			<topPen lineWidth="0.5" lineColor="#000000"/>
+			<leftPen lineWidth="0.5" lineColor="#000000"/>
+			<bottomPen lineWidth="0.5" lineColor="#000000"/>
+			<rightPen lineWidth="0.5" lineColor="#000000"/>
+		</box>
+	</style>
+	<style name="Table_TD" mode="Opaque" backcolor="#FFFFFF">
+		<box>
+			<pen lineWidth="0.5" lineColor="#000000"/>
+			<topPen lineWidth="0.5" lineColor="#000000"/>
+			<leftPen lineWidth="0.5" lineColor="#000000"/>
+			<bottomPen lineWidth="0.5" lineColor="#000000"/>
+			<rightPen lineWidth="0.5" lineColor="#000000"/>
+		</box>
+	</style>
+	<style name="Crosstab_CH" mode="Opaque" backcolor="#F0F8FF">
+		<box>
+			<pen lineWidth="0.5" lineColor="#000000"/>
+			<topPen lineWidth="0.5" lineColor="#000000"/>
+			<leftPen lineWidth="0.5" lineColor="#000000"/>
+			<bottomPen lineWidth="0.5" lineColor="#000000"/>
+			<rightPen lineWidth="0.5" lineColor="#000000"/>
+		</box>
+	</style>
+	<style name="Crosstab_CG" mode="Opaque" backcolor="#BFE1FF">
+		<box>
+			<pen lineWidth="0.5" lineColor="#000000"/>
+			<topPen lineWidth="0.5" lineColor="#000000"/>
+			<leftPen lineWidth="0.5" lineColor="#000000"/>
+			<bottomPen lineWidth="0.5" lineColor="#000000"/>
+			<rightPen lineWidth="0.5" lineColor="#000000"/>
+		</box>
+	</style>
+	<style name="Crosstab_CT" mode="Opaque" backcolor="#005FB3">
+		<box>
+			<pen lineWidth="0.5" lineColor="#000000"/>
+			<topPen lineWidth="0.5" lineColor="#000000"/>
+			<leftPen lineWidth="0.5" lineColor="#000000"/>
+			<bottomPen lineWidth="0.5" lineColor="#000000"/>
+			<rightPen lineWidth="0.5" lineColor="#000000"/>
+		</box>
+	</style>
+	<style name="Crosstab_CD" mode="Opaque" backcolor="#FFFFFF">
+		<box>
+			<pen lineWidth="0.5" lineColor="#000000"/>
+			<topPen lineWidth="0.5" lineColor="#000000"/>
+			<leftPen lineWidth="0.5" lineColor="#000000"/>
+			<bottomPen lineWidth="0.5" lineColor="#000000"/>
+			<rightPen lineWidth="0.5" lineColor="#000000"/>
+		</box>
+	</style>
+	<style name="Table 1_TH" mode="Opaque" backcolor="#F0F8FF">
+		<box>
+			<pen lineWidth="0.5" lineColor="#000000"/>
+			<topPen lineWidth="0.5" lineColor="#000000"/>
+			<leftPen lineWidth="0.5" lineColor="#000000"/>
+			<bottomPen lineWidth="0.5" lineColor="#000000"/>
+			<rightPen lineWidth="0.5" lineColor="#000000"/>
+		</box>
+	</style>
+	<style name="Table 1_CH" mode="Opaque" backcolor="#BFE1FF">
+		<box>
+			<pen lineWidth="0.5" lineColor="#000000"/>
+			<topPen lineWidth="0.5" lineColor="#000000"/>
+			<leftPen lineWidth="0.5" lineColor="#000000"/>
+			<bottomPen lineWidth="0.5" lineColor="#000000"/>
+			<rightPen lineWidth="0.5" lineColor="#000000"/>
+		</box>
+	</style>
+	<style name="Table 1_TD" mode="Opaque" backcolor="#FFFFFF">
+		<box>
+			<pen lineWidth="0.5" lineColor="#000000"/>
+			<topPen lineWidth="0.5" lineColor="#000000"/>
+			<leftPen lineWidth="0.5" lineColor="#000000"/>
+			<bottomPen lineWidth="0.5" lineColor="#000000"/>
+			<rightPen lineWidth="0.5" lineColor="#000000"/>
+		</box>
+	</style>
+	<subDataset name="SummaryDataset" uuid="a9a5ba83-d798-4a73-a11a-d0df77c4a32f">
+		<property name="com.jaspersoft.studio.data.sql.tables" value=""/>
+		<property name="com.jaspersoft.studio.data.defaultdataadapter" value="local-mssql"/>
+		<parameter name="prId" class="java.lang.Integer"/>
+		<queryString language="SQL">
+			<![CDATA[with cte_pr as (
+select
+    A.PR_ID
+    , 0 as parent
+    , 1 as level
+	, A.SEL_TS_NO
+	, CONVERT(varchar, concat(RIGHT('0000'+CAST(A.PR_ING_ID AS VARCHAR(4)),4)
+, ' ')) AS SEQ
+, CONVERT(varchar,'') AS SPACES
+    , A.REF_ID
+    , A.REF_TYPE
+    , cast(A.ING_PERC as decimal(13,10)) as ING_PERC
+    , (
+		select STUFF (
+			(
+			select ',' +rm.RAW_MATL_NAME from RAW_MATERIAL rm where 1=1 and rm.RAW_MATL_ID in (
+				select p.value from dbo.[fn_split]((select p.ALT_RM
+				from PR_INGREDIENT p
+				where 1=1
+				and p.ALT_RM is not null
+				and p.PR_ING_ID = A.PR_ING_ID),',') p
+				)
+			FOR XML PATH('')
+			),1,1,''
+		) 
+	) as altnames,
+	(select fs.FS_NAME from FLAVOR_STATUS fs where fs.FS_ID=(select p.FLAVOR_STATUS_ID from RAW_MATERIAL p where p.RAW_MATL_ID=A.REF_ID)) as flvstatname
+from PR_INGREDIENT A
+where 1=1
+and A.PR_ID = (select pr_id from PRODUCT_RECIPE where PR_ID = $P{prId})
+union all
+select
+    cur.PR_ID
+    , ct.pr_id as parent
+    , ct.level + 1 as level
+	, cur.SEL_TS_NO
+	, CONVERT(varchar, concat(ct.SEQ,  RIGHT('0000'+CAST(PR_ING_ID AS VARCHAR(4)),4)
+, ' ')) AS SEQ
+, CONVERT(varchar, CONCAT(SPACES, '  ')) AS SPACES
+    , cur.REF_ID
+    , cur.REF_TYPE
+    , cast(cur.ING_PERC*ct.ING_PERC/100 as decimal(13,10)) as ING_PERC
+    , (
+		select STUFF (
+			(
+			select ',' +rm.RAW_MATL_NAME from RAW_MATERIAL rm where 1=1 and rm.RAW_MATL_ID in (
+				select p.value from dbo.[fn_split]((select p.ALT_RM
+				from PR_INGREDIENT p
+				where 1=1
+				and p.ALT_RM is not null
+				and p.PR_ING_ID = cur.PR_ING_ID),',') p
+				)
+			FOR XML PATH('')
+			),1,1,''
+		) 
+	) as altnames,
+	(select fs.FS_NAME from FLAVOR_STATUS fs where fs.FS_ID=(select p.FLAVOR_STATUS_ID from RAW_MATERIAL p where p.RAW_MATL_ID=cur.REF_ID)) as flvstatname
+from PR_INGREDIENT cur
+inner join cte_pr ct on cur.PR_ID = ct.ref_id
+where 1=1
+and ct.REF_TYPE = 301
+)
+select A.PR_ID, 
+B.PR_NAME,
+C.RAW_MATL_NAME,
+CASE WHEN A.REF_TYPE = 301 
+	THEN 'Intermediate Product' 
+	WHEN A.REF_TYPE = 201
+	THEN 'Raw Material' 
+	ELSE '' 
+END AS CATEGORY,
+A.SEL_TS_NO,
+CASE WHEN A.REF_TYPE = 301 
+	THEN CONCAT(SPACES, B.PR_NAME)
+	WHEN A.REF_TYPE = 201
+	THEN CONCAT(SPACES, C.RAW_MATL_NAME)
+	ELSE '' 
+END AS INGREDIENT_NAME,
+A.altnames,
+A.flvstatname,
+A.parent, 
+A.level,
+A.SEQ,
+A.REF_ID,
+A.REF_TYPE,
+A.ING_PERC
+FROM cte_pr A
+LEFT JOIN PRODUCT_RECIPE B
+ON A.REF_ID = B.PR_ID
+AND A.REF_TYPE = 301
+LEFT JOIN RAW_MATERIAL C
+ON A.REF_ID = C.RAW_MATL_ID
+AND A.REF_TYPE = 201
+where 1=1
+order by 
+SEQ ,
+level
+;]]>
+		</queryString>
+		<field name="PR_ID" class="java.lang.Integer">
+			<property name="com.jaspersoft.studio.field.label" value="PR_ID"/>
+		</field>
+		<field name="PR_NAME" class="java.lang.String">
+			<property name="com.jaspersoft.studio.field.label" value="PR_NAME"/>
+		</field>
+		<field name="RAW_MATL_NAME" class="java.lang.String">
+			<property name="com.jaspersoft.studio.field.label" value="RAW_MATL_NAME"/>
+		</field>
+		<field name="CATEGORY" class="java.lang.String">
+			<property name="com.jaspersoft.studio.field.label" value="CATEGORY"/>
+		</field>
+		<field name="SEL_TS_NO" class="java.lang.String">
+			<property name="com.jaspersoft.studio.field.label" value="SEL_TS_NO"/>
+		</field>
+		<field name="INGREDIENT_NAME" class="java.lang.String">
+			<property name="com.jaspersoft.studio.field.label" value="INGREDIENT_NAME"/>
+		</field>
+		<field name="altnames" class="java.lang.String">
+			<property name="com.jaspersoft.studio.field.label" value="altnames"/>
+		</field>
+		<field name="parent" class="java.lang.Integer">
+			<property name="com.jaspersoft.studio.field.label" value="parent"/>
+		</field>
+		<field name="level" class="java.lang.Integer">
+			<property name="com.jaspersoft.studio.field.label" value="level"/>
+		</field>
+		<field name="SEQ" class="java.lang.String">
+			<property name="com.jaspersoft.studio.field.label" value="SEQ"/>
+		</field>
+		<field name="REF_ID" class="java.lang.Integer">
+			<property name="com.jaspersoft.studio.field.label" value="REF_ID"/>
+		</field>
+		<field name="REF_TYPE" class="java.lang.Integer">
+			<property name="com.jaspersoft.studio.field.label" value="REF_TYPE"/>
+		</field>
+		<field name="ING_PERC" class="java.math.BigDecimal">
+			<property name="com.jaspersoft.studio.field.label" value="ING_PERC"/>
+		</field>
+		<field name="flvstatname" class="java.lang.String"/>
+	</subDataset>
+	<subDataset name="RMStatusDataset" uuid="1ab8c4ca-343b-4676-b484-74c70119ea2f">
+		<property name="com.jaspersoft.studio.data.sql.tables" value=""/>
+		<property name="com.jaspersoft.studio.data.defaultdataadapter" value="rmppsdb"/>
+		<parameter name="prId" class="java.lang.Integer"/>
+		<queryString language="SQL">
+			<![CDATA[SELECT C.COUNTRY_NAME, B.RAW_MATL_NAME, 
+CASE A.FINAL_STATUS
+WHEN 1 THEN 'Permitted'
+WHEN 2 THEN 'Not Permitted'
+WHEN 3 THEN 'Not Sure'
+ELSE 'N/A'
+END AS FINAL_STATUS FROM PR_RM_STAT A INNER JOIN RAW_MATERIAL B  
+			 	ON A.RAW_MATL_ID = B.RAW_MATL_ID  
+			 	INNER JOIN REF_COUNTRY C  
+			 	ON A.COUNTRY_ID  = C.COUNTRY_ID  
+			 	WHERE A.PR_ID = $P{prId}
+			 	ORDER BY A.COUNTRY_ID]]>
+		</queryString>
+		<field name="COUNTRY_NAME" class="java.lang.String">
+			<property name="com.jaspersoft.studio.field.label" value="COUNTRY_NAME"/>
+		</field>
+		<field name="RAW_MATL_NAME" class="java.lang.String">
+			<property name="com.jaspersoft.studio.field.label" value="RAW_MATL_NAME"/>
+		</field>
+		<field name="FINAL_STATUS" class="java.lang.String">
+			<property name="com.jaspersoft.studio.field.label" value="FINAL_STATUS"/>
+		</field>
+	</subDataset>
+	<subDataset name="PRStatusDataset" uuid="296c03bc-40be-46e3-892a-3d8d9e9babb1">
+		<property name="com.jaspersoft.studio.data.sql.tables" value=""/>
+		<property name="com.jaspersoft.studio.data.defaultdataadapter" value="rmppsdb"/>
+		<parameter name="prId" class="java.lang.Integer"/>
+		<queryString language="SQL">
+			<![CDATA[SELECT A.PR_ID, 
+CASE A.FINAL_STATUS
+WHEN 1 THEN 'Permitted'
+WHEN 2 THEN 'Not Permitted'
+WHEN 3 THEN 'Not Sure'
+ELSE 'N/A'
+END AS FINAL_STATUS
+, B.COUNTRY_NAME AS CNTRY_NAME FROM PR_STAT A 
+			INNER JOIN REF_COUNTRY B 
+			ON A.COUNTRY_ID = B.COUNTRY_ID 
+			WHERE A.PR_ID = $P{prId}
+ORDER BY CNTRY_NAME]]>
+		</queryString>
+		<field name="PR_ID" class="java.lang.Integer">
+			<property name="com.jaspersoft.studio.field.label" value="PR_ID"/>
+		</field>
+		<field name="FINAL_STATUS" class="java.lang.String">
+			<property name="com.jaspersoft.studio.field.label" value="FINAL_STATUS"/>
+		</field>
+		<field name="CNTRY_NAME" class="java.lang.String">
+			<property name="com.jaspersoft.studio.field.label" value="CNTRY_NAME"/>
+		</field>
+	</subDataset>
+	<parameter name="pridList" class="java.util.Collection">
+		<defaultValueExpression><![CDATA[new java.util.ArrayList()]]></defaultValueExpression>
+	</parameter>
+	<parameter name="userId" class="java.lang.String"/>
+	<queryString language="SQL">
+		<![CDATA[SELECT PR.*, 
+IsNULL((SELECT U.USER_NAME
+FROM USR U WHERE U.USER_ID = PR.CREATOR_ID),'SYSTEM') AS USER_NAME,
+IsNULL((select f.fs_name from FLAVOR_STATUS f where f.FS_ID=pr.FLAVOR_STATUS_ID),'') as FLV_STATUS
+FROM PRODUCT_RECIPE PR
+WHERE 1=1
+and $X{IN,pr.pr_id,pridList}
+ORDER BY PR.PR_NAME]]>
+	</queryString>
+	<field name="USER_NAME" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="USER_NAME"/>
+	</field>
+	<field name="PR_ID" class="java.lang.Integer">
+		<property name="com.jaspersoft.studio.field.label" value="PR_ID"/>
+	</field>
+	<field name="PR_CODE" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="PR_CODE"/>
+	</field>
+	<field name="PR_NAME" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="PR_NAME"/>
+	</field>
+	<field name="REMARKS" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="REMARKS"/>
+	</field>
+	<field name="REMARKS_USER_ID" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="REMARKS_USER_ID"/>
+	</field>
+	<field name="TOTAL_PERC" class="java.math.BigDecimal">
+		<property name="com.jaspersoft.studio.field.label" value="TOTAL_PERC"/>
+	</field>
+	<field name="RECORD_STATUS" class="java.lang.Integer">
+		<property name="com.jaspersoft.studio.field.label" value="RECORD_STATUS"/>
+	</field>
+	<field name="CREATOR_ID" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="CREATOR_ID"/>
+	</field>
+	<field name="CREATED_DATETIME" class="java.sql.Timestamp">
+		<property name="com.jaspersoft.studio.field.label" value="CREATED_DATETIME"/>
+	</field>
+	<field name="MODIFIER_ID" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="MODIFIER_ID"/>
+	</field>
+	<field name="MODIFIED_DATETIME" class="java.sql.Timestamp">
+		<property name="com.jaspersoft.studio.field.label" value="MODIFIED_DATETIME"/>
+	</field>
+	<field name="CHECKER_ID" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="CHECKER_ID"/>
+	</field>
+	<field name="SUBMITTED_DATETIME" class="java.sql.Timestamp">
+		<property name="com.jaspersoft.studio.field.label" value="SUBMITTED_DATETIME"/>
+	</field>
+	<field name="PR_OTHER_NAME1" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="PR_OTHER_NAME1"/>
+	</field>
+	<field name="PR_OTHER_NAME2" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="PR_OTHER_NAME2"/>
+	</field>
+	<field name="PR_OTHER_NAME3" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="PR_OTHER_NAME3"/>
+	</field>
+	<field name="PR_OTHER_NAME4" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="PR_OTHER_NAME4"/>
+	</field>
+	<field name="PR_OTHER_NAME5" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="PR_OTHER_NAME5"/>
+	</field>
+	<field name="FLV_STATUS" class="java.lang.String"/>
+	<group name="GroupPR" isStartNewPage="true">
+		<groupExpression><![CDATA[$F{PR_ID}]]></groupExpression>
+		<groupHeader>
+			<band height="160">
+				<property name="com.jaspersoft.studio.unit.height" value="px"/>
+				<textField>
+					<reportElement stretchType="RelativeToTallestObject" x="0" y="0" width="800" height="30" uuid="cbefc5ca-3ece-4cb5-873c-409326b3f75a"/>
+					<textElement>
+						<font fontName="Arial" size="19" isBold="true"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$F{PR_NAME}]]></textFieldExpression>
+				</textField>
+				<staticText>
+					<reportElement mode="Opaque" x="0" y="30" width="130" height="30" backcolor="#BFE1FF" uuid="3b00c13e-533a-40b0-99a2-b2fe2aee998d"/>
+					<box>
+						<pen lineColor="#FFFFFF"/>
+					</box>
+					<textElement textAlignment="Left" verticalAlignment="Middle">
+						<font fontName="Arial" size="12" isBold="false"/>
+					</textElement>
+					<text><![CDATA[Product Recipe TS No]]></text>
+				</staticText>
+				<staticText>
+					<reportElement mode="Opaque" x="0" y="60" width="130" height="30" backcolor="#BFE1FF" uuid="9de0a56a-4f1d-41fb-bbb2-c30ba7f093f0"/>
+					<box>
+						<pen lineColor="#FFFFFF"/>
+					</box>
+					<textElement textAlignment="Left" verticalAlignment="Middle">
+						<font fontName="Arial" size="12" isBold="false"/>
+					</textElement>
+					<text><![CDATA[Other Names]]></text>
+				</staticText>
+				<staticText>
+					<reportElement mode="Opaque" x="0" y="90" width="130" height="30" backcolor="#BFE1FF" uuid="e6873c07-383a-4d37-b222-5d175f2448a9"/>
+					<box>
+						<pen lineColor="#FFFFFF"/>
+					</box>
+					<textElement textAlignment="Left" verticalAlignment="Middle">
+						<font fontName="Arial" size="12" isBold="false"/>
+					</textElement>
+					<text><![CDATA[Total Ratio %]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="130" y="30" width="10" height="30" uuid="6c3745e7-88ac-4a53-b889-9ca7c770b706"/>
+					<textElement verticalAlignment="Middle">
+						<font fontName="Arial" size="12"/>
+					</textElement>
+					<text><![CDATA[ :]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="130" y="60" width="10" height="30" uuid="e0d3206f-ca90-4ed5-9e25-598065e86b41"/>
+					<textElement verticalAlignment="Middle">
+						<font fontName="Arial" size="12"/>
+					</textElement>
+					<text><![CDATA[ :]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="130" y="90" width="10" height="30" uuid="c041c92f-fff3-4fcc-a88d-2b2b8d8a1cf9"/>
+					<textElement verticalAlignment="Middle">
+						<font fontName="Arial" size="12"/>
+					</textElement>
+					<text><![CDATA[ :]]></text>
+				</staticText>
+				<textField>
+					<reportElement x="140" y="30" width="330" height="30" uuid="941359e4-cf82-4f4c-95d8-b0a40a38e152"/>
+					<textElement verticalAlignment="Middle">
+						<font fontName="Arial" size="12"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$F{PR_CODE}]]></textFieldExpression>
+				</textField>
+				<textField>
+					<reportElement stretchType="RelativeToTallestObject" x="140" y="60" width="330" height="30" uuid="8e6f2cd4-7feb-4689-befa-c34afdd77f41"/>
+					<textElement verticalAlignment="Middle">
+						<font fontName="Arial" size="12"/>
+					</textElement>
+					<textFieldExpression><![CDATA[(($F{PR_OTHER_NAME1}==null || $F{PR_OTHER_NAME1}.equals(""))?"":($F{PR_OTHER_NAME1}))
++
+(($F{PR_OTHER_NAME2}==null || $F{PR_OTHER_NAME2}.equals(""))?"":(" / "+$F{PR_OTHER_NAME2}))
++
+(($F{PR_OTHER_NAME3}==null || $F{PR_OTHER_NAME3}.equals(""))?"":(" / "+$F{PR_OTHER_NAME3}))
++
+(($F{PR_OTHER_NAME4}==null || $F{PR_OTHER_NAME4}.equals(""))?"":(" / "+$F{PR_OTHER_NAME4}))
++
+(($F{PR_OTHER_NAME5}==null || $F{PR_OTHER_NAME5}.equals(""))?"":(" / "+$F{PR_OTHER_NAME5}))]]></textFieldExpression>
+				</textField>
+				<textField>
+					<reportElement x="140" y="90" width="330" height="30" uuid="ceff8ef8-742f-43e2-8637-aaa48863b692"/>
+					<textElement verticalAlignment="Middle">
+						<font fontName="Arial" size="12"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$F{TOTAL_PERC}]]></textFieldExpression>
+				</textField>
+				<staticText>
+					<reportElement mode="Opaque" x="470" y="30" width="130" height="30" backcolor="#BFE1FF" uuid="bb13aae8-8cf5-41ce-b4a6-8854da7414c5"/>
+					<box>
+						<pen lineColor="#FFFFFF"/>
+					</box>
+					<textElement textAlignment="Left" verticalAlignment="Middle">
+						<font fontName="Arial" size="12" isBold="false"/>
+					</textElement>
+					<text><![CDATA[Creator Name]]></text>
+				</staticText>
+				<staticText>
+					<reportElement mode="Opaque" x="470" y="90" width="130" height="30" backcolor="#BFE1FF" uuid="63ec9ef0-2f04-4d87-8935-3b4e2df55774"/>
+					<box>
+						<pen lineColor="#FFFFFF"/>
+					</box>
+					<textElement textAlignment="Left" verticalAlignment="Middle">
+						<font fontName="Arial" size="12" isBold="false"/>
+					</textElement>
+					<text><![CDATA[Last Modified Date]]></text>
+				</staticText>
+				<staticText>
+					<reportElement mode="Opaque" x="470" y="60" width="130" height="30" backcolor="#BFE1FF" uuid="43191d0f-5435-4245-b67f-601a639c2571"/>
+					<box>
+						<pen lineColor="#FFFFFF"/>
+					</box>
+					<textElement textAlignment="Left" verticalAlignment="Middle">
+						<font fontName="Arial" size="12" isBold="false"/>
+					</textElement>
+					<text><![CDATA[Date Created]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="600" y="90" width="10" height="30" uuid="cedf0450-1c79-4a2e-ae65-9a03208bd05e"/>
+					<textElement verticalAlignment="Middle">
+						<font fontName="Arial" size="12"/>
+					</textElement>
+					<text><![CDATA[ :]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="600" y="30" width="10" height="30" uuid="af8ef26d-1ada-4b51-9e3b-ba33bf876e57"/>
+					<textElement verticalAlignment="Middle">
+						<font fontName="Arial" size="12"/>
+					</textElement>
+					<text><![CDATA[ :]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="600" y="60" width="10" height="30" uuid="7b1fc9b6-3b64-4754-afe8-c35a4c251ac2"/>
+					<textElement verticalAlignment="Middle">
+						<font fontName="Arial" size="12"/>
+					</textElement>
+					<text><![CDATA[ :]]></text>
+				</staticText>
+				<textField>
+					<reportElement x="610" y="30" width="190" height="30" uuid="2938cc72-c90e-41b3-8a6a-61fa1e55d58a"/>
+					<textElement verticalAlignment="Middle">
+						<font fontName="Arial"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$F{USER_NAME}]]></textFieldExpression>
+				</textField>
+				<textField>
+					<reportElement x="610" y="90" width="190" height="30" uuid="ad9d94ec-abda-4f6f-a246-5a92977b0f19"/>
+					<textElement verticalAlignment="Middle">
+						<font fontName="Arial"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$F{MODIFIED_DATETIME}==null?"":new java.text.SimpleDateFormat("dd/MM/yyy hh:mm:ss a").format($F{MODIFIED_DATETIME})]]></textFieldExpression>
+				</textField>
+				<textField>
+					<reportElement x="610" y="60" width="190" height="30" uuid="6430d776-c379-4937-bd28-d7231370a6f2"/>
+					<textElement verticalAlignment="Middle">
+						<font fontName="Arial"/>
+					</textElement>
+					<textFieldExpression><![CDATA[new java.text.SimpleDateFormat("dd/MM/yyy hh:mm:ss a").format($F{CREATED_DATETIME})]]></textFieldExpression>
+				</textField>
+				<staticText>
+					<reportElement mode="Opaque" x="0" y="120" width="130" height="30" backcolor="#BFE1FF" uuid="5eb5dccc-eab6-41a1-9276-eddf71336eca"/>
+					<box>
+						<pen lineColor="#FFFFFF"/>
+					</box>
+					<textElement textAlignment="Left" verticalAlignment="Middle">
+						<font fontName="Arial" size="12" isBold="false"/>
+					</textElement>
+					<text><![CDATA[Final Flavor Status]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="130" y="120" width="10" height="30" uuid="5628773c-b766-42ec-a985-908eba8e3d5f"/>
+					<textElement verticalAlignment="Middle">
+						<font fontName="Arial" size="12"/>
+					</textElement>
+					<text><![CDATA[ :]]></text>
+				</staticText>
+				<textField>
+					<reportElement x="140" y="120" width="330" height="30" uuid="9248eed0-e218-4cea-9843-7adaca5170ef"/>
+					<textElement verticalAlignment="Middle">
+						<font fontName="Arial" size="12"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$F{FLV_STATUS}]]></textFieldExpression>
+				</textField>
+			</band>
+		</groupHeader>
+	</group>
+	<background>
+		<band splitType="Stretch"/>
+	</background>
+	<title>
+		<band height="37" splitType="Stretch">
+			<staticText>
+				<reportElement x="0" y="1" width="800" height="36" uuid="1eef4b18-f869-4fac-bc59-6d860abd64fe"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Arial" size="20" isBold="true" isUnderline="true"/>
+				</textElement>
+				<text><![CDATA[Product Recipe Report]]></text>
+			</staticText>
+		</band>
+	</title>
+	<detail>
+		<band height="114">
+			<staticText>
+				<reportElement x="0" y="0" width="608" height="36" uuid="3090fe35-d917-4543-987b-4cd9302fe733"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Arial" size="14" isBold="true" isUnderline="false"/>
+				</textElement>
+				<text><![CDATA[Product Ingredient Summary]]></text>
+			</staticText>
+			<componentElement>
+				<reportElement x="0" y="37" width="800" height="60" uuid="7adb9393-7370-48a2-a78d-25928f223182">
+					<property name="com.jaspersoft.studio.layout" value="com.jaspersoft.studio.editor.layout.VerticalRowLayout"/>
+					<property name="com.jaspersoft.studio.table.style.table_header" value="Table_TH"/>
+					<property name="com.jaspersoft.studio.table.style.column_header" value="Table_CH"/>
+					<property name="com.jaspersoft.studio.table.style.detail" value="Table_TD"/>
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+				</reportElement>
+				<jr:table xmlns:jr="http://jasperreports.sourceforge.net/jasperreports/components" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports/components http://jasperreports.sourceforge.net/xsd/components.xsd">
+					<datasetRun subDataset="SummaryDataset" uuid="294c1111-eac2-472c-b315-b35ea3de830e">
+						<datasetParameter name="prId">
+							<datasetParameterExpression><![CDATA[$F{PR_ID}]]></datasetParameterExpression>
+						</datasetParameter>
+						<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
+					</datasetRun>
+					<jr:column width="100" uuid="7a060842-99c4-44a0-a585-3d84437d26f4">
+						<property name="com.jaspersoft.studio.components.table.model.column.name" value="Column1"/>
+						<jr:columnHeader style="Table_CH" height="30" rowSpan="1">
+							<property name="com.jaspersoft.studio.unit.width" value="px"/>
+							<staticText>
+								<reportElement x="0" y="0" width="100" height="30" uuid="a2654d6b-5662-46c8-91d5-8fdfc8da08e3"/>
+								<textElement textAlignment="Left" verticalAlignment="Middle">
+									<font fontName="Arial"/>
+								</textElement>
+								<text><![CDATA[Category]]></text>
+							</staticText>
+						</jr:columnHeader>
+						<jr:detailCell style="Table_TD" height="30">
+							<textField>
+								<reportElement x="0" y="0" width="100" height="30" uuid="42a0486f-e71c-4f06-b448-de4a7ea9c720"/>
+								<textElement verticalAlignment="Middle">
+									<font fontName="Arial"/>
+								</textElement>
+								<textFieldExpression><![CDATA[$F{CATEGORY}]]></textFieldExpression>
+							</textField>
+						</jr:detailCell>
+					</jr:column>
+					<jr:column width="100" uuid="d4d1f958-e18f-4a38-9c8b-f7b2e5042ac1">
+						<property name="com.jaspersoft.studio.components.table.model.column.name" value="Column2"/>
+						<jr:columnHeader style="Table_CH" height="30" rowSpan="1">
+							<property name="com.jaspersoft.studio.unit.width" value="px"/>
+							<staticText>
+								<reportElement x="0" y="0" width="100" height="30" uuid="325703e5-37da-4980-8bf6-78a0d4bf4998"/>
+								<textElement textAlignment="Center" verticalAlignment="Middle">
+									<font fontName="Arial"/>
+								</textElement>
+								<text><![CDATA[TS No]]></text>
+							</staticText>
+						</jr:columnHeader>
+						<jr:detailCell style="Table_TD" height="30">
+							<textField>
+								<reportElement x="0" y="0" width="100" height="30" uuid="394e30db-583b-479e-ab75-fccf2713428a"/>
+								<textElement textAlignment="Center" verticalAlignment="Middle">
+									<font fontName="Arial"/>
+								</textElement>
+								<textFieldExpression><![CDATA[$F{SEL_TS_NO}]]></textFieldExpression>
+							</textField>
+						</jr:detailCell>
+					</jr:column>
+					<jr:column width="200" uuid="1842d315-1a86-4088-a32b-08c7e3ddb248">
+						<property name="com.jaspersoft.studio.components.table.model.column.name" value="Column3"/>
+						<jr:columnHeader style="Table_CH" height="30" rowSpan="1">
+							<property name="com.jaspersoft.studio.unit.width" value="px"/>
+							<staticText>
+								<reportElement x="0" y="0" width="200" height="30" uuid="66eec5fc-eeee-4917-bb54-be5877b38023"/>
+								<textElement textAlignment="Left" verticalAlignment="Middle">
+									<font fontName="Arial"/>
+								</textElement>
+								<text><![CDATA[Ingredient Name]]></text>
+							</staticText>
+						</jr:columnHeader>
+						<jr:detailCell style="Table_TD" height="30">
+							<textField>
+								<reportElement x="0" y="0" width="200" height="30" uuid="f1bd0bee-fac3-48c8-a496-3bb44ae248c8"/>
+								<textElement verticalAlignment="Middle">
+									<font fontName="Arial"/>
+								</textElement>
+								<textFieldExpression><![CDATA[$F{INGREDIENT_NAME}]]></textFieldExpression>
+							</textField>
+						</jr:detailCell>
+					</jr:column>
+					<jr:column width="150" uuid="fe2db4da-1444-4e53-8e53-fa6726449706">
+						<property name="com.jaspersoft.studio.components.table.model.column.name" value="Column4"/>
+						<jr:columnHeader style="Table_CH" height="30" rowSpan="1">
+							<property name="com.jaspersoft.studio.unit.width" value="px"/>
+							<staticText>
+								<reportElement x="0" y="0" width="150" height="30" uuid="1987b5ae-2dd4-4304-ae81-94d3532f1a58">
+									<property name="com.jaspersoft.studio.unit.width" value="pixel"/>
+								</reportElement>
+								<textElement verticalAlignment="Middle"/>
+								<text><![CDATA[RM Flavor Status]]></text>
+							</staticText>
+						</jr:columnHeader>
+						<jr:detailCell style="Table_TD" height="30">
+							<textField isBlankWhenNull="true">
+								<reportElement x="0" y="0" width="150" height="30" uuid="34d6427e-682c-44e4-80c9-404024629bff"/>
+								<textElement textAlignment="Left" verticalAlignment="Middle"/>
+								<textFieldExpression><![CDATA[$F{flvstatname}]]></textFieldExpression>
+							</textField>
+						</jr:detailCell>
+					</jr:column>
+					<jr:column width="150" uuid="7bad1625-706f-41f9-a318-e237cce2b377">
+						<property name="com.jaspersoft.studio.components.table.model.column.name" value="Column5"/>
+						<jr:columnHeader style="Table_CH" height="30" rowSpan="1">
+							<staticText>
+								<reportElement x="0" y="0" width="150" height="30" uuid="b3e7fd0e-1ba4-4a5f-8e57-8d711b92fa22">
+									<property name="com.jaspersoft.studio.unit.width" value="pixel"/>
+								</reportElement>
+								<textElement verticalAlignment="Middle"/>
+								<text><![CDATA[Alternative RM]]></text>
+							</staticText>
+						</jr:columnHeader>
+						<jr:detailCell style="Table_TD" height="30">
+							<textField isBlankWhenNull="true">
+								<reportElement x="0" y="0" width="150" height="30" uuid="9c0a42ce-7f7e-4f67-9b55-368e53498413"/>
+								<textElement verticalAlignment="Middle"/>
+								<textFieldExpression><![CDATA[$F{altnames}]]></textFieldExpression>
+							</textField>
+						</jr:detailCell>
+					</jr:column>
+					<jr:column width="100" uuid="8f9de0e4-8084-4415-8ce7-af9dbdc9f90d">
+						<property name="com.jaspersoft.studio.components.table.model.column.name" value="Column6"/>
+						<jr:columnHeader style="Table_CH" height="30" rowSpan="1">
+							<staticText>
+								<reportElement x="0" y="0" width="100" height="30" uuid="e4072737-69c0-47d5-abc2-9877b19cf68d"/>
+								<textElement textAlignment="Right" verticalAlignment="Middle">
+									<font fontName="Arial"/>
+								</textElement>
+								<text><![CDATA[Ratio %]]></text>
+							</staticText>
+						</jr:columnHeader>
+						<jr:detailCell style="Table_TD" height="30">
+							<textField pattern="###0.0000000000#;(###0.0000000000#-)">
+								<reportElement x="0" y="0" width="100" height="30" uuid="c82d0fbc-5a01-4267-84c7-593f2a10e278"/>
+								<textElement textAlignment="Right" verticalAlignment="Middle">
+									<font fontName="Arial"/>
+								</textElement>
+								<textFieldExpression><![CDATA[$F{ING_PERC}]]></textFieldExpression>
+							</textField>
+						</jr:detailCell>
+					</jr:column>
+				</jr:table>
+			</componentElement>
+		</band>
+		<band height="100">
+			<crosstab>
+				<reportElement x="0" y="40" width="800" height="50" uuid="8444100a-fc4e-4b1e-ae72-59d716f51481">
+					<property name="com.jaspersoft.studio.layout" value="com.jaspersoft.studio.editor.layout.VerticalRowLayout"/>
+					<property name="com.jaspersoft.studio.crosstab.style.header" value="Crosstab_CH"/>
+					<property name="com.jaspersoft.studio.crosstab.style.group" value="Crosstab_CG"/>
+					<property name="com.jaspersoft.studio.crosstab.style.total" value="Crosstab_CT"/>
+					<property name="com.jaspersoft.studio.crosstab.style.detail" value="Crosstab_CD"/>
+				</reportElement>
+				<crosstabParameter name="prId" class="java.lang.Integer"/>
+				<crosstabDataset>
+					<dataset resetType="Report">
+						<datasetRun subDataset="RMStatusDataset" uuid="5302c1a8-c16d-497a-a7cc-13ebc3d20628">
+							<datasetParameter name="prId">
+								<datasetParameterExpression><![CDATA[$F{PR_ID}]]></datasetParameterExpression>
+							</datasetParameter>
+							<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
+						</datasetRun>
+					</dataset>
+				</crosstabDataset>
+				<rowGroup name="RAW_MATL_NAME" width="180">
+					<bucket class="java.lang.String">
+						<bucketExpression><![CDATA[$F{RAW_MATL_NAME}]]></bucketExpression>
+					</bucket>
+					<crosstabRowHeader>
+						<cellContents mode="Opaque" style="Crosstab_CH">
+							<textField>
+								<reportElement x="0" y="0" width="180" height="30" uuid="3a889dab-a040-4f97-ae9f-805ef3475c39"/>
+								<textElement verticalAlignment="Middle">
+									<font fontName="Arial"/>
+								</textElement>
+								<textFieldExpression><![CDATA[$V{RAW_MATL_NAME}]]></textFieldExpression>
+							</textField>
+						</cellContents>
+					</crosstabRowHeader>
+					<crosstabTotalRowHeader>
+						<cellContents>
+							<staticText>
+								<reportElement x="0" y="0" width="-2147483648" height="-2147483648" uuid="40a85980-ebb9-4e36-98e4-ccb7a03ff23f"/>
+								<text><![CDATA[Total RAW_MATL_NAME]]></text>
+							</staticText>
+						</cellContents>
+					</crosstabTotalRowHeader>
+				</rowGroup>
+				<columnGroup name="COUNTRY_NAME" height="20">
+					<bucket class="java.lang.String">
+						<bucketExpression><![CDATA[$F{COUNTRY_NAME}]]></bucketExpression>
+					</bucket>
+					<crosstabColumnHeader>
+						<cellContents mode="Opaque" style="Crosstab_CH">
+							<textField>
+								<reportElement x="0" y="0" width="180" height="20" uuid="e0e44d2d-1190-469e-92c1-a8127b803210"/>
+								<textElement textAlignment="Center" verticalAlignment="Middle">
+									<font fontName="Arial"/>
+								</textElement>
+								<textFieldExpression><![CDATA[$V{COUNTRY_NAME}]]></textFieldExpression>
+							</textField>
+						</cellContents>
+					</crosstabColumnHeader>
+					<crosstabTotalColumnHeader>
+						<cellContents>
+							<staticText>
+								<reportElement x="0" y="0" width="-2147483648" height="-2147483648" uuid="7998bdfc-f12e-4041-92e6-b17a08e80102"/>
+								<text><![CDATA[Total COUNTRY_NAME]]></text>
+							</staticText>
+						</cellContents>
+					</crosstabTotalColumnHeader>
+				</columnGroup>
+				<measure name="FINAL_STATUS_MEASURE" class="java.lang.String">
+					<measureExpression><![CDATA[$F{FINAL_STATUS}]]></measureExpression>
+				</measure>
+				<crosstabCell width="180" height="30">
+					<cellContents mode="Opaque" style="Crosstab_CD">
+						<textField>
+							<reportElement x="0" y="0" width="180" height="30" uuid="f0c19db5-90bf-4b0a-a8f3-62ca36b0502b"/>
+							<textElement textAlignment="Center" verticalAlignment="Middle">
+								<font fontName="Arial"/>
+							</textElement>
+							<textFieldExpression><![CDATA[$V{FINAL_STATUS_MEASURE}]]></textFieldExpression>
+						</textField>
+					</cellContents>
+				</crosstabCell>
+				<crosstabCell width="60" height="20" columnTotalGroup="COUNTRY_NAME">
+					<cellContents mode="Opaque" style="Crosstab_CT">
+						<textField>
+							<reportElement x="0" y="0" width="60" height="20" forecolor="#FFFFFF" uuid="c6f81969-a56d-4825-acfe-a5f3400d549c"/>
+							<textFieldExpression><![CDATA[$V{FINAL_STATUS_MEASURE}]]></textFieldExpression>
+						</textField>
+					</cellContents>
+				</crosstabCell>
+				<crosstabCell width="60" height="20" rowTotalGroup="RAW_MATL_NAME">
+					<cellContents mode="Opaque" style="Crosstab_CT">
+						<textField>
+							<reportElement x="0" y="0" width="60" height="20" forecolor="#FFFFFF" uuid="0372e39d-fccd-4393-9e43-5a500f6aa695"/>
+							<textFieldExpression><![CDATA[$V{FINAL_STATUS_MEASURE}]]></textFieldExpression>
+						</textField>
+					</cellContents>
+				</crosstabCell>
+				<crosstabCell width="60" height="20" rowTotalGroup="RAW_MATL_NAME" columnTotalGroup="COUNTRY_NAME">
+					<cellContents mode="Opaque" style="Crosstab_CT">
+						<textField>
+							<reportElement x="0" y="0" width="60" height="20" forecolor="#FFFFFF" uuid="826a4850-ef8b-4b7d-9aa6-90ac8c80f939"/>
+							<textFieldExpression><![CDATA[$V{FINAL_STATUS_MEASURE}]]></textFieldExpression>
+						</textField>
+					</cellContents>
+				</crosstabCell>
+			</crosstab>
+			<staticText>
+				<reportElement x="0" y="0" width="608" height="36" uuid="996aaa73-c223-4353-b056-898dfafac300"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Arial" size="14" isBold="true" isUnderline="false"/>
+				</textElement>
+				<text><![CDATA[Ingredient Permissibility Status]]></text>
+			</staticText>
+		</band>
+		<band height="108">
+			<staticText>
+				<reportElement x="0" y="0" width="608" height="36" uuid="1b8c34cd-62bd-4cf0-810e-f61b4c80a47e"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Arial" size="14" isBold="true" isUnderline="false"/>
+				</textElement>
+				<text><![CDATA[Product Permissibility Status]]></text>
+			</staticText>
+			<componentElement>
+				<reportElement x="0" y="40" width="800" height="60" uuid="8705b609-dc17-48c4-b955-9cb2c328425f">
+					<property name="com.jaspersoft.studio.layout" value="com.jaspersoft.studio.editor.layout.VerticalRowLayout"/>
+					<property name="com.jaspersoft.studio.table.style.table_header" value="Table 1_TH"/>
+					<property name="com.jaspersoft.studio.table.style.column_header" value="Table 1_CH"/>
+					<property name="com.jaspersoft.studio.table.style.detail" value="Table 1_TD"/>
+				</reportElement>
+				<jr:table xmlns:jr="http://jasperreports.sourceforge.net/jasperreports/components" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports/components http://jasperreports.sourceforge.net/xsd/components.xsd">
+					<datasetRun subDataset="PRStatusDataset" uuid="b825b248-6af4-4b36-a818-dd1c701a4392">
+						<datasetParameter name="prId">
+							<datasetParameterExpression><![CDATA[$F{PR_ID}]]></datasetParameterExpression>
+						</datasetParameter>
+						<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
+					</datasetRun>
+					<jr:column width="400" uuid="576b5944-e9a9-49db-868a-345fa18bed1b">
+						<property name="com.jaspersoft.studio.components.table.model.column.name" value="Column1"/>
+						<jr:columnHeader style="Table 1_CH" height="30">
+							<staticText>
+								<reportElement x="0" y="0" width="400" height="30" uuid="9bf1397b-aa33-4317-955e-14e3091aba0f"/>
+								<textElement textAlignment="Center" verticalAlignment="Middle">
+									<font fontName="Arial"/>
+								</textElement>
+								<text><![CDATA[COUNTRY NAME]]></text>
+							</staticText>
+						</jr:columnHeader>
+						<jr:detailCell style="Table 1_TD" height="30">
+							<textField>
+								<reportElement x="0" y="0" width="400" height="30" uuid="75c59675-2f96-42c7-a1a2-4007777161d2"/>
+								<textElement textAlignment="Center" verticalAlignment="Middle">
+									<font fontName="Arial"/>
+								</textElement>
+								<textFieldExpression><![CDATA[$F{CNTRY_NAME}]]></textFieldExpression>
+							</textField>
+						</jr:detailCell>
+					</jr:column>
+					<jr:column width="400" uuid="e8d336cb-30fa-4fc8-a7bc-fcd43201c872">
+						<property name="com.jaspersoft.studio.components.table.model.column.name" value="Column2"/>
+						<jr:columnHeader style="Table 1_CH" height="30">
+							<staticText>
+								<reportElement x="0" y="0" width="400" height="30" uuid="18d06b0b-a489-42f2-bd04-58c46f77e120"/>
+								<textElement textAlignment="Center" verticalAlignment="Middle">
+									<font fontName="Arial"/>
+								</textElement>
+								<text><![CDATA[FINAL STATUS]]></text>
+							</staticText>
+						</jr:columnHeader>
+						<jr:detailCell style="Table 1_TD" height="30">
+							<textField>
+								<reportElement x="0" y="0" width="400" height="30" uuid="b17bc341-508d-45d6-86f7-8bc398fd46b9"/>
+								<textElement textAlignment="Center" verticalAlignment="Middle">
+									<font fontName="Arial"/>
+								</textElement>
+								<textFieldExpression><![CDATA[$F{FINAL_STATUS}]]></textFieldExpression>
+							</textField>
+						</jr:detailCell>
+					</jr:column>
+				</jr:table>
+			</componentElement>
+		</band>
+	</detail>
+	<pageFooter>
+		<band height="37" splitType="Stretch">
+			<rectangle>
+				<reportElement x="0" y="10" width="800" height="1" uuid="d274548f-bd90-44b9-97b5-aaf08985269c">
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+				</reportElement>
+			</rectangle>
+			<textField>
+				<reportElement x="720" y="20" width="40" height="16" uuid="48ec5bbd-7fe9-4670-a918-8aef0e883d86">
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+				</reportElement>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Arial" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA["Page " + $V{PAGE_NUMBER}]]></textFieldExpression>
+			</textField>
+			<textField evaluationTime="Report">
+				<reportElement x="760" y="20" width="42" height="16" uuid="ec130824-1bbe-4504-b4af-f93913b1094f">
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+				</reportElement>
+				<textElement textAlignment="Left" verticalAlignment="Middle">
+					<font fontName="Arial" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[" of " + $V{PAGE_NUMBER}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement x="0" y="20" width="44" height="16" uuid="b6b9003c-ce99-4e25-b8aa-864516bf2e23"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Arial" size="8"/>
+				</textElement>
+				<text><![CDATA[Printed by :]]></text>
+			</staticText>
+			<textField pattern="dd/mm/yyyy" isBlankWhenNull="true">
+				<reportElement x="160" y="20" width="100" height="16" uuid="3a0d42ec-5c66-4579-9742-7cc7892f734b">
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+				</reportElement>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Arial" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[new java.text.SimpleDateFormat("dd/MM/yyy hh:mm:ss a").format(new java.util.Date())]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement x="144" y="20" width="16" height="16" uuid="037377c8-503a-4a7f-8ddf-b649f88ffef2"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Arial" size="8"/>
+				</textElement>
+				<text><![CDATA[on]]></text>
+			</staticText>
+			<textField>
+				<reportElement x="44" y="20" width="100" height="16" uuid="bf896f6b-aee9-4e25-ba47-f89e5ca93bf7">
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+				</reportElement>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Arial"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{userId}]]></textFieldExpression>
+			</textField>
+		</band>
+	</pageFooter>
+	<noData>
+		<band height="31">
+			<staticText>
+				<reportElement x="0" y="0" width="800" height="30" uuid="2c14638e-5f9c-490d-940a-16d7ce401edc"/>
+				<textElement textAlignment="Center">
+					<font size="14"/>
+				</textElement>
+				<text><![CDATA[No data found or the data is insufficient to generate the report.]]></text>
+			</staticText>
+		</band>
+	</noData>
+</jasperReport>

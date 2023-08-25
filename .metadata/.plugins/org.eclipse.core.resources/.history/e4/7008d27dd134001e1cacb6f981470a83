@@ -1,0 +1,29 @@
+package com.fms.pfc.repository.main.api;
+
+import java.util.List;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.stereotype.Repository;
+
+import com.fms.pfc.domain.model.main.FoldCatgConf;
+
+@Repository
+public interface FoldCatgConfRepository extends JpaRepository<FoldCatgConf, Integer> {
+
+	@Query(value = "SELECT * FROM LETTER_TYPE WHERE 1=1 " 
+			+ "AND (?1 = '' OR (LT_NAME LIKE CASE "
+			+ "                                 WHEN ?3 = '1' THEN CONCAT('%', ?1, '%') "
+			+ "									WHEN ?3 = '2' THEN CONCAT('%', ?1) "
+			+ "									WHEN ?3 = '3' THEN ?1 "
+			+ "									WHEN ?3 = '4' THEN CONCAT(?1, '%') END)) "
+			+ "AND (?2 = '' OR (LT_DESC LIKE CASE "
+			+ "                                 WHEN ?4 = '1' THEN CONCAT('%', ?2, '%') "
+			+ "									WHEN ?4 = '2' THEN CONCAT('%', ?2) "
+			+ "									WHEN ?4 = '3' THEN ?2 "
+			+ "									WHEN ?4 = '4' THEN CONCAT(?2, '%') END)) "
+			+ "ORDER BY LT_NAME", nativeQuery = true)
+	List<FoldCatgConf> searchByCriteria(String hpl, String model, String year, String month, String day, String prodLn,
+			String seq);
+
+}

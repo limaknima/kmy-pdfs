@@ -1,0 +1,12 @@
+package com.fms.pfc.controller.base;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.context.annotation.SessionScope;
+
+@Controller
+@SessionScope
+public class MenuRoleFunctionController {
+	private final Logger logger = LoggerFactory.getLogger(MenuRoleFunctionController.class);
+}

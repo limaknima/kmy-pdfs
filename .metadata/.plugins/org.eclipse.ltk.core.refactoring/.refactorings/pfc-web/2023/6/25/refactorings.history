@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<session version="1.0">
+<refactoring comment="Rename resource &apos;pfc-web/src/main/resources/templates/main/pfc/fileTypeSzForm.html&apos; to &apos;fileTypeSzList.html&apos;" description="Rename resource &apos;fileTypeSzForm.html&apos;" flags="7" id="org.eclipse.ltk.core.refactoring.rename.resource" input="src/main/resources/templates/main/pfc/fileTypeSzForm.html" name="fileTypeSzList.html" stamp="1686818095968" updateReferences="true"/>
+</session>

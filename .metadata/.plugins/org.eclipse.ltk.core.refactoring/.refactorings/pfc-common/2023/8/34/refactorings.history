@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<session version="1.0">
+<refactoring comment="Extract local variable &apos;mrf&apos; from expression &apos;mrfServ.searchByCriteria(menuItemId,&quot;&quot;,0,0,false)&apos;&#x0D;&#x0A;- Original project: &apos;pfc-common&apos;&#x0D;&#x0A;- Variable name: &apos;mrf&apos;&#x0D;&#x0A;- Destination method: &apos;com.fms.pfc.common.Authority.menuRoleFunction()&apos;&#x0D;&#x0A;- Variable expression: &apos;mrfServ.searchByCriteria(menuItemId,&quot;&quot;,0,0,false)&apos;&#x0D;&#x0A;- Replace occurrences of expression with variable" description="Extract local variable &apos;mrf&apos;" final="false" id="org.eclipse.jdt.ui.extract.temp" input="/src\/main\/java=/optional=/true=/=/maven.pomderived=/true=/&lt;com.fms.pfc.common{Authority.java" name="mrf" replace="true" selection="1856 54" stamp="1692329992024" varType="false" version="1.0"/>
+</session>

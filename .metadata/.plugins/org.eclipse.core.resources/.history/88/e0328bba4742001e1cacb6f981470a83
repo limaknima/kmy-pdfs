@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+<title>PFC - Report Menu</title>
+<link rel="icon" type="image/ico" th:href="@{/static/favicon.ico}">
+<link rel="stylesheet" type="text/css" th:href="@{/css/styles.css}" />
+<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css">
+
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/js/all.min.js"></script>
+</head>
+
+<body class="sb-nav-fixed">
+	<div th:replace="/header :: navBar"></div>
+	<div id="layoutSidenav">
+		<div th:replace="/header :: sideNavBar"></div>
+		<div id="layoutSidenav_content">
+			<main>
+				<div class="container-fluid" id="content">
+					<h2 class="mt-4">Report</h2>
+					
+					<ol class="breadcrumb mb-4">
+						<li class="breadcrumb-item active">Report printing</li>
+					</ol>
+					<div class="row">
+						<div class="col-xl-3 col-md-6" th:if="${M601}">
+							<div class="wrimagecard wrimagecard-topimage">
+								<a th:href="@{/main/report/rawMatlReport}">
+									<div class="wrimagecard-topimage_header"
+										style="background-color: #b4b4b4">
+										<i class="far fa-newspaper fa-5x" style="color: #2d2d46"></i>
+									</div>
+									<div class="wrimagecard-topimage_title">
+										<div class="pull-right badge" id="WrControls">
+											<h5>
+												<span>Raw Material Report</span>
+											</h5>
+										</div>
+									</div>
+								</a>
+							</div>
+						</div>
+						<div class="col-xl-3 col-md-6" th:if="${M602}">
+							<div class="wrimagecard wrimagecard-topimage">
+								<a th:href="@{/main/report/productReport}">
+									<div class="wrimagecard-topimage_header"
+										style="background-color: #b4b4b4">
+										<i class="fas fa-newspaper fa-5x" style="color: #2d2d46"></i>
+									</div>
+									<div class="wrimagecard-topimage_title">
+										<div class="pull-right badge" id="WrControls">
+											<h5>
+												<span>Product Recipe Report</span>
+											</h5>
+										</div>
+									</div>
+								</a>
+							</div>
+						</div>
+					</div>
+					<div class="row">
+					
+					</div>
+				</div>
+			</main>
+		</div>
+	</div>
+	
+	<script type="text/javascript" src="../js/scripts.js"></script>
+	<script src="https://code.highcharts.com/highcharts.js"></script>
+	<script src="https://code.highcharts.com/modules/exporting.js"></script>
+	
+</body>
+</html>

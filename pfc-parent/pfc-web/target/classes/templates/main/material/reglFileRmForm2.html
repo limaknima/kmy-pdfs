@@ -1,0 +1,700 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+<title>PFC - Raw Material Regulation File</title>
+<link rel="icon" type="image/ico" th:href="@{/static/favicon.ico}">
+<link rel="stylesheet" type="text/css" th:href="@{/css/styles.css}" />
+<link rel="stylesheet" type="text/css"
+	th:href="@{/css/bootstrap-duallistbox.css}">
+<link rel="stylesheet"
+	href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css">
+<link rel="stylesheet"
+	href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/css/bootstrap-datepicker.css" />
+<link rel="stylesheet" type="text/css"
+	href="//cdn.datatables.net/1.10.20/css/dataTables.material.css">
+<link rel="stylesheet"
+	href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+
+<script
+	src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/js/all.min.js"></script>
+<script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+<script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+<script
+	src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/js/bootstrap.bundle.min.js"></script>
+<script
+	src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/js/bootstrap-datepicker.min.js"></script>
+<script
+	src="https://cdn.datatables.net/1.10.20/js/jquery.dataTables.min.js"></script>
+<script
+	src="https://cdn.datatables.net/1.10.20/js/dataTables.bootstrap4.min.js"></script>
+<script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
+<script
+	src="https://cdn.rawgit.com/google/code-prettify/master/loader/run_prettify.js"></script>
+<script type="text/javascript"
+	src="../../js/jquery.bootstrap-duallistbox.js"></script>
+<style>
+.tableFixHead {
+	overflow-y: auto;
+	overflow-x: hidden;
+	height: 300px;
+	margin-bottom: 10px;
+}
+
+.tableFixHead thead th {
+	position: sticky;
+	top: 0;
+	background: #F5F5F5;
+	border-top: none;
+	border-bottom: none;
+	box-shadow: inset 0 0.1px 0 #000000, inset 0 -0.1px 0 #000000;
+	border-bottom: none;
+}
+/*FSGS) Faiz - 10/3/2021 - log no 220 = filename overlap */
+label.custom-file-label {
+	overflow: hidden;
+}
+</style>
+
+</head>
+
+<body class="sb-nav-fixed" onload="onPageLoad()">
+
+	<main>
+		<div class="container-fluid" id="content">
+			<br />
+			<div class="alert alert-danger alert-dismissible" th:if="${error}">
+				<a class="close" data-dismiss="alert" aria-label="close">&times;</a>
+				<a th:utext="${error}"></a>
+			</div>
+			<div class="alert alert-success alert-dismissible" th:if="${success}">
+				<a class="close" data-dismiss="alert" aria-label="close">&times;</a>
+				<a th:text="${success}"></a>
+			</div>
+			<div class="alert alert-dark alert-dismissible" th:if="${info}">
+				<a class="close" data-dismiss="alert" aria-label="close">&times;</a>
+				<a th:utext="${info}"></a>
+			</div>
+
+			<div class="card">
+				<div class="card-header" id="headingTwo">
+					<a th:text="${header}"></a>
+				</div>
+				<div class="card-body">
+
+					<form th:action="@{/main/material/reglFileRmFormSave2}"
+						method="post" th:object="${reglFileItem}" id="mainForm"
+						enctype="multipart/form-data">
+
+						<input type="text" class="form-control" name="reglFileId"
+							hidden="true" th:field="*{reglFileId}"> <input
+							type="text" class="form-control" name="fileName" hidden="true"
+							th:field="*{fileName}">
+						<h4>File Information</h4>
+						<hr />
+
+						<div id="fileInfoAddDiv">
+						<div class="form-group row">
+							<label class="col-sm-3 col-form-label">Add new or
+								existing? <a name="asterisk" style="color: red;">*</a>
+							</label><label class="col-form-label">:</label>
+							<div class="row col-sm-5">
+								<div class="col">
+									<div class="row col-sm-3 col-form-label">
+										<div class="col">
+											<input type="radio" value="1" name="addType"
+												onchange="onCatChange()" id="newRad"
+												th:checked="${addType == 1}"> <label>New</label>
+										</div>
+									</div>
+									<div th:hidden="${hideExistRadio}"
+										class="row col-sm-3 col-form-label">
+										<div class="col">
+											<input type="radio" value="2" name="addType"
+												onchange="onCatChange()" id="existingRad"
+												th:checked="${addType == 2}"> <label>Existing</label>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+
+						<div id="extDataDiv" th:hidden="${hideExistDiv}">
+							<div class="form-group row">
+								<label class="col-sm-3 col-form-label">Existing files <a
+									name="asterisk" style="color: red;">*</a>
+								</label><label class="col-form-label">:</label>
+								<div class="row col-sm-5">
+									<div class="col">
+										<select class="custom-select" name="exFile" id="exFile"
+											disabled th:value="${exFile}">
+											<option value="" selected hidden="true">Please
+												Select</option>
+											<option th:each="file: ${fileSelectItems}"
+												th:value="${file.reglFileId}" th:text="${file.fileName}"
+												th:selected="${file.reglFileId == exFile}" />
+										</select>
+									</div>
+								</div>
+							</div>
+						</div>
+
+						<div id="newDataDiv" th:hidden="${hideNewDiv}">
+							<div class="form-group row">
+								<label class="col-sm-3 col-form-label">File Group <a
+									name="asterisk" style="color: red;">*</a>
+								</label><label class="col-form-label">:</label>
+								<div class="row col-sm-5">
+									<div class="col">
+										<select class="custom-select" name="docCatGrpId"
+											id="docCatGrpId" disabled th:field="*{docCatGrpId}">
+											<option value="" selected hidden="true">Please
+												Select</option>
+											<option th:each="fileGrp: ${fileGroupSelectItems}"
+												th:value="${fileGrp.regDocCatGrpId}"
+												th:text="${fileGrp.grpName}"
+												th:selected="${fileGrp.regDocCatGrpId == docCatGrpId}" />
+										</select>
+									</div>
+								</div>
+							</div>
+
+							<div class="form-group row">
+								<label class="col-sm-3 col-form-label">File Category <a
+									name="asterisk" style="color: red;">*</a>
+								</label><label class="col-form-label">:</label>
+								<div class="row col-sm-5">
+									<div class="col">
+										<select class="custom-select" name="docCatId" id="docCatId"
+											disabled hidden="true" th:field="*{docCatId}">
+											<option value="" selected hidden="true">Please
+												Select</option>
+											<option th:each="fileCat: ${fileCategorySelectItems}"
+												th:value="${fileCat.regDocCatId}"
+												th:text="${fileCat.catName}"
+												th:selected="${fileCat.regDocCatId == docCatId}" />
+										</select>
+									</div>
+								</div>
+							</div>
+
+							<div class="form-group row" id="fileNameDiv"
+								th:hidden="${fileNameDiv}">
+								<label class="col-sm-3 col-form-label">File Name <a
+									name="asterisk" style="color: red;">*</a>
+								</label><label class="col-form-label">:</label>
+								<div class="row col-sm-5">
+									<div class="col">
+										<div class="custom-file" id="inputFileName">
+											<input type="file" class="custom-file-input btn"
+												hidden="true" disabled name="fileContent" id="fileContent"
+												th:field="*{fileContent}"> <label
+												class="custom-file-label" for="customFileLang"
+												id="fileContentLabel">Choose file</label>
+										</div>
+									</div>
+								</div>
+							</div>
+
+							<div id="editFileDiv" th:hidden="${editDiv}">
+								<!-- 
+												<div class="form-group row">
+													<label class="col-sm-3 col-form-label">Archive?</label> <label
+														class="col-form-label">:</label>
+													<div class="row col-sm-3 col-form-label">
+														<div class="col">
+															<input type="checkbox" value="Archived" id="fileStatus"
+																name="fileStatus" disabled onchange="onCheck(this)"
+																th:checked="${fileStatus=='Archived'}"> 
+															<input
+																type="checkbox" value="Active" id="fileStatusActive"
+																name="fileStatus" hidden="true"
+																th:checked="${fileStatus != 'Archived'}">
+														</div>
+													</div>
+												</div>
+												 -->
+
+								<div class="form-group row">
+									<label class="col-sm-3 col-form-label">New File (If
+										required) </label><label class="col-form-label">:</label>
+									<div class="row col-sm-4">
+										<div class="col">
+											<div class="custom-file" id="inputNewFileName">
+												<input type="file" class="custom-file-input btn"
+													hidden="true" disabled name="newFileContent"
+													id="newFileContent"> <label
+													class="custom-file-label" for="customFileLang"
+													id="newFileContentLabel">Choose file</label>
+											</div>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+						</div>
+
+						<div class="form-group row" id="viewFileNameDiv"
+							th:hidden="${viewFileNameDiv}">
+							<label class="col-sm-3 col-form-label">File Name </label> <label
+								class="col-form-label">:</label>
+							<div class="row col-sm-5">
+								<div class="col">
+									<textarea disabled class="form-control-plaintext" name="viewFileName" id="viewFileName" 
+														th:field="*{fileName}" maxlength="100" rows="2"
+														style="resize: none;"></textarea><a
+										th:href="@{/main/material/reglFileRmListDownload2(reglFileId=*{reglFileId})}">
+										<i class="fas fa-download"></i>
+									</a>
+								</div>
+							</div>
+						</div>
+
+						<h4>Regulation Reference</h4>
+						<hr />
+
+						<div class="form-group row">
+							<label class="col-sm-3 col-form-label">Country <a
+								name="asterisk" style="color: red;">*</a>
+							</label><label class="col-form-label">:</label>
+							<div class="row col-sm-5">
+								<div class="col">
+									<select class="custom-select" name="countryId" id="countryId"
+										disabled th:field="*{countryId}">
+										<option value="" selected hidden="true">Please Select</option>
+										<option th:each="country: ${countrySelectItems}"
+											th:value="${country.countryId}"
+											th:text="${country.countryName}"
+											th:selected="${country.countryId == countryId}" />
+									</select>
+								</div>
+							</div>
+						</div>
+
+						<div class="form-group row">
+							<label class="col-sm-3 col-form-label">Selected RM <a
+								id="asterisk" style="color: red;" th:hidden="${asterisk}">*</a>
+							</label><label class="col-form-label">:</label>
+							<div class="row col-sm-5">
+								<div class="col">
+
+									<select class="custom-select" name="infoRmId" id="infoRmId"
+										disabled hidden="true" th:value="${infoRmId}">
+										<option value="" selected hidden="true">Please Select</option>
+										<option th:each="rmItem: ${rmSelectItems}"
+											th:value="${rmItem.value}" th:text="${rmItem.label}"
+											th:selected="${rmItem.value == infoRmId}" />
+									</select> 
+								</div>
+							</div>
+						</div>
+						<div class="form-group row">
+							<label class="col-sm-3 col-form-label">Regulation Name </label><label
+								class="col-form-label">:</label>
+							<div class="row col-sm-5">
+								<div class="col">
+									<textarea class="form-control" name="infoRegName"
+										id="infoRegName" disabled th:text="${infoRegName}"
+										maxlength="100" rows="2" style="resize: none;"></textarea>
+								</div>
+							</div>
+						</div>
+						<div class="form-group row">
+							<label class="col-sm-3 col-form-label">Reference URL 1</label><label
+								class="col-form-label">:</label>
+							<div class="row col-sm-5">
+								<div class="col">
+									<textarea class="form-control" name="infoRef1" id="infoRef1"
+										disabled th:text="${infoRef1}" maxlength="100" rows="2"
+										style="resize: none;"></textarea>
+								</div>
+							</div>
+						</div>
+						<div class="form-group row">
+							<label class="col-sm-3 col-form-label">Reference URL 2 </label><label
+								class="col-form-label">:</label>
+							<div class="row col-sm-5">
+								<div class="col">
+									<textarea class="form-control" name="infoRef2" id="infoRef2"
+										disabled th:text="${infoRef2}" maxlength="100" rows="2"
+										style="resize: none;"></textarea>
+								</div>
+							</div>
+						</div>
+						<div class="form-group row">
+							<label class="col-sm-3 col-form-label">Reference URL 3 </label><label
+								class="col-form-label">:</label>
+							<div class="row col-sm-5">
+								<div class="col">
+									<textarea class="form-control" name="infoRef3" id="infoRef3"
+										disabled th:text="${infoRef3}" maxlength="100" rows="2"
+										style="resize: none;"></textarea>
+								</div>
+							</div>
+						</div>
+						<div class="form-group row">
+							<label class="col-sm-3 col-form-label">Reference URL 4 </label><label
+								class="col-form-label">:</label>
+							<div class="row col-sm-5">
+								<div class="col">
+									<textarea class="form-control" name="infoRef4" id="infoRef4"
+										disabled th:text="${infoRef4}" maxlength="100" rows="2"
+										style="resize: none;"></textarea>
+								</div>
+							</div>
+						</div>
+						<div class="form-group row">
+							<label class="col-sm-3 col-form-label">Reference URL 5 </label><label
+								class="col-form-label">:</label>
+							<div class="row col-sm-5">
+								<div class="col">
+									<textarea class="form-control" name="infoRef5" id="infoRef5"
+										disabled th:text="${infoRef5}" maxlength="100" rows="2"
+										style="resize: none;"></textarea>
+								</div>
+							</div>
+						</div>
+						<div class="form-group row">
+							<label class="col-sm-3 col-form-label">Remarks </label><label
+								class="col-form-label">:</label>
+							<div class="row col-sm-5">
+								<div class="col">
+									<textarea class="form-control" maxlength="300" rows="4"
+										style="resize: none;" id="infoRemark" disabled
+										name="infoRemark" th:text="${infoRemark}"></textarea>
+								</div>
+							</div>
+						</div>
+
+					</form>
+				</div>
+			</div>
+
+			<div class="form-group row" th:if="${createdInfo}">
+				<div class="row col-sm-12">
+					<div class="col">
+						<a style="float: left;" th:text="${createdInfo}"></a> <a
+							style="float: right; margin-right: -30px;"
+							th:text="${modifiedInfo}"></a>
+					</div>
+				</div>
+			</div>
+
+			<br />
+
+			<div style="margin-bottom: 20px;">
+				<button class="btn btn-primary dropdown-toggle" type="button"
+					id="btnAction" data-toggle="dropdown" style="width: 90px;"
+					aria-haspopup="true" aria-expanded="false" th:hidden="${btnAction}">Action</button>
+				<div class="dropdown-menu" style="width: 90px;"
+					aria-labelledby="dropdownMenuButton">
+					<button class="dropdown-item btn" type="submit" form="mainForm"
+						th:hidden="${btnEdit}" id="btnEdit" value="edit" name="action">Edit</button>
+					<button class="dropdown-item btn" form="mainForm" type="submit"
+						th:hidden="${btnSaveSts}" id="btnSave" value="save" name="action"
+						th:text="${btnSave}"></button>
+				</div>
+
+				<button class="btn btn-primary" style="width: 90px;" type="button"
+					id="btnAddCancel" data-toggle="modal" hidden="true"
+					data-target="#cancelConfirmDialog">Cancel</button>
+					
+				<button class="btn btn-primary" style="width: 90px;"
+					id="btnViewCancel" type="button" onclick="onCancel()"
+					>Close</button>
+
+				<button class="btn btn-primary" style="width: 90px;" hidden="true"
+					id="btnEditCancel" type="button" data-toggle="modal"
+					data-target="#cancelEditConfirmDialog">Cancel</button>
+
+				<!-- Confirmation message -->
+				<div class="modal fade" id="confirmDialog" tabindex="-1"
+					role="dialog" aria-hidden="true">
+					<div class="modal-dialog modal-dialog-centered" role="document">
+						<div class="modal-content">
+							<div class="modal-header">
+								<h5 class="modal-title" th:text="${confirmHeader}"></h5>
+								<button type="button" class="close" data-dismiss="modal"
+									aria-label="Close">
+									<span aria-hidden="true">&times;</span>
+								</button>
+							</div>
+							<div class="modal-body" th:text="${confirmMsg}"></div>
+							<div class="modal-footer">
+								<button type="submit" class="btn btn-primary"
+									onclick="onCancel()">Confirm</button>
+								<button type="button" class="btn btn-secondary"
+									data-dismiss="modal">Cancel</button>
+							</div>
+						</div>
+					</div>
+				</div>
+
+				<!-- Confirmation Save Message -->
+				<div class="modal fade" id="saveConfirmDialog" tabindex="-1"
+					role="dialog" aria-hidden="true">
+					<div class="modal-dialog modal-dialog-centered" role="document">
+						<div class="modal-content">
+							<div class="modal-header">
+								<h5 class="modal-title">Save Confirmation</h5>
+								<button type="button" class="close" data-dismiss="modal"
+									aria-label="Close">
+									<span aria-hidden="true">&times;</span>
+								</button>
+							</div>
+							<div class="modal-body">Do you confirm to save this record?</div>
+							<div class="modal-footer">
+								<button type="submit" class="btn btn-primary" form="mainForm"
+									value="save" name="action">Confirm</button>
+								<button type="button" class="btn btn-secondary"
+									data-dismiss="modal">Cancel</button>
+							</div>
+						</div>
+					</div>
+				</div>
+
+				<!-- Confirmation To Add Page Message -->
+				<div class="modal fade" id="cancelEditConfirmDialog" tabindex="-1"
+					role="dialog" aria-hidden="true">
+					<div class="modal-dialog modal-dialog-centered" role="document">
+						<div class="modal-content">
+							<div class="modal-header">
+								<h5 class="modal-title">Cancel Confirmation</h5>
+								<button type="button" class="close" data-dismiss="modal"
+									aria-label="Close">
+									<span aria-hidden="true">&times;</span>
+								</button>
+							</div>
+							<div class="modal-body">Do you want to cancel edit this
+								record?</div>
+							<div class="modal-footer">
+								<a class="btn btn-primary" style="width: 90px;" type="button"
+									id="btnAddCancel" onclick="onCancel()">Confirm</a>
+
+								<button type="button" class="btn btn-secondary"
+									data-dismiss="modal">Cancel</button>
+							</div>
+						</div>
+					</div>
+				</div>
+
+				<!-- Confirmation To Search List Message -->
+				<div class="modal fade" id="cancelConfirmDialog" tabindex="-1"
+					role="dialog" aria-hidden="true">
+					<div class="modal-dialog modal-dialog-centered" role="document">
+						<div class="modal-content">
+							<div class="modal-header">
+								<h5 class="modal-title">Cancel Confirmation</h5>
+								<button type="button" class="close" data-dismiss="modal"
+									aria-label="Close">
+									<span aria-hidden="true">&times;</span>
+								</button>
+							</div>
+							<div class="modal-body">Do you want to cancel this record?</div>
+							<div class="modal-footer">
+								<a class="btn btn-primary" style="width: 90px;" type="button"
+									id="btnAddCancel" onclick="onCancel()">Confirm</a>
+
+								<button type="button" class="btn btn-secondary"
+									data-dismiss="modal">Cancel</button>
+							</div>
+						</div>
+					</div>
+				</div>
+
+
+
+			</div>
+		</div>
+	</main>
+
+
+	<script type="text/javascript" src="../../js/scripts.js"></script>
+
+	<script type="text/javascript">
+		function onPageLoad() {
+			
+			var screenMode = "[(${screenMode})]";
+			if (screenMode === "add") {
+				enabledField();
+				document.getElementById("viewFileNameDiv").hidden = true;
+				document.getElementById("btnAddCancel").hidden = false;
+				document.getElementById("btnViewCancel").hidden = true;
+				//document.getElementById("docCatId2").disabled = false;
+				//document.getElementById("docCatId2").hidden = false;
+				document.getElementById("infoRmId").disabled = true;
+				document.getElementById("infoRmId").hidden = false;
+				document.getElementById("countryId").disabled = true;
+				document.getElementById("countryId").hidden = false;
+				document.getElementById("docCatId").disabled = false;
+				document.getElementById("docCatId").hidden = false;
+				document.getElementById("exFile").disabled = false;
+				document.getElementById("exFile").hidden = false;
+
+				screenClassControl("form-control", "form-control-plaintext");
+			} else if (screenMode === "edit") {
+				enabledField();
+				document.getElementById("fileNameDiv").hidden = true;
+				document.getElementById("fileContent").hidden = false;
+				document.getElementById("docCatId").disabled = false;
+				document.getElementById("docCatId").hidden = false;
+				document.getElementById("infoRmId").disabled = false;
+				document.getElementById("infoRmId").hidden = false;
+				document.getElementById("exFile").disabled = false;
+				document.getElementById("exFile").hidden = false;
+				document.getElementById("editFileDiv").hidden = false;
+				
+				document.getElementById("btnInfoAdd").disabled = false;
+				document.getElementById("btnEditCancel").hidden = false;
+				document.getElementById("btnViewCancel").hidden = true;
+
+				screenClassControl("form-control", "form-control-plaintext");
+			} else if (screenMode === "view") {
+				document.getElementById("fileInfoAddDiv").hidden = true;
+				document.getElementById("fileNameDiv").hidden = true;
+				document.getElementById("docCatId").hidden = false;
+				document.getElementById("infoRmId").hidden = false;
+				document.getElementById("editFileDiv").hidden = false;
+				
+				screenClassControl("form-control-plaintext", "form-control");
+			}
+		}
+
+		function screenClassControl(add, remove) {
+			// File Tab
+			// $("#docCatGrpId").addClass(add);
+			// $("#docCatGrpId").removeClass(remove);
+			// $("#docCatId").addClass(add);
+			// $("#docCatId").removeClass(remove);
+			// $("#countryId").addClass(add);
+			// $("#countryId").removeClass(remove);
+
+			// Info Tab
+			$("#infoRmId").addClass(add);
+			$("#infoRmId").removeClass(remove);
+			$("#infoRegName").addClass(add);
+			$("#infoRegName").removeClass(remove);
+			$("#infoRef1").addClass(add);
+			$("#infoRef1").removeClass(remove);
+			$("#infoRef2").addClass(add);
+			$("#infoRef2").removeClass(remove);
+			$("#infoRef3").addClass(add);
+			$("#infoRef3").removeClass(remove);
+			$("#infoRef4").addClass(add);
+			$("#infoRef4").removeClass(remove);
+			$("#infoRef5").addClass(add);
+			$("#infoRef5").removeClass(remove);
+			$("#infoRemark").addClass(add);
+			$("#infoRemark").removeClass(remove);
+
+		}
+
+		function enabledField() {
+			// File Tab
+			document.getElementById("docCatGrpId").disabled = false;
+			document.getElementById("docCatId").disabled = false;
+			//document.getElementById("infoRmId").disabled = false;
+			document.getElementById("inputFileName").disabled = false;
+			//document.getElementById("countryId").disabled = false;	
+			document.getElementById("fileContent").disabled = false;
+			document.getElementById("fileContent").hidden = false;
+			document.getElementById("newFileContent").disabled = false;
+			document.getElementById("newFileContent").hidden = false;
+			document.getElementsByName("fileStatus").forEach(e => {e.disabled = false;}); 
+
+			// Info Tab
+			//document.getElementById("infoRmId").disabled = false;
+			document.getElementById("infoRegName").disabled = false;
+			document.getElementById("infoRef1").disabled = false;
+			document.getElementById("infoRef2").disabled = false;
+			document.getElementById("infoRef3").disabled = false;
+			document.getElementById("infoRef4").disabled = false;
+			document.getElementById("infoRef5").disabled = false;
+			document.getElementById("infoRemark").disabled = false;
+
+		}
+
+		$(".custom-file-input").on(
+				"change",
+				function() {
+					var fileName = $(this).val().split("\\").pop();
+					$(this).siblings(".custom-file-label").addClass("selected")
+							.html(fileName);
+				});
+		
+		var fileContent = document.getElementById("fileContent");
+		fileContent.onchange = function() {
+			if (this.files[0].size > 104857600) {
+				this.value = "";
+				document.getElementById("fileContentLabel").innerHTML = "Choose file";
+
+				showAlert(1);
+			} else {
+				if (!checkExt(this.value)) {
+					showAlert(2);
+					this.value = "";
+					document.getElementById("fileContentLabel").innerHTML = "Choose file";
+				}
+			}
+		};		
+
+		var newFileContent = document.getElementById("newFileContent");
+		newFileContent.onchange = function() {
+			if (this.files[0].size > 104857600) {
+				this.value = "";
+				document.getElementById("newFileContentLabel").innerHTML = "Choose file";
+
+				showAlert(1);
+			} else {
+				if (!checkExt(this.value)) {
+					showAlert(2);
+					this.value = "";
+					document.getElementById("newFileContentLabel").innerHTML = "Choose file";
+				}
+			}
+		};
+				
+		$(document).ready(function() {
+			
+		});
+		
+		function onCancel() {
+			window.close();
+			//opener.location.reload(true);
+		    //self.close();
+		}
+		
+		function onCatChange() {
+			if(document.getElementById("newRad").checked){
+				document.getElementById("extDataDiv").hidden = true;
+				document.getElementById("newDataDiv").hidden = false;
+			}
+			
+			if(document.getElementById("existingRad").checked){
+				document.getElementById("extDataDiv").hidden = false;
+				document.getElementById("newDataDiv").hidden = true;
+			}			
+		}
+		
+		//To enable before submit since disabled values won't pass to the server
+		$('#mainForm').on('submit', function() {
+		    $('#countryId').prop('disabled', false);
+		});
+		$('#mainForm').on('submit', function() {
+		    $('#infoRmId').prop('disabled', false);
+		});
+		/*$("#mainForm").submit(function() {
+		    var $form = $(this);
+		    // submit form
+		    $.post($form.attr('action'), $form.serializeArray());
+		    // alert
+		    alert("The request has been submitted.");
+		    // close window
+		    //window.close();
+		    onCancel();
+		    // return
+		    return false;
+		  });*/
+		 
+	</script>
+</body>
+</html>

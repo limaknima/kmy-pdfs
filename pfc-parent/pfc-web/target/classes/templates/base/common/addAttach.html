@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+<title>PFC</title>
+<link rel="icon" type="image/ico" th:href="@{/static/favicon.ico}">
+<link rel="stylesheet" type="text/css" th:href="@{/css/styles.css}" />
+<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/css/bootstrap-datepicker.css" />
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/js/all.min.js"></script>
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/js/bootstrap-datepicker.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/1000hz-bootstrap-validator/0.11.9/validator.min.js"></script>
+<style>
+.has-error input[type="text"], .has-error select {
+	border: 1px solid #a94442;
+}
+
+.help-block {
+	display: block;
+	margin-top: 5px;
+	margin-bottom: 3px;
+	color: #a94442;
+}
+
+.required {
+	color: red;
+}
+</style>
+</head>
+<body class="sb-nav-fixed">
+	<div th:replace="/header :: navBar"></div>
+	<div id="layoutSidenav">
+		<div th:replace="/header :: sideNavBar"></div>
+		<div id="layoutSidenav_content">
+			<main>
+				<div class="container-fluid" id="content">
+					<br />
+					<div class="alert alert-danger alert-dismissible" th:if="${error}">
+						<a class="close" data-dismiss="alert" aria-label="close">&times;</a>
+						<a th:utext="${error}"></a>
+					</div>
+					<div class="alert alert-success alert-dismissible"
+						th:if="${success}">
+						<a class="close" data-dismiss="alert" aria-label="close">&times;</a>
+						<a th:utext="${success}"></a>
+					</div>
+					<div>
+						<div class="card">
+							<div class="card-header" id="headingTwo">Attach Document</div>
+							<div class="card-body">
+								<form th:action="@{/base/common/addAttach}"
+									enctype="multipart/form-data" id="add-form" method="post"
+									role="form" data-toggle="validator" novalidate="true">
+									<div class="form-group row">
+										<label class="col-sm-2 col-form-label">Title <span
+											class="required">*</span></label> <label class="col-form-label">:</label>
+										<div class="row col-sm-7">
+											<div class="col">
+												<input type="text" class="form-control" id="attachTitle"
+													maxlength="20" th:value="${attachTitle}" name="attachTitle"
+													required="required" data-error="The field cannot be empty!">
+												<div class="help-block with-errors"></div>
+											</div>
+										</div>
+									</div>
+									<div class="form-group row">
+										<label class="col-sm-2 col-form-label">Category <span
+											class="required">*</span></label> <label class="col-form-label">:</label>
+										<div class="row col-sm-7">
+											<div class="col">
+												<select class="custom-select" name="category" required>
+													<option th:each="categoryList : ${documentType}"
+														th:value="${categoryList.id}" th:selected="${category}"
+														th:text="${categoryList.name}"
+														data-error="The field cannot be empty!"></option>
+												</select>
+												<div class="help-block with-errors"></div>
+											</div>
+										</div>
+									</div>
+									<div class="form-group row">
+										<label class="col-sm-2 col-form-label">File <span
+											class="required">*</span></label> <label class="col-form-label">:</label>
+										<div class="row col-sm-7">
+											<div class="col">
+												<div class="custom-file">
+													<input type="file" class="custom-file-input btn" id="files"
+														placeholder="Choose file" name="files" multiple></input> <label
+														class="custom-file-label" for="files">Choose file</label>
+												</div>
+											</div>
+										</div>
+									</div>
+								</form>
+							</div>
+						</div>
+					</div>
+					<br />
+					<div class="row">
+						<div class="col-sm-auto d-flex justify-content-left">
+							<button class="btn btn-primary" id="submit-add-form"
+								style="margin-right: 5px; width: 90px;">Attach</button>
+							<button class="btn btn-primary" style="width: 90px;"
+								type="button" data-toggle="modal" data-target="#confirmDialog">
+								Cancel</button>
+
+							<div class="modal fade" id="confirmDialog" tabindex="-1"
+								role="dialog" aria-hidden="true">
+								<div class="modal-dialog modal-dialog-centered" role="document">
+									<div class="modal-content">
+										<div class="modal-header">
+											<h5 class="modal-title">Cancel Confirmation</h5>
+											<button type="button" class="close" data-dismiss="modal"
+												aria-label="Close">
+												<span aria-hidden="true">&times;</span>
+											</button>
+										</div>
+										<div class="modal-body">Are you confirm to return back
+											to listing page?</div>
+										<div class="modal-footer">
+											<form th:action="@{/base/common/addAttachBack}" method="post">
+												<button type="submit" class="btn btn-primary">Confirm</button>
+											</form>
+											<button type="button" class="btn btn-secondary"
+												data-dismiss="modal">Cancel</button>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</main>
+		</div>
+	</div>
+	<script type="text/javascript">
+		$(document).ready(
+				function() {
+					$('#submit-add-form').click(function() {
+						$('#add-form').submit();
+					});
+
+					$(".custom-file-input").on(
+							"change",
+							function() {
+								var fileName = $(this).val().split("\\").pop();
+								$(this).siblings(".custom-file-label")
+										.addClass("selected").html(fileName);
+							});
+				});
+	</script>
+	<script type="text/javascript" src="../../js/scripts.js"></script>
+</body>
+</html>

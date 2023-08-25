@@ -1,0 +1,115 @@
+package com.fms.pfc.controller.main;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpSession;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.context.annotation.SessionScope;
+
+import com.fms.pfc.domain.dto.main.G2LotViewDto;
+import com.fms.pfc.domain.dto.main.ProdFileDto;
+import com.fms.pfc.domain.dto.main.RelPathDto;
+import com.fms.pfc.service.api.main.G2LotViewService;
+
+@Controller
+@SessionScope
+public class CommonController {
+	private static final Logger logger = LoggerFactory.getLogger(CommonController.class);
+
+	private G2LotViewService g2LotServ;
+
+	@Autowired
+	public CommonController(G2LotViewService g2LotServ) {
+		super();
+		this.g2LotServ = g2LotServ;
+	}
+
+	@GetMapping(value = "/main/pfc/api/getHplModelByHpl")
+	@ResponseBody
+	public Map<String, Object> getHplModelByHpl(@RequestParam(name = "hpl") String hpl, HttpServletRequest request,
+			HttpSession session) {
+
+		List<String> all = g2LotServ.hplModelList(hpl);
+		Map<String, Object> modelMap = new HashMap<String, Object>();
+		modelMap.put("items", all);
+
+		logger.debug("api>> getHplModelByHpl() hpl={}, items size={}", hpl, all.size());
+
+		return modelMap;
+	}
+
+	@GetMapping(value = "/main/pfc/api/getProdLnByHpl")
+	@ResponseBody
+	public Map<String, Object> getProdLnByHpl(@RequestParam(name = "hplId") String hpl,
+			@RequestParam(name = "hplModelId2") String model, @RequestParam(name = "year") String year,
+			@RequestParam(name = "mth") String mth, @RequestParam(name = "day") String day, HttpServletRequest request,
+			HttpSession session) {
+
+		List<String> all = g2LotServ.prodLnList(hpl, model, year, mth, "");
+		Map<String, Object> modelMap = new HashMap<String, Object>();
+		modelMap.put("items", all);
+
+		logger.debug("api>> getProdLnByHpl() hpl={}, model={}, year={}, mth={}, day={}, items size={}", hpl, model,
+				year, mth, day, all.size());
+
+		return modelMap;
+	}
+
+	@GetMapping(value = "/main/pfc/api/getCompletedG2Lot")
+	@ResponseBody
+	public Map<String, Object> getCompletedG2Lot(ProdFileDto dto,
+			@RequestParam(name = "hplId", required = false) String hplId,
+			@RequestParam(name = "hplModelId2", required = false) String hplModelId2,
+			@RequestParam(name = "year", required = false) String year,
+			@RequestParam(name = "mth", required = false) String mth,
+			@RequestParam(name = "prodLn2", required = false) String prodLn2, HttpServletRequest request,
+			HttpSession session) {
+
+		Map<String, Object> respObjMap = new HashMap<String, Object>();
+
+		// model.put("prodLn2Temp", prodLn2);
+
+		// G2 lot dropdown items
+		List<G2LotViewDto> items = generateG2LotItems(year, mth, prodLn2, hplId, hplModelId2);
+		respObjMap.put("items", items);
+
+		// Prod ln dropdown items
+		List<G2LotViewDto> itemsPrd = items;
+		List<String> prodLnList = generateProdLnItems(itemsPrd);
+		respObjMap.put("prodLnItems", prodLnList);
+
+		// Path dropdown items
+		List<RelPathDto> paths = generatePathsItems(hplId, year, prodLn2, mth);
+		respObjMap.put("pathsItems", paths);
+
+		logger.debug(
+				"loadCompletedG2Lot() hpl={}, hplModelId2={}, year={}, mth={}, prodLn2={}, lot size={}, path size={}",
+				hplId, hplModelId2, year, mth, prodLn2, items.size(), paths.size());
+		return respObjMap;
+	}
+
+	private List<String> generateProdLnItems(List<G2LotViewDto> itemsPrd) {
+		List<String> prodLnList = itemsPrd.stream().map(G2LotViewDto::getProdLn).distinct()
+				.collect(Collectors.toList());
+		return prodLnList;
+	}
+
+	private List<G2LotViewDto> generateG2LotItems(String year, String mth, String prodLn2, String hpl,
+			String hplModel) {
+		List<G2LotViewDto> items = new ArrayList<G2LotViewDto>();
+		items = g2LotServ.searchByCriteria("", hpl, hplModel, year, mth, "", prodLn2, "");
+		return items;
+	}
+}

@@ -1,0 +1,7 @@
+package com.fms.pfc.repository.main.api;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+
+public interface G2LotViewRepository extends JpaRepository<T, ID> {
+
+}

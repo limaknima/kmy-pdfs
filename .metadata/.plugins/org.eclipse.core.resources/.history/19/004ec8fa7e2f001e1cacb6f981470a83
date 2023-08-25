@@ -1,0 +1,186 @@
+package com.fms.pfc.service.api.main;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.Date;
+import java.util.List;
+import java.util.Objects;
+
+import javax.transaction.Transactional;
+
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
+
+import com.fms.pfc.domain.converter.main.ProdFileConverter;
+import com.fms.pfc.domain.dto.main.HplModelDto;
+import com.fms.pfc.domain.dto.main.ProdFileDto;
+import com.fms.pfc.domain.model.main.ProdFile;
+import com.fms.pfc.domain.model.main.ProdFileSearch;
+import com.fms.pfc.repository.main.api.ProdFileRepository;
+import com.fms.pfc.repository.main.api.ProdFileSearchRepository;
+
+@Service
+public class ProdFileService {
+
+	private final Logger logger = LoggerFactory.getLogger(ProdFileService.class);
+
+	private ProdFileRepository prodFileRepo;
+	private ProdFileConverter prodFileConv;
+	private ProdFileSearchRepository prodFileSearchRepo;
+	private HplModelService hplModelServ;
+
+	@Autowired
+	public ProdFileService(ProdFileRepository prodFileRepo, ProdFileConverter prodFileConv,
+			ProdFileSearchRepository prodFileSearchRepo, HplModelService hplModelServ) {
+		super();
+		this.prodFileRepo = prodFileRepo;
+		this.prodFileConv = prodFileConv;
+		this.prodFileSearchRepo = prodFileSearchRepo;
+		this.hplModelServ = hplModelServ;
+	}
+
+	public ProdFile findById(Integer id) {
+		return prodFileRepo.findById(id).orElse(null);
+	}
+
+	public ProdFileDto findDtoById(Integer id) {
+		ProdFile rel = findById(id);
+		return prodFileConv.entityToDto(rel);
+	}
+
+	public List<ProdFileDto> findAllDto() {
+		List<ProdFile> models = prodFileRepo.findAll();
+		return prodFileConv.entityToDtoList(models);
+	}
+
+	public List<HplModelDto> findHplModelSelectItems(Integer parentId) {
+		return hplModelServ.findAllByParentNative(parentId);
+	}
+
+	public List<ProdFileSearch> searchByCriteria(Integer searchHplId, Integer searchHplModelId, String searchYear,
+			String searchMth, String g2LotNo, String g2LotNoExp, String path, String pathExp) {
+		return prodFileSearchRepo.searchByCriteria(searchHplId == null ? 0 : searchHplId,
+				searchHplModelId == null ? 0 : searchHplModelId, searchYear, searchMth, g2LotNo, g2LotNoExp, path,
+				pathExp);
+	}
+
+	@Transactional
+	public Integer save(ProdFileDto dto, String userId, boolean isFileChanged, MultipartFile finalFileContent)
+			throws Exception {
+		Date currentDate = new Date();
+		boolean isCreate = false;
+		String dir = "";
+		String oldDir = "";
+		String deleteDir = "";
+		// save parent
+		if (Objects.isNull(dto.getPkPfileId()) || 0 == dto.getPkPfileId()) {
+			dto.setCreatorId(userId);
+			dto.setCreatedDatetime(currentDate);
+			dir = dto.getFilePath();
+			isCreate = true;
+		} else {
+			ProdFileDto existing = findDtoById(dto.getPkPfileId());
+			dto.setCreatorId(existing.getCreatorId());
+			dto.setCreatedDatetime(existing.getCreatedDatetime());
+			dto.setModifierId(userId);
+			dto.setModifiedDatetime(currentDate);
+			dir = dto.getFilePath();
+			isCreate = false;
+
+			if (!isFileChanged) {
+				dto.setFileName(existing.getFileName());
+				dto.setFileSize(existing.getFileSize());
+				dto.setFileType(existing.getFileType());
+				dto.setCrcValue(existing.getCrcValue());
+			} else {
+				// if file change
+				if (!StringUtils.equals(existing.getFilePath(), dto.getFilePath())) {
+					oldDir = existing.getFilePath();
+					deleteDir = (StringUtils.isEmpty(dir) ? oldDir : dir) + File.separator + existing.getFileName();
+
+					logger.debug("save() isFileChanged?={}, deleteDir={}", isFileChanged, deleteDir);
+				}
+			}
+		}
+
+		ProdFile entity = prodFileConv.dtoToEntity(dto);
+		prodFileRepo.saveAndFlush(entity);
+
+		// need to do something to files 
+		manageFile(isFileChanged, finalFileContent, isCreate, dir, deleteDir);
+
+		return entity.getPkPfileId();
+	}
+
+	@Transactional
+	public void delete(Integer id) {
+		prodFileRepo.deleteById(id);
+	}
+
+	/**
+	 * Save file to disk
+	 * 
+	 * @param finalFileContent
+	 * @param dir
+	 * @throws IOException
+	 */
+	private void saveFileToDisk(MultipartFile finalFileContent, String dir) throws Exception {
+
+		if (Objects.isNull(finalFileContent) || StringUtils.isEmpty(dir)) {
+			throw new Exception("File or directory is not supplied or null!");
+		}
+
+		logger.debug("saveFileToDisk() file={}, dir={}", finalFileContent.getOriginalFilename(), dir);
+
+		File saveFile = new File(dir + File.separator + finalFileContent.getOriginalFilename());
+		FileUtils.writeByteArrayToFile(saveFile, finalFileContent.getBytes());
+	}
+
+	/**
+	 * Manage file if it is new, or updated
+	 * 
+	 * @param isFileChanged
+	 * @param finalFileContent
+	 * @param isCreate
+	 * @param dir
+	 * @param deleteDir
+	 * @throws Exception
+	 */
+	private void manageFile(boolean isFileChanged, MultipartFile finalFileContent, boolean isCreate, String dir,
+			String deleteDir) throws Exception {
+		try {
+			// new file, add mode
+			if (isCreate) {
+				logger.debug("manageFile() new file, add mode");
+				// save file to disk
+				saveFileToDisk(finalFileContent, dir);
+			}
+
+			// old/current file, edit mode
+			if (!isCreate && !isFileChanged) {
+				logger.debug("manageFile() old/current file, edit mode");
+				// do nothing to file
+			}
+
+			// file replace/update, edit mode
+			// For file update case, delete old file
+			if (!isCreate) {
+				if (isFileChanged && StringUtils.isNotEmpty(deleteDir)) {
+					logger.debug("manageFile() file replace/update, edit mode");
+					// save new file to disk
+					saveFileToDisk(finalFileContent, dir);
+					// remove old file from disk
+					FileUtils.deleteQuietly(new File(deleteDir));
+				}
+			}
+
+		} catch (Exception e) {
+			throw new Exception();
+		}
+	}
+}

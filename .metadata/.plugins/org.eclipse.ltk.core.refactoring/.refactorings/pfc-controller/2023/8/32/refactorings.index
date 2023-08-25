@@ -1,0 +1,6 @@
+1690881959482	Rename local variable 'confDto'
+1690882824807	Extract method 'valudateUsbUsrConf'
+1690882894086	Rename method 'valudateUsbUsrConf'
+1691044739947	Move compilation unit
+1691300990099	Extract method 'generateG2LotItems'
+1691301779833	Rename local variable 'model'

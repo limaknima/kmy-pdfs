@@ -1,0 +1,137 @@
+package com.fms.pfc.service.api.main;
+
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
+import java.util.List;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.env.Environment;
+import org.springframework.stereotype.Service;
+
+import com.fms.pfc.domain.dto.main.G2LotViewDto;
+import com.fms.pfc.domain.dto.main.HplDto;
+import com.fms.pfc.domain.model.AlertMessage;
+import com.fms.pfc.domain.model.main.OnDemandSearch;
+import com.fms.pfc.domain.model.main.ProdFileSearch;
+import com.fms.pfc.service.api.base.AlertMessageService;
+
+@Service
+public class FileCompareJobProcess {
+	private final Logger logger = LoggerFactory.getLogger(FileCompareJobProcess.class);
+
+	private Environment env;
+	private AlertMessageService alertMsgServ;
+	private OnDemandSearchService odsServ;
+	private G2LotViewService g2Serv;
+	private ProdFileService pfServ;
+
+	@Autowired
+	public FileCompareJobProcess(Environment env, AlertMessageService alertMsgServ, OnDemandSearchService odsServ,
+			G2LotViewService g2Serv, ProdFileService pfServ) {
+		this.env = env;
+		this.alertMsgServ = alertMsgServ;
+		this.odsServ = odsServ;
+		this.g2Serv = g2Serv;
+		this.pfServ = pfServ;
+	}
+
+	public void process() {
+		LocalDate todayDate = LocalDate.now();
+		LocalDate backDate = todayDate.minusDays(2);
+		long daysBetween = ChronoUnit.DAYS.between(backDate, todayDate);
+		String asOfDateStr = todayDate.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
+		int retention = Integer.valueOf(env.getProperty("task.reminder.retention"));
+		String roles = env.getProperty("task.reminder.roles");
+		AlertMessage alertMsg = alertMsgServ.searchAlertById("FILE_COMPARE");
+		
+		List<HplDto> hplList = hplServ.findAllDto();
+		
+		for (int idx = 0; idx <= daysBetween; idx++) {
+			int year, month, day = 0;
+			String yearStr, monthStr, dayStr = "";
+			if (idx == 0) {
+				// today
+				year = todayDate.getYear();
+				month = todayDate.getMonthValue();
+				day = todayDate.getDayOfMonth();
+			} else {
+				LocalDate currentDate = todayDate.minusDays(idx);
+				year = currentDate.getYear();
+				month = currentDate.getMonthValue();
+				day = currentDate.getDayOfMonth();
+			}
+			
+			yearStr = String.valueOf(year);
+			monthStr = convertIntStr(month);
+			dayStr = convertIntStr(day);
+			
+			// loop each hpl
+			for (HplDto hplDto : hplList) {
+				String name = hplDto.getHplName();
+				//String hplId = hplDto.getHpl();
+				List<G2LotViewDto> g2LotList = getCompletedG2LotList("", name, yearStr, monthStr, dayStr, "", "", "");
+				if(g2LotList.isEmpty()) {
+					//no new lot, continue to next hpl
+					continue;
+				}
+				
+				// lot exists, check ProdFile records
+				for (G2LotViewDto g2Lot : g2LotList) {
+					List<ProdFileSearch> prodFiles = getProdFileList("", "", yearStr, monthStr, g2Lot.getLot(), "", "", "");
+					if(prodFiles.isEmpty()) {
+						//no lot record, send alert, continue to next hpl
+						sendAlert();
+						continue;
+					}					
+				}
+				
+				
+				
+			}
+
+		}
+		
+
+		// check from ProdFile tables
+		List<OnDemandSearch> search = odsServ.searchByCriteria("", "", "", "", "", "", "", null, null);
+		// based on current date, check the files existence
+		if (!search.isEmpty()) {
+			// 1- by file record created time
+			// 2- by physical file of that record
+
+		}
+
+		// 3- by completed G2 lot no completion - check if file already exists
+		// hpl, model, year, month
+
+		// 4- email result to user
+	}
+
+	private String convertIntStr(int dm) {
+		String result = "";
+		if (dm > 0 && dm < 10)
+			result = "0" + dm;
+		else
+			result = String.valueOf(dm);
+		return result;
+	}
+
+	private void sendAlert() {
+		// TODO Auto-generated method stub
+		
+	}
+
+	private List<G2LotViewDto> getCompletedG2LotList(String lot, String hpl, String model, String year, String mth,
+			String day, String prodLn, String seq) {
+		return g2Serv.searchByCriteria(lot, hpl, model, year, mth, day, prodLn, seq);
+	}
+
+	private List<ProdFileSearch> getProdFileList(String searchHplId, String searchHplModelId, String searchYear,
+			String searchMth, String g2LotNo, String g2LotNoExp, String path, String pathExp) {
+		return pfServ.searchByCriteria(searchHplId, searchHplModelId, searchYear, searchMth, g2LotNo, g2LotNoExp, path,
+				pathExp);
+	}
+}

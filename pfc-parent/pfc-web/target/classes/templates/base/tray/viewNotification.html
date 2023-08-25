@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+<title>PFC - View Notification</title>
+<link rel="icon" type="image/ico" th:href="@{/static/favicon.ico}">
+<link rel="stylesheet" type="text/css" th:href="@{/css/styles.css}" />
+<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css">
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/js/all.min.js"></script>
+<script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/js/bootstrap.bundle.min.js"></script>
+</head>
+<body class="sb-nav-fixed">
+	<div th:replace="/header :: navBar"></div>
+	<div id="layoutSidenav">
+		<div th:replace="/header :: sideNavBar"></div>
+		<div id="layoutSidenav_content">
+			<main>
+				<div class="container-fluid" id="content">
+					<br />
+					<div class="card">
+						<div class="card-header" id="headingTwo">View Notification</div>
+						<div class="card-body">
+							<form>
+								<div class="form-group row">
+									<label class="col-sm-2 col-form-label">Notification
+										Date</label>
+									<label class="col-form-label">:</label>
+									<div class="row col-sm-7">
+										<div class="col">
+											<input type="text" class="form-control-plaintext" disabled
+												th:value="${#dates.format(date, 'dd/MM/yyy HH:mm:ss')}">
+										</div>
+									</div>
+								</div>
+								<div class="form-group row">
+									<label class="col-sm-2 col-form-label">Reference ID</label>
+									<label class="col-form-label">:</label>
+									<div class="row col-sm-7">
+										<div class="col">
+											<input type="text" class="form-control-plaintext" disabled
+												th:value="${recordId}" id="recId" name="recId">
+										</div>
+									</div>
+								</div>
+								<div class="form-group row">
+									<label class="col-sm-2 col-form-label">Subject</label>
+									<label class="col-form-label">:</label>
+									<div class="row col-sm-7">
+										<div class="col">
+											<input type="text" class="form-control-plaintext" disabled
+												th:value="${subject}">
+										</div>
+									</div>
+								</div>
+								<div class="form-group row">
+									<label class="col-sm-2 col-form-label">Description</label>
+									<label class="col-form-label">:</label>
+									<div class="row col-sm-8">
+										<div class="col">
+											<div>
+												<p th:utext="${description}" ></p>
+											</div>
+										</div>
+									</div>
+								</div>
+
+							</form>
+						</div>
+					</div>
+					<br />
+					<form th:action="@{/base/tray/viewNotificationDel}" method="post">
+						<input type="text" readonly hidden="true" th:value="${alertId}"
+							id="alertId" name="alertId">
+						<button class="btn btn-primary" type="button" data-toggle="modal"
+							data-target="#confirmDialog"
+							style="margin-right: 5px; width: 90px;">Delete</button>
+						<a class="btn btn-primary" style="width: 90px;"
+							type="button" th:href="@{/base/tray/notificationList}">Cancel</a>
+
+						<div class="modal fade" id="confirmDialog" tabindex="-1"
+							role="dialog" aria-hidden="true">
+							<div class="modal-dialog modal-dialog-centered" role="document">
+								<div class="modal-content">
+									<div class="modal-header">
+										<h5 class="modal-title">Delete Confirmation</h5>
+										<button type="button" class="close" data-dismiss="modal"
+											aria-label="Close">
+											<span aria-hidden="true">&times;</span>
+										</button>
+									</div>
+									<div class="modal-body">Are you confirm to delete this
+										record?</div>
+									<div class="modal-footer">
+										<button type="submit" class="btn btn-primary">Confirm</button>
+										<button type="button" class="btn btn-secondary"
+											data-dismiss="modal">Cancel</button>
+									</div>
+								</div>
+							</div>
+						</div>
+					</form>
+				</div>
+			</main>
+		</div>
+	</div>
+
+	<script type="text/javascript" src="../../js/scripts.js"></script>
+	
+</body>
+</html>

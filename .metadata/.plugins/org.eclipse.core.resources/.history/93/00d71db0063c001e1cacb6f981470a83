@@ -1,0 +1,73 @@
+package com.fms.pfc.common;
+
+import javax.mail.MessagingException;
+import javax.mail.internet.MimeMessage;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.mail.SimpleMailMessage;
+import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.mail.javamail.MimeMessageHelper;
+import org.springframework.stereotype.Service;
+
+import com.fms.pfc.domain.model.UsrProfile;
+import com.fms.pfc.service.api.base.AlertService;
+
+@Service
+public class SendAlertAndEmailService {
+	private static final Logger logger = LoggerFactory.getLogger(SendAlertAndEmailService.class);
+	private AlertService alertServ;
+	private JavaMailSender javaMailSender;
+
+	@Autowired
+	public SendAlertAndEmailService(AlertService alertServ, JavaMailSender javaMailSender) {
+		super();
+		this.alertServ = alertServ;
+		this.javaMailSender = javaMailSender;
+	}
+
+	public void sendAlertAndEmail(String systemEmail, String lot, UsrProfile usr, String subject, String content,
+			boolean isHtml) {
+		if (usr.getAlertPre() == CommonConstants.MESSAGE_PREF_EMAIL) {
+
+			sendEmail(usr.getEmail(), subject, content, null, isHtml);
+		} else if (usr.getAlertPre() == CommonConstants.MESSAGE_PREF_NOTIFICATION) {
+
+			alertServ.addAlert(subject, content, systemEmail, lot, CommonConstants.RECORD_TYPE_ID_ON_DEMAND,
+					usr.getUserId());
+
+		} else if (usr.getAlertPre() == CommonConstants.MESSAGE_PREF_EMAIL_NOTIFICATION) {
+
+			alertServ.addAlert(subject, content, systemEmail, lot, CommonConstants.RECORD_TYPE_ID_ON_DEMAND,
+					usr.getUserId());
+			sendEmail(usr.getEmail(), subject, content, null, isHtml);
+		}
+	}
+
+	public void sendEmail(String to, String subject, String content, String[] cc, boolean isHtml) {
+		if (!isHtml) {
+			SimpleMailMessage msg = new SimpleMailMessage();
+			msg.setTo(to);
+			msg.setSubject(subject);
+			msg.setText(content);
+			javaMailSender.send(msg);
+		} else {
+			sendEmailHtml(to, subject, content, cc);
+		}
+	}
+
+	public void sendEmailHtml(String sendTo, String subject, String htmlMsg, String[] cc) {
+		MimeMessage message = javaMailSender.createMimeMessage();
+		try {
+			MimeMessageHelper helper = new MimeMessageHelper(message, false, "utf-8");
+			message.setContent(htmlMsg, "text/html");
+			helper.setTo(sendTo);
+			helper.setCc(cc);
+			helper.setSubject(subject);
+			javaMailSender.send(message);
+		} catch (MessagingException e) {
+			logger.error(e.toString());
+		}
+	}
+}

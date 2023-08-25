@@ -1,0 +1,29 @@
+package com.fms.pfc.service.api.base;
+
+import java.util.List;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+
+@Service
+public class YearMonthDayItemsService {
+
+	private static final Logger logger = LoggerFactory.getLogger(YearMonthDayItemsService.class);
+
+	public YearMonthDayItemsService() {
+
+	}
+
+	public List<String> yearDropdownItems() {
+		return null;
+	}
+
+	public List<String> monthDropdownItems() {
+		return null;
+	}
+
+	public List<String> dayDropdownItems() {
+		return null;
+	}
+}

@@ -1,0 +1,62 @@
+package com.fms.pfc.controller.main;
+
+import java.util.HashMap;
+import java.util.Map;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.MessageSource;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.context.annotation.SessionScope;
+import org.springframework.web.servlet.ModelAndView;
+
+import com.fms.pfc.common.Authority;
+import com.fms.pfc.service.api.base.TrxHisService;
+import com.fms.pfc.service.api.main.G2LotViewService;
+import com.fms.pfc.service.api.main.HplService;
+import com.fms.pfc.validation.common.CommonValidation;
+
+@Controller
+@SessionScope
+public class G2LotViewController {
+	private static final Logger logger = LoggerFactory.getLogger(G2LotViewController.class);
+	
+	private Authority auth;
+	private MessageSource msgSource;
+	private G2LotViewService g2LotServ;
+
+	private Map<String, Object> model = new HashMap<String, Object>();
+	private String screenMode = "";
+	
+	@Autowired
+	public G2LotViewController(Authority auth, MessageSource msgSource, G2LotViewService g2LotServ) {
+		super();
+		this.auth = auth;
+		this.msgSource = msgSource;
+		this.g2LotServ = g2LotServ;
+	}
+	
+	/**
+	 * Display initial screen
+	 * 
+	 * @param request
+	 * @param response
+	 * @return
+	 */
+	@GetMapping("/main/pfc/hplList")
+	public ModelAndView initListing(HttpServletRequest request, HttpServletResponse response) {
+
+		model = auth.onPageLoad(model, request);
+		auth.isAuthUrl(request, response);
+		model.put("g2LotItems", g2LotServ.findAllDto());
+
+		return new ModelAndView("/main/pfc/hplList", model);
+	}
+
+
+}

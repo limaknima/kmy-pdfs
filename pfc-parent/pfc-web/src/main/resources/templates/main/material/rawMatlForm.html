@@ -1,0 +1,1814 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+<title>PFC - Raw Material Form</title>
+<link rel="icon" type="image/ico" th:href="@{/static/favicon.ico}">
+<link rel="stylesheet" type="text/css" th:href="@{/css/styles.css}" />
+<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/css/bootstrap-datepicker.css" />
+<link rel="stylesheet" type="text/css" href="//cdn.datatables.net/1.10.20/css/dataTables.material.css">
+<link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/js/all.min.js"></script>
+<script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+<script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/js/bootstrap-datepicker.min.js"></script>
+
+<script src="https://cdn.datatables.net/1.10.20/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.10.20/js/dataTables.bootstrap4.min.js"></script>
+<script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
+<style>
+.tableFixHead {
+	overflow-y: auto;
+	overflow-x: hidden;
+	height: 300px;
+	margin-bottom: 10px;
+}
+
+.tableFixHead thead th {
+	position: sticky;
+	top: 0;
+	background: #F5F5F5;
+	border-top: none;
+	border-bottom: none;
+	box-shadow: inset 0 0.1px 0 #000000, inset 0 -0.1px 0 #000000;
+	border-bottom: none;
+}
+/*FSGS) Faiz - 10/3/2021 - log no 220 = filename overlap */
+label.custom-file-label {
+	overflow:hidden;
+}
+</style>
+
+</head>
+
+<body class="sb-nav-fixed" onload="onPageLoad()">
+	<div th:replace="/header :: navBar"></div>
+	<div id="layoutSidenav">
+		<div th:replace="/header :: sideNavBar"></div>
+		<div id="layoutSidenav_content">
+			<main>
+				<div class="container-fluid" id="content">
+					<br />		
+					<ol class="breadcrumb mb-4">
+						<li class="breadcrumb-item active" ><a th:href="@{/}"><i class="fa fa-home"></i></a></li>
+						<li class="breadcrumb-item active" ><a th:href="@{/menu/rawMaterialMenu}"><span th:text="#{menuRM}"></span></a></li>
+						<li class="breadcrumb-item active" >Raw Material Management</li>
+					</ol>
+					<div class="alert alert-danger alert-dismissible" th:if="${error}">
+						<a class="close" data-dismiss="alert" aria-label="close">&times;</a>
+						<a th:utext="${error}"></a>
+					</div>
+					<div class="alert alert-success alert-dismissible"
+						th:if="${success}">
+						<a class="close" data-dismiss="alert" aria-label="close">&times;</a>
+						<a th:text="${success}"></a>
+					</div>
+
+					<div class="card">
+						<div class="card-header" id="headingTwo">
+							<a th:text="${header}"></a>
+						</div>
+						<div class="card-body">
+
+							<form th:action="@{/main/material/rawMatlForm}" method="post"
+								th:object="${rawMatlItems}" id="mainForm"
+								enctype="multipart/form-data">
+								<div class="d-flex justify-content-end">
+									<a th:if="${screenMode == 'add'}">Status : &nbsp;Draft</a> <a
+										th:if="${screenMode != 'add'}"
+										th:href="@{/main/common/statusHistoryList(matlId=${rawMatlId})}">
+										Status : &nbsp;<span th:if="${matlStatus == 1}">Draft</span> <span
+										th:if="${matlStatus == 2}">Pending Authorization</span> <span
+										th:if="${matlStatus == 3}">Completed</span> <span
+										th:if="${matlStatus == 4}">Rejected</span> <span
+										th:if="${matlStatus == 5}">Rework</span> <span
+										th:if="${matlStatus == 6}">Pending Authorization -
+											rework</span> <span th:if="${matlStatus == 8}">Changed -
+											Pending Authorization</span> <span th:if="${matlStatus == 10}">Changed
+											- rework</span> 
+											<span th:if="${matlStatus == 11}">Pending Deactivate</span> 
+											<span th:if="${matlStatus == 12}">Deactivated</span> 
+											<span th:if="${matlStatus == 13}">Pending Activate</span>
+									</a>
+								</div>
+								<ul class="nav nav-tabs" id="tab" role="tablist">
+									<li class="nav-item"><a class="nav-link active" role="tab"
+										data-toggle="tab" href="#manfacturerTab"
+										onclick="onInitManufacturer()">Manufacturer</a></li>
+									<li class="nav-item"><a class="nav-link" data-toggle="tab"
+										role="tab" href="#ingredientTab" onclick="onInitIngredient()">Ingredient</a></li>
+									<li class="nav-item"><a class="nav-link" data-toggle="tab"
+										role="tab" href="#regulationTab" onclick="onInitRegulation()">Regulation</a></li>
+									<li class="nav-item"><a class="nav-link" data-toggle="tab"
+										role="tab" href="#attachTab" onclick="onInitAttach()">Attachment</a></li>
+									<li class="nav-item"><a class="nav-link" data-toggle="tab"
+										role="tab" href="#remarkTab" onclick="onInitRemark()">Remark</a></li>
+								</ul>
+
+								<div class="tab-content">
+									<div id="manfacturerTab" class="container tab-pane active">
+										<br />
+										<div class="form-group row">
+											<label class="col-sm-3 col-form-label">Raw Material <a
+												id="matlAsterisk" style="color: red;">*</a></label><label
+												class="col-form-label">:</label>
+											<div class="row col-sm-4">
+												<div class="col">
+													<input type="text" class="form-control" id="rawMatlName"
+														th:field="*{rawMatlName}" maxlength="100" disabled>
+													<input type="text" class="form-control" name="rawMatlId"
+														hidden="true" th:value="${rawMatlId}">
+												</div>
+											</div>
+										</div>
+										<div class="tableFixHead" style="overflow-x: scroll;">
+											<table class="table table-bordered" id="manufTable">
+												<thead>
+													<tr>
+														<th class="text-left">TS No</th>
+														<th class="text-left">Manufacturer</th>
+														<th class="text-left">Supplier</th>
+														<th class="text-left">VIPD Date</th>
+														<th class="text-left">VIPD Date File</th>
+														<th class="text-left">Declaration Date</th>
+														<th class="text-left">Declaration Date File</th>
+														<th class="text-left">Country of Origin</th>
+													</tr>
+												</thead>
+												<tbody>
+													<tr th:each="rmManfItem: ${rmManfItems}">
+														<td><a th:text="${rmManfItem.tsNo}"
+															th:href="@{/main/material/rawMatlFormGetData(id=${rmManfItem.manfRowNo})}"></a></td>
+														<td th:text="${rmManfItem.vendorName}"></td>
+														<td th:utext="${rmManfItem.supplierName}"></td>
+														<td
+															th:text="${#dates.format(rmManfItem.vipdDate, 'dd/MM/yyy')}"></td>
+														<td><a th:text="${rmManfItem.vipdFileName}"
+															th:href="@{/main/material/rawMatlFormDownloadVipd(id=${rmManfItem.manfRowNo})}"></a></td>
+														<td
+															th:text="${#dates.format(rmManfItem.vipdAnnex2Date, 'dd/MM/yyy')}"></td>
+														<td><a th:text="${rmManfItem.vipdAnnex2FileName}"
+															th:href="@{/main/material/rawMatlFormDownloadSuppl(id=${rmManfItem.manfRowNo})}"></a></td>
+														<td th:text="${rmManfItem.countryName}"></td>
+													</tr>
+												</tbody>
+											</table>
+										</div>
+
+										<button class="btn btn-primary" type="submit" value="add"
+											th:disabled="${manfAdd}" name="manfAction" id="btnManfAdd"
+											style="width: 130px;">Add to List</button>
+										<button class="btn btn-primary" type="submit" value="update"
+											th:disabled="${manfUpdate}" name="manfAction"
+											style="width: 130px;">Update to List</button>
+										<button class="btn btn-primary" type="submit" value="delete"
+											th:disabled="${manfDelete}" name="manfAction"
+											style="width: 130px;">Delete to List</button>
+										<br /> <br />
+
+										<div class="form-group row">
+											<label class="col-sm-3 col-form-label">TS No <a
+												id="asterisk" style="color: red;" th:hidden="${asterisk}">*</a></label><label
+												class="col-form-label">:</label>
+											<div class="row col-sm-4">
+												<div class="col">
+													<input type="text" class="form-control" name="tsNo"
+														maxlength="10" id="manfTsNo" th:value="${manfTsNo}"
+														disabled> <input type="text" class="form-control"
+														name="rowNo" hidden="true" th:value="${rowNo}">
+												</div>
+											</div>
+										</div>
+										<div class="form-group row">
+											<label class="col-sm-3 col-form-label">Manufacturer <a
+												id="asterisk" style="color: red;" th:hidden="${asterisk}">*</a></label><label
+												class="col-form-label">:</label>
+											<div class="row col-sm-4">
+												<div class="col">
+												 	<input type="text" class="form-control"  name="mfrautocomplete" 
+												 		id="mfrautocomplete" th:value="${mfrautocomplete}" disabled/>
+												 	<input type="hidden" name="manufacturer" id="manufacturer" th:value="${manufacturer}"/>
+													<!--  <select class="custom-select" name="manufacturer"
+														id="manufacturer" disabled>
+														<option value="0" selected hidden="true">Please
+															Select</option>
+														<option th:each="manufacturerItem: ${manufacturerItems}"
+															th:value="${manufacturerItem.vendorId}"
+															th:text="${manufacturerItem.vendorName}"
+															th:selected="${manufacturerItem.vendorId==manfManufacturer}" />
+													</select> -->
+												</div>
+											</div>
+										</div>
+										<div class="form-group row">
+											<label class="col-sm-3 col-form-label">Supplier <a
+												id="asterisk" style="color: red;" th:hidden="${asterisk}">*</a></label><label
+												class="col-form-label">:</label>
+											<div class="row col-sm-4">
+												<div class="col">
+													<select class="custom-select browser-default" multiple
+														id="supplier" hidden="true" name="supplier">
+														<option th:each="supplierItem: ${supplierItems}"
+															th:value="${supplierItem.vendorId}"
+															th:text="${supplierItem.vendorName}"
+															th:selected="${manfSupplier != null AND manfSupplier.contains(supplierItem.vendorId)}" />
+													</select> <label id="lblSuppl" class="form-control-plaintext"
+														th:utext="${manfSupplierText}"></label>
+												</div>
+											</div>
+										</div>
+										<div class="form-group row">
+											<label class="col-sm-3 col-form-label">VIPD Date <a
+												id="asterisk" style="color: red;" th:hidden="${asterisk}">*</a></label><label
+												class="col-form-label">:</label>
+											<div class="row col-sm-4">
+												<div class="col">
+													<div class="input-group date">
+														<input type="text" class="form-control" name="vipdDate"
+															id="vipdDate" disabled
+															th:value="${#dates.format(manfVipdDate, 'dd/MM/yyy')}"
+															placeholder="dd/mm/yyyy" autocomplete="off" />
+														<div class="input-group-append">
+															<span class="input-group-text"><i
+																class="far fa-calendar-alt"></i></span>
+														</div>
+													</div>
+												</div>
+											</div>
+
+
+											<label class="col-form-label" id="inputVipdFile"
+												hidden="true">File :</label>
+											<div class="row col-sm-4" id="inputVipdFileField"
+												hidden="true">
+												<div class="col">
+													<div class="custom-file">
+														<input type="file" class="custom-file-input btn"
+															name="vipdFile" id="vipdFile">
+														<label class="custom-file-label" for="customFileLang" id="vipdFileLabel">Choose
+															file</label>
+													</div>
+												</div>
+											</div>
+
+
+											<div th:if="${vipdFileView}">
+												<label class="col-form-label">File :</label> <label
+													th:text="${vipdFileView}"></label>
+											</div>
+
+										</div>
+										<div class="form-group row">
+											<label class="col-sm-3 col-form-label">Supplier
+												Declaration Date <a id="asterisk" style="color: red;"
+												th:hidden="${asterisk}">*</a>
+											</label><label class="col-form-label">:</label>
+											<div class="row col-sm-4">
+												<div class="col">
+													<div class="input-group date">
+														<input type="text" class="form-control" id="supplierDate"
+															disabled
+															th:value="${#dates.format(manfDeclareDate, 'dd/MM/yyy')}"
+															name="supplDeclareDate" placeholder="dd/mm/yyyy"
+															autocomplete="off" />
+														<div class="input-group-append">
+															<span class="input-group-text"><i
+																class="far fa-calendar-alt"></i></span>
+														</div>
+													</div>
+												</div>
+											</div>
+
+											<label class="col-form-label" id="inputSupplierFile"
+												hidden="true">File :</label>
+											<div class="row col-sm-4" id="inputSupplierFileField"
+												hidden="true">
+												<div class="col">
+													<div class="custom-file">
+														<input type="file" class="custom-file-input btn"
+															value="asd" name="supplierFile" id="supplierFile">
+														<label id="supplierFileLabel" class="custom-file-label"
+															for="customFileLang">Choose file</label>
+													</div>
+												</div>
+											</div>
+
+											<div th:if="${supplierFileView}">
+												<label class="col-form-label">File :</label> <label
+													th:text="${supplierFileView}"></label>
+											</div>
+
+										</div>
+										<div class="form-group row">
+											<label class="col-sm-3 col-form-label">Country of
+												Origin <a id="asterisk" style="color: red;"
+												th:hidden="${asterisk}">*</a>
+											</label><label class="col-form-label">:</label>
+											<div class="row col-sm-4">
+												<div class="col">
+													<select class="custom-select" name="countryOfOrigin"
+														id="countryOfOrigin" disabled>
+														<option value="" selected hidden="true">Please
+															Select</option>
+														<option th:each="originCountryItem: ${originCountryItems}"
+															th:value="${originCountryItem.countryId}"
+															th:text="${originCountryItem.countryName}"
+															th:selected="${originCountryItem.countryId==manfOriginCountry}" />
+													</select>
+												</div>
+											</div>
+										</div>
+										
+										<br />
+										<h5 style="font-weight: bold;">Material Information</h5>
+										<hr />
+										
+										<div class="form-group row">
+											<label class="col-sm-3 col-form-label">INS </label><label
+												class="col-form-label">:</label>
+											<div class="row col-sm-4">
+												<div class="col">
+													<input type="text" class="form-control" th:field="*{insNo}"
+														id="manfIns" disabled maxlength="10">
+												</div>
+											</div>
+										</div>
+										<div class="form-group row">
+											<label class="col-sm-3 col-form-label">E No </label><label
+												class="col-form-label">:</label>
+											<div class="row col-sm-4">
+												<div class="col">
+													<input type="text" class="form-control" th:field="*{eNo}"
+														id="manfENo" disabled maxlength="10">
+												</div>
+											</div>
+										</div>
+										<div class="form-group row">
+											<label class="col-sm-3 col-form-label">FEMA No </label><label
+												class="col-form-label">:</label>
+											<div class="row col-sm-4">
+												<div class="col">
+													<input type="text" class="form-control"
+														th:field="*{femaNo}" id="manfFema" disabled maxlength="10">
+												</div>
+											</div>
+										</div>
+										<div class="form-group row">
+											<label class="col-sm-3 col-form-label">JECFA No </label><label
+												class="col-form-label">:</label>
+											<div class="row col-sm-4">
+												<div class="col">
+													<input type="text" class="form-control"
+														th:field="*{jecfaNo}" id="manfJecfa" disabled
+														maxlength="10">
+												</div>
+											</div>
+										</div>
+										<div class="form-group row">
+											<label class="col-sm-3 col-form-label">CAS No </label><label
+												class="col-form-label">:</label>
+											<div class="row col-sm-4">
+												<div class="col">
+													<input type="text" class="form-control" th:field="*{casNo}"
+														id="manfCas" disabled maxlength="100">
+												</div>
+											</div>
+										</div>
+										<div class="form-group row">
+											<label class="col-sm-3 col-form-label">GMO Status <a
+												id="asterisk" style="color: red;" th:hidden="${asterisk}">*</a>
+											</label><label class="col-form-label">:</label>
+											<div class="row col-sm-4">
+												<div class="col">
+													<input type="text" class="form-control"
+														th:field="*{gmoStatus}" id="manfGmo" disabled
+														maxlength="20">
+												</div>
+											</div>
+										</div>
+										<!-- 
+										<div class="form-group row">
+											<label class="col-sm-3 col-form-label">Flavor Status (Old)
+												<a id="asterisk" style="color: red;" th:hidden="${asterisk}">*</a>
+											</label><label class="col-form-label">:</label>
+											<div class="row col-sm-4">
+												<div class="col">
+													<input type="text" class="form-control" maxlength="20"
+														th:field="*{flavorStatus}" id="manfFlavorStatus" disabled>
+												</div>
+											</div>
+										</div>
+										 -->
+										<div class="form-group row">
+											<label class="col-sm-3 col-form-label">Flavor Status
+												<a id="asterisk" style="color: red;" th:hidden="${asterisk}">*</a>
+											</label><label class="col-form-label">:</label>
+											<div class="row col-sm-4">
+												<div class="col">
+													<!-- <input type="text" class="form-control" maxlength="20"
+														th:field="*{flavStatusName}" id="manfFlavorStatus2" disabled> -->
+
+													<select class="custom-select" name="rmFsId" id="rmFsId"
+														th:field="*{flavStatusId}" disabled>
+														<option value="" selected hidden="true">Please
+															Select</option>
+														<option th:each="flavStatusItem: ${flavStatusItems}"
+															th:value="${flavStatusItem.fsId}"
+															th:text="${flavStatusItem.fsName}"
+															th:selected="${flavStatusItem.fsId==rmFsId}" />
+													</select>
+													<input hidden="true" th:field="*{flavStatusId}" name="hidFlavStatusId">
+												</div>
+											</div>
+										</div>
+										<div class="form-group row">
+											<label class="col-sm-3 col-form-label">Contain PHO <a
+												id="asterisk" style="color: red;" th:hidden="${asterisk}">*</a>
+											</label><label class="col-form-label">:</label>
+											<div class="row col-sm-4">
+												<div class="col">
+													<select id="manfPHO" class="custom-select"
+														th:field="*{phoFlag}" disabled>
+														<option value="" selected hidden="true">Please
+															Select</option>
+														<option value="Y">Yes</option>
+														<option value="N">No</option>
+													</select>
+												</div>
+											</div>
+										</div>
+									</div>
+
+									<div id="ingredientTab" class="container tab-pane fade">
+										<br />
+										<div class="form-group row">
+											<label class="col-sm-3 col-form-label">Raw Material</label><label
+												class="col-form-label">:</label>
+											<div class="row col-sm-4">
+												<div class="col">
+													<input type="text" disabled class="form-control-plaintext"
+														name="rawMatlDisplay" th:value="${rawMatlName}">
+												</div>
+											</div>
+										</div>
+										<div class="form-group row">
+											<label class="col-sm-3 col-form-label">Manufacturer <a
+												id="asterisk" style="color: red;" th:hidden="${asterisk}">*</a></label><label
+												class="col-form-label">:</label>
+											<div class="row col-sm-4">
+												<div class="col">
+													<select class="custom-select" name="ingManufacturer"
+														id="ingManufacturer" disabled>
+														<option value="0" selected hidden="true">Please
+															Select</option>
+														<option th:each="ingDropDown: ${ingDropDownItems}"
+															th:value="${ingDropDown.manfId}"
+															th:text="${ingDropDown.vendorName}"
+															th:selected="${ingDropDown.manfId==ingManufacturer}" />
+													</select>
+												</div>
+											</div>
+										</div>
+										<div class="tableFixHead" style="overflow-x: scroll;">
+											<table class="table table-bordered">
+												<thead>
+													<tr>
+														<th class="text-left">Manufacturer</th>
+														<th class="text-left">Ingredient Content</th>
+														<th class="text-left">Percentage</th>
+														<th class="text-left">INS</th>
+														<th class="text-left">E No</th>
+														<th class="text-left">FEMA No</th>
+														<th class="text-left">JECFA No</th>
+														<th class="text-left">CAS No</th>
+													</tr>
+												</thead>
+												<tbody>
+													<tr th:each="ingItem: ${ingItems}">
+														<td th:text="${ingItem.vendorName}"></td>
+														<td><a th:text="${ingItem.ingName}"
+															th:href="@{/main/material/rawMatlFormIngGetData(id=${ingItem.ingRowNo})}"></a></td>
+														<td th:text="${ingItem.compPerc}"></td>
+														<td th:text="${ingItem.insNo}"></td>
+														<td th:text="${ingItem.eNo}"></td>
+														<td th:text="${ingItem.femaNo}"></td>
+														<td th:text="${ingItem.jecfaNo}"></td>
+														<td th:text="${ingItem.casNo}"></td>
+													</tr>
+												</tbody>
+											</table>
+										</div>
+
+										<button class="btn btn-primary" type="submit" value="add"
+											name="ingAction" th:disabled="${ingAdd}" id="btnIngAdd"
+											style="width: 130px;">Add to List</button>
+										<button class="btn btn-primary" type="submit" value="update"
+											name="ingAction" th:disabled="${ingUpdate}"
+											style="width: 130px;">Update to List</button>
+										<button class="btn btn-primary" type="submit" value="delete"
+											name="ingAction" th:disabled="${ingDelete}"
+											style="width: 130px;">Delete to List</button>
+										<br /> <br />
+
+										<div class="form-group row">
+											<label class="col-sm-3 col-form-label">Ingredient
+												Content <a id="asterisk" style="color: red;"
+												th:hidden="${asterisk}">*</a>
+											</label><label class="col-form-label">:</label>
+											<div class="row col-sm-4">
+												<div class="col">
+													<input type="text" class="form-control" name="ingContent"
+														id="ingContent" disabled th:value="${ingContent}"
+														maxlength="100"> <input type="text"
+														class="form-control" name="ingRowNo" hidden="true"
+														th:value="${ingRowNo}">
+												</div>
+											</div>
+										</div>
+										<div class="form-group row">
+											<label class="col-sm-3 col-form-label">Percentage <a
+												id="asterisk" style="color: red;" th:hidden="${asterisk}">*</a></label><label
+												class="col-form-label">:</label>
+											<div class="row col-sm-4">
+												<div class="col">
+													<input type="text" class="form-control" name="ingPercent"
+														id="ingPercent" disabled th:value="${ingPercent}"
+														maxlength="50">
+												</div>
+											</div>
+										</div>
+										<div class="form-group row">
+											<label class="col-sm-3 col-form-label">INS </label><label
+												class="col-form-label">:</label>
+											<div class="row col-sm-4">
+												<div class="col">
+													<input type="text" class="form-control" name="ingIns"
+														id="ingIns" disabled th:value="${ingIns}" maxlength="10">
+												</div>
+											</div>
+										</div>
+										<div class="form-group row">
+											<label class="col-sm-3 col-form-label">E No </label><label
+												class="col-form-label">:</label>
+											<div class="row col-sm-4">
+												<div class="col">
+													<input type="text" class="form-control" name="ingENo"
+														id="ingENo" disabled th:value="${ingENo}" maxlength="10">
+												</div>
+											</div>
+										</div>
+										<div class="form-group row">
+											<label class="col-sm-3 col-form-label">FEMA No </label><label
+												class="col-form-label">:</label>
+											<div class="row col-sm-4">
+												<div class="col">
+													<input type="text" class="form-control" name="ingFema"
+														id="ingFema" disabled th:value="${ingFema}" maxlength="10">
+												</div>
+											</div>
+										</div>
+										<div class="form-group row">
+											<label class="col-sm-3 col-form-label">JECFA No </label><label
+												class="col-form-label">:</label>
+											<div class="row col-sm-4">
+												<div class="col">
+													<input type="text" class="form-control" name="ingJecfa"
+														id="ingJecfa" disabled th:value="${ingJecfa}"
+														maxlength="10">
+												</div>
+											</div>
+										</div>
+										<div class="form-group row">
+											<label class="col-sm-3 col-form-label">CAS No </label><label
+												class="col-form-label">:</label>
+											<div class="row col-sm-4">
+												<div class="col">
+													<input type="text" class="form-control" name="ingCas"
+														id="ingCas" disabled th:value="${ingCas}" maxlength="100">
+												</div>
+											</div>
+										</div>
+
+									</div>
+
+									<div id="regulationTab" class="container tab-pane fade">
+										<br />
+										<div class="form-group row">
+											<label class="col-sm-3 col-form-label">Raw Material</label><label
+												class="col-form-label">:</label>
+											<div class="row col-sm-4">
+												<div class="col">
+													<input type="text" disabled class="form-control-plaintext"
+														name="rawMatlDisplay" th:value="${rawMatlName}">
+												</div>
+											</div>
+										</div>
+
+										<div class="tableFixHead">
+											<table class="table table-bordered">
+												<thead>
+													<tr>
+														<th class="text-left"></th>
+														<th>Country</th>
+														<th>Country New Final Status</th>
+													</tr>
+												</thead>
+												<tbody>
+													<tr th:each="regItem: ${regItems}">
+														<td>
+															<div th:if="${regItem.dataChgBool}">
+																<i class="fa fa-exclamation-circle blink"
+																style="color: red" title="Final Status/Declaration Status changed"></i>
+															</div>
+														</td>
+														<td><a th:text="${regItem.countryName}"
+															th:href="@{/main/material/rawMatlFormRegGetData(id=${regItem.rmStatRowNo})}" onclick="refCtyClick()"></a></td>
+														<td th:text="${regItem.finalStatusDesc}"></td>
+													</tr>
+												</tbody>
+											</table>
+										</div>
+
+										<button class="btn btn-primary" type="submit" value="add"
+											th:disabled="${regAdd}" name="regAction" id="btnRegAdd"
+											style="width: 130px;">Add to List</button>
+										<button class="btn btn-primary" type="submit" value="update"
+											th:disabled="${regUpdate}" name="regAction"
+											style="width: 130px;">Update to List</button>
+										<button class="btn btn-primary" type="submit" value="delete"
+											th:disabled="${regDelete}" name="regAction"
+											style="width: 130px;">Delete to List</button>
+										<br /> <br />
+
+										<div class="form-group row">
+											<label class="col-sm-3 col-form-label">Country <a
+												id="asterisk" style="color: red;" th:hidden="${asterisk}">*</a>
+											</label><label class="col-form-label">:</label>
+											<div class="row col-sm-4">
+												<div class="col">
+													<select class="custom-select" name="regCountryId"
+														id="regCountryId" disabled onchange="onRegCountryChange()">
+														<option value="" selected hidden="true">Please
+															Select</option>
+														<option th:each="countryItem: ${countryItems}"
+															th:value="${countryItem.countryId}"
+															th:text="${countryItem.countryName}"
+															th:selected="${countryItem.countryId==regCountryId}" />
+													</select> <input type="text" class="form-control" name="regRowNo"
+														hidden="true" th:value="${regRowNo}" />
+												</div>
+											</div>
+											<div id="divRegRef" class="row col-sm-4" th:hidden="${divRegRefHid}">
+												<div class="col">
+													<i class="fa fa-exclamation-circle blink"
+													style="color: black" title="Refer below section for country regulation."></i>
+													<label class="col-form-label">Refer below section for country regulation.</label>
+												</div>
+											</div>
+										</div>
+										<div class="form-group row">
+											<label class="col-sm-3 col-form-label">New Final
+												Status <a id="asterisk" style="color: red;"
+												th:hidden="${asterisk}">*</a>
+											</label><label class="col-form-label">:</label>
+											<div class="row col-sm-4">
+												<div class="col">
+													<select class="custom-select" name="regFinalStatus"
+														id="regFinalStatus" disabled>
+														<option value="0" selected hidden="true">Please
+															Select</option>
+														<option value="1" th:selected="${regFinalStatus==1}">Permitted</option>
+														<option value="2" th:selected="${regFinalStatus==2}">Not
+															Permitted</option>
+														<option value="3" th:selected="${regFinalStatus==3}">Not
+															Sure</option>
+														<option value="4" th:selected="${regFinalStatus==4}">N/A</option>
+													</select>
+												</div>
+											</div>
+										</div>
+
+										<div class="tableFixHead">
+											<table class="table table-bordered">
+												<thead>
+													<tr>
+														<th class="text-left">TS No</th>
+														<th class="text-left">Manufacturer</th>
+														<th class="text-left">VIPD Date</th>
+														<th class="text-left">Declaration Date</th>
+														<th class="text-left">Supplier Declaration Status<a
+															id="asterisk" style="color: red;" th:hidden="${asterisk}">*</a></th>
+													</tr>
+												</thead>
+												<tbody>
+													<tr th:each="rmManfItem: ${rmManfItems}">
+														<td th:text="${rmManfItem.tsNo}"></td>
+														<td th:text="${rmManfItem.vendorName}"></td>
+														<td
+															th:text="${#dates.format(rmManfItem.vipdDate, 'dd/MM/yyy')}"></td>
+														<td
+															th:text="${#dates.format(rmManfItem.vipdAnnex2Date, 'dd/MM/yyy')}"></td>
+														<td><select class="custom-select" disabled
+															name="manfSupplDeclare"
+															onchange="onManfSupplDeclareChanged()">
+																<option value="0" selected hidden="true">Please
+																	Select</option>
+																<option value="1"
+																	th:selected="${rmManfItem.supplDeclareStatus==1}">Permitted</option>
+																<option value="2"
+																	th:selected="${rmManfItem.supplDeclareStatus==2}">Not
+																	Permitted</option>
+																<option value="3"
+																	th:selected="${rmManfItem.supplDeclareStatus==3}">Not
+																	Sure</option>
+																<option value="4"
+																	th:selected="${rmManfItem.supplDeclareStatus==4}">N/A</option>
+														</select></td>
+													</tr>
+												</tbody>
+											</table>
+										</div>
+
+										<div id="reg1" th:if="${rawMatlId}">
+											<div th:hidden="${regDocBlockNotFound}">
+												<br />
+												<div class="card">
+													<div class="card-header" id="headingTwo" th:text="${regHeader}" style="font-weight: bold"></div>			
+													<div class="card-body">
+														<button class="btn btn-secondary" type="button" onClick="openRegForm()"
+															th:hidden="${btnAddRegHid}" id="btnAddReg">Add Regulation</button>
+														<button class="btn btn-secondary" type="button" onClick="onRegCountryChange()"
+															th:hidden="${btnAddRegRfhHid}" id="btnAddRegRfh">Refresh</button>
+														
+													</div>
+												</div>												
+											</div>											
+											
+											<div th:hidden="${regDocBlock}">
+												<br />
+												<div class="card">
+													<div class="card-header" id="headingTwo" th:text="${regHeader}" style="font-weight: bold"></div>			
+													<div class="card-body">
+														<div class="form-group row">
+															<label class="col-sm-2 col-form-label">Regulation Name</label> <label
+																class="col-form-label">:</label>
+															<div class="row col-sm-8">
+																<div class="col">
+																	<input class="form-control-plaintext" disabled th:value="${regName}">
+																</div>
+															</div>
+														</div>
+														<div class="form-group row">
+															<label class="col-sm-2 col-form-label">Regulation File/s</label> <label
+																class="col-form-label">:</label>
+															<div class="row col-sm-8">
+																<div class="col">
+																	<table>
+																		<tbody>
+																			<tr th:each="regDoc : ${regDocItems}">
+																				<td><a
+																					th:href="@{/main/material/rawMatlFormDownloadReg(id=${regDoc.reglFileId})}"
+																					class="form-control-plaintext btn-link"
+																					th:text="${regDoc.fileName}"></a></td>
+																			</tr>
+																		</tbody>
+																	</table>
+																</div>
+															</div>
+														</div>
+														<div class="form-group row">
+															<label class="col-sm-2 col-form-label">Reference</label> <label
+																class="col-form-label">:</label>
+															<div class="row col-sm-8">
+																<div class="col">
+																	<input class="form-control-plaintext" disabled
+																		th:value="${regRef1}"><input
+																		class="form-control-plaintext" disabled
+																		th:value="${regRef2}"><input
+																		class="form-control-plaintext" disabled
+																		th:value="${regRef3}"> <input
+																		class="form-control-plaintext" disabled
+																		th:value="${regRef4}"> <input
+																		class="form-control-plaintext" disabled
+																		th:value="${regRef5}">
+																</div>
+															</div>
+														</div>
+														<div class="form-group row">
+															<label class="col-sm-2 col-form-label">Remark</label> <label
+																class="col-form-label">:</label>
+															<div class="row col-sm-8">
+																<div class="col">
+																	<textarea class="form-control-plaintext" rows="3" disabled
+																		th:text="${regRemark}" style="resize: none;"></textarea>
+																</div>
+															</div>
+														</div>
+													</div>
+												</div>
+											</div>
+										</div>
+
+									</div>
+
+									<div id="remarkTab" class="container tab-pane fade">
+										<br />
+										<div class="form-group row">
+											<label class="col-sm-3 col-form-label">Raw Material </label>
+											<label class="col-form-label">:</label>
+											<div class="row col-sm-7">
+												<div class="col">
+													<input type="text" disabled class="form-control-plaintext"
+														name="rawMatlDisplay" th:value="${rawMatlName}">
+												</div>
+											</div>
+										</div>
+										<div class="form-group row">
+											<label class="col-sm-3 col-form-label">Remark</label> <label
+												class="col-form-label">:</label>
+											<div class="row col-sm-7">
+												<div class="col">
+													<textarea class="form-control" maxlength="500" rows="3"
+														style="resize: none;" id="remark" disabled
+														th:field="*{remarks}"></textarea>
+												</div>
+											</div>
+										</div>
+									</div>
+
+									<div id="attachTab" class="container tab-pane fade">
+										<br />
+										<div class="form-group row">
+											<label class="col-sm-3 col-form-label">Raw Material </label>
+											<label class="col-form-label">:</label>
+											<div class="row col-sm-7">
+												<div class="col">
+													<input type="text" disabled class="form-control-plaintext"
+														name="rawMatlDisplay" th:value="${rawMatlName}">
+												</div>
+											</div>
+										</div>
+
+										<div class="tableFixHead">
+											<table class="table table-bordered">
+												<thead>
+													<tr>
+														<th class="text-left">Title</th>
+														<th class="text-left">File Name</th>
+														<th class="text-left">Category</th>
+														<th class="text-left">Owner</th>
+													</tr>
+												</thead>
+												<tbody>
+													<tr th:each="attach : ${attachItems}">
+														<td><a
+															th:href="@{/main/material/rawMatlFormDocGetData(id=${attach.docRowNo})}"
+															th:text="${attach.subject}"></a></td>
+														<td><a
+															th:href="@{/main/material/rawMatlFormDocDwn(id=${attach.docRowNo})}"
+															th:text="${attach.fileName}"></a></td>
+														<td th:text="${attach.docTypeName}"></td>
+														<td th:text="${attach.createdBy}"></td>
+													</tr>
+												</tbody>
+											</table>
+										</div>
+
+										<button class="btn btn-primary" type="submit" value="add"
+											th:disabled="${attachAdd}" name="attachAction"
+											id="btnAttachAdd" style="width: 130px;">Add to List</button>
+										<button class="btn btn-primary" type="submit" value="update"
+											th:disabled="${attachUpdate}" name="attachAction"
+											style="width: 130px;">Update to List</button>
+										<button class="btn btn-primary" type="submit" value="delete"
+											th:disabled="${attachDelete}" name="attachAction"
+											style="width: 130px;">Delete to List</button>
+										<br /> <br />
+
+										<div class="form-group row">
+											<label class="col-sm-2 col-form-label">Title <a
+												id="asterisk" style="color: red;" th:hidden="${asterisk}">*</a></label>
+											<label class="col-form-label">:</label>
+											<div class="row col-sm-5">
+												<div class="col">
+													<input type="text" class="form-control" id="attachTitle"
+														maxlength="50" th:value="${attachTitle}"
+														name="attachTitle" disabled> <input type="text"
+														hidden="true" name="attachRow" th:value="${attachRow}">
+												</div>
+											</div>
+										</div>
+										<div class="form-group row">
+											<label class="col-sm-2 col-form-label">Category <a
+												id="asterisk" style="color: red;" th:hidden="${asterisk}">*</a></label>
+											<label class="col-form-label">:</label>
+											<div class="row col-sm-5">
+												<div class="col">
+													<select class="custom-select" id="attachCategory"
+														name="attachCategory" disabled>
+														<option value="0" selected hidden="true">Please
+															Select</option>
+														<option th:each="categoryList : ${documentType}"
+															th:value="${categoryList.id}"
+															th:selected="${categoryList.id == attachCategory}"
+															th:text="${categoryList.name}">
+													</select>
+												</div>
+											</div>
+										</div>
+										<div class="form-group row">
+											<label class="col-sm-2 col-form-label">File <a
+												id="asterisk" style="color: red;" th:hidden="${asterisk}">*</a></label>
+											<label class="col-form-label">:</label>
+											<div class="row col-sm-5">
+												<div class="col">
+													<div class="custom-file">
+														<input type="file" class="custom-file-input btn" disabled
+															hidden="true" id="attachFile" placeholder="Choose file"
+															name="attachFile" multiple></input> <label
+															id="attachFileLabel" hidden="true"
+															class="custom-file-label" for="files">Choose file</label>
+														<input type="text" id="attachFileName" class="form-control-plaintext"
+															th:value="${attachFileName}" disabled>
+													</div>
+												</div>
+											</div>
+										</div>
+									</div>
+								</div>
+
+								<div class="modal fade" id="rejectModal" tabindex="-1"
+									role="dialog" aria-hidden="true">
+									<div class="modal-dialog" role="document">
+										<div class="modal-content">
+											<div class="modal-header">
+												<h5 class="modal-title">Reject Raw Material</h5>
+												<button type="button" class="close" data-dismiss="modal"
+													aria-label="Close">
+													<span aria-hidden="true">&times;</span>
+												</button>
+											</div>
+											<div class="modal-body">
+												<div class="form-group">
+													<label class="col-form-label">Raw Material :</label> <input
+														type="text" disabled class="form-control"
+														th:field="*{rawMatlName}">
+												</div>
+												<div class="form-group">
+													<label class="col-form-label">Remarks <a
+														id="asterisk" style="color: red;">*</a>:</label>
+													<textarea class="form-control"  name="rejectRemark"></textarea>
+													<span>* Reject Remarks is mandatory as it will be used for tracing reason of change/update</span>
+												</div>
+											</div>
+											<div class="modal-footer">
+												<button type="submit" class="btn btn-primary" value="reject"
+													name="action">Confirm</button>
+												<button type="button" class="btn btn-secondary"
+													data-dismiss="modal">Close</button>
+											</div>
+										</div>
+									</div>
+								</div>
+
+								<div class="modal fade" id="reworkModal" tabindex="-1"
+									role="dialog" aria-hidden="true">
+									<div class="modal-dialog" role="document">
+										<div class="modal-content">
+											<div class="modal-header">
+												<h5 class="modal-title">Rework Raw Material</h5>
+												<button type="button" class="close" data-dismiss="modal"
+													aria-label="Close">
+													<span aria-hidden="true">&times;</span>
+												</button>
+											</div>
+											<div class="modal-body">
+												<div class="form-group">
+													<label class="col-form-label">Raw Material :</label> <input
+														type="text" disabled class="form-control"
+														th:field="*{rawMatlName}">
+												</div>
+												<div class="form-group">
+													<label class="col-form-label">Remarks <a
+														id="asterisk" style="color: red;">*</a>:</label>
+													<textarea class="form-control"  name="reworkRemark"></textarea>
+													<span>* Rework Remarks is mandatory as it will be used for tracing reason of change/update</span>
+												</div>
+											</div>
+											<div class="modal-footer">
+												<button type="submit" class="btn btn-primary" value="rework"
+													name="action">Confirm</button>
+												<button type="button" class="btn btn-secondary"
+													data-dismiss="modal">Close</button>
+											</div>
+										</div>
+									</div>
+								</div>
+								
+								<div class="modal fade" id="deactivateModal" tabindex="-1"
+									role="dialog" aria-hidden="true">
+									<div class="modal-dialog" role="document">
+										<div class="modal-content">
+											<div class="modal-header">
+												<h5 class="modal-title">Deactivate Raw Material</h5>
+												<button type="button" class="close" data-dismiss="modal"
+													aria-label="Close">
+													<span aria-hidden="true">&times;</span>
+												</button>
+											</div>
+											<div class="modal-body">
+												<div class="form-group">
+													<label class="col-form-label">Raw Material :</label> <input
+														type="text" disabled class="form-control"
+														th:field="*{rawMatlName}">
+												</div>
+												<div th:hidden=false id="prLinkDeact">
+													Kindly make sure these Product Recipe ingredients have been replaced or updated.
+													Affected Product Recipe as follows:
+													<table class="table table-bordered" id="linkedPrTableDeact">
+														<thead>
+															<tr>
+																<th class="text-left">Product TS No</th>
+																<th class="text-left">Product Name</th>
+																<th class="text-left">Record Status</th>
+															</tr>
+														</thead>
+													</table>
+												</div>
+												<div class="form-group" id="divRemarkDeact">
+													<label class="col-form-label">Remarks <a
+														id="asterisk" style="color: red;">*</a>:</label>
+													<textarea class="form-control" name="deactivateRemark"></textarea>
+													<span>* Deactivate Remarks is mandatory as it will be used for tracing reason of change/update</span>
+												</div>
+											</div>
+											<div class="modal-footer">
+												<button type="submit" class="btn btn-primary" value="deactivate"
+													name="action" id="btnConfirmDeact">Confirm</button>
+												<button type="button" class="btn btn-secondary"
+													data-dismiss="modal">Close</button>
+											</div>
+										</div>
+									</div>
+								</div>
+								
+								<div class="modal fade" id="activateModal" tabindex="-1"
+									role="dialog" aria-hidden="true">
+									<div class="modal-dialog" role="document">
+										<div class="modal-content">
+											<div class="modal-header">
+												<h5 class="modal-title">Activate Raw Material</h5>
+												<button type="button" class="close" data-dismiss="modal"
+													aria-label="Close">
+													<span aria-hidden="true">&times;</span>
+												</button>
+											</div>
+											<div class="modal-body">
+												<div class="form-group">
+													<label class="col-form-label">Raw Material :</label> <input
+														type="text" disabled class="form-control"
+														th:field="*{rawMatlName}">
+												</div>
+												<div class="form-group">
+													<label class="col-form-label">Remarks <a
+														id="asterisk" style="color: red;">*</a>:</label>
+													<textarea class="form-control" name="activateRemark"></textarea>
+													<span>* Activate Remarks is mandatory as it will be used for tracing reason of change/update</span>
+												</div>
+											</div>
+											<div class="modal-footer">
+												<button type="submit" class="btn btn-primary" value="activate"
+													name="action">Confirm</button>
+												<button type="button" class="btn btn-secondary"
+													data-dismiss="modal">Close</button>
+											</div>
+										</div>
+									</div>
+								</div>
+								
+								<div class="modal fade" id="submitConfirmDialog" tabindex="-1"
+									role="dialog" aria-hidden="true">
+									<div class="modal-dialog modal-dialog-centered" role="document">
+										<div class="modal-content">
+											<div class="modal-header">
+												<h5 class="modal-title">Submit Confirmation</h5>
+												<button type="button" class="close" data-dismiss="modal"
+													aria-label="Close">
+													<span aria-hidden="true">&times;</span>
+												</button>
+											</div>
+											<div class="modal-body">
+												Are you sure to submit this record?
+												
+												<div class="form-group">
+													<label class="col-form-label">Raw Material :</label> <input
+														type="text" disabled class="form-control"
+														th:field="*{rawMatlName}">
+												</div>
+												<div class="form-group" th:if="${screenMode != 'add'}">
+													<label class="col-form-label">Traceability Remarks <a
+														id="asterisk" style="color: red;">*</a>:</label>
+													<textarea class="form-control"  name="submitConfirmRemark1"></textarea>
+													<span>* Traceability Remarks is mandatory as it will be used for tracing reason of change/update</span>
+												</div>
+												
+											</div>
+											<div class="modal-footer">
+												<button type="submit" class="btn btn-primary" form="mainForm"
+													value="submit" name="action">Confirm</button>
+												<button type="button" class="btn btn-secondary"
+													data-dismiss="modal">Cancel</button>
+											</div>
+										</div>
+									</div>
+								</div>
+								
+								<div class="modal fade" id="prLinkConfirmDialog" tabindex="-1"
+									role="dialog" aria-hidden="true">
+									<div class="modal-dialog modal-dialog-centered" role="document">
+										<div class="modal-content">
+											<div class="modal-header">
+												<h5 class="modal-title">Submit Confirmation</h5>
+												<button type="button" class="close" data-dismiss="modal"
+													aria-label="Close">
+													<span aria-hidden="true">&times;</span>
+												</button>
+											</div>
+											<div class="modal-body" >
+												<div id="prLink">
+													General information has been changed. 
+													Affected Product Recipe as follows:
+													
+													<table class="table table-bordered" id="linkedPrTable">
+														<thead>
+															<tr>
+																<th class="text-left">Product TS No</th>
+																<th class="text-left">Product Name</th>
+																<th class="text-left">Record Status</th>
+															</tr>
+														</thead>
+													</table>
+												</div>
+											</div>									
+											<div class="modal-body">
+												<div id="prRmStatLink">
+													VIPD Status or Final Status has been changed. 
+													Affected Product Recipe and country as follows:
+													
+													<table class="table table-bordered" id="linkedPrRmStatTable">
+														<thead>
+															<tr>
+																<th class="text-left">Product TS No</th>
+																<th class="text-left">Product Name</th>
+																<th class="text-left">Raw Material Name</th>
+																<th class="text-left">Country</th>
+															</tr>
+														</thead>
+													</table>
+												</div>										
+											
+												Are you sure to submit this record?
+												
+												<div class="form-group">
+													<label class="col-form-label">Raw Material :</label> <input
+														type="text" disabled class="form-control"
+														th:field="*{rawMatlName}">
+												</div>
+												<div class="form-group" th:if="${screenMode != 'add'}">
+													<label class="col-form-label">Traceability Remarks <a
+														id="asterisk" style="color: red;">*</a>:</label>
+													<textarea class="form-control"  name="submitConfirmRemark2"></textarea>
+													<span>* Traceability Remarks is mandatory as it will be used for tracing reason of change/update</span>
+												</div>
+												
+											</div>
+											<div class="modal-footer">
+												<button type="submit" class="btn btn-primary" form="mainForm"
+													value="submit" name="action">Proceed</button>
+												<button type="button" class="btn btn-secondary"
+													data-dismiss="modal">Cancel</button>
+											</div>
+										</div>
+									</div>
+								</div>
+
+							</form>
+						</div>
+					</div>
+
+					<div class="form-group row" th:if="${createdInfo}">
+						<div class="row col-sm-12">
+							<div class="col">
+								<a style="float: left;" th:text="${createdInfo}"></a> <a
+									style="float: right; margin-right: -30px;"
+									th:text="${modifiedInfo}"></a>
+							</div>
+						</div>
+					</div>
+					<div th:if="${screenMode == 'add'}">
+						<br />
+					</div>
+					<div th:if="${screenMode == 'edit'}">
+						<br />
+					</div>
+
+					<div style="margin-bottom: 20px;">
+						<a class="btn btn-primary" type="button" id="btnAudit"
+							style="width: 110px;"
+							th:href="@{/base/audit/activityLogList(rawMatlId=${rawMatlId})}">Activity Log</a>
+						<button class="btn btn-primary dropdown-toggle" type="button"
+							style="width: 90px;" id="btnAction" data-toggle="dropdown"
+							aria-haspopup="true" aria-expanded="false"
+							th:hidden="${btnAction}">Action</button>
+						<div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+							<button class="dropdown-item btn" type="submit" form="mainForm"
+								th:hidden="${btnEdit}" id="btnEdit" value="edit" name="action">Edit</button>
+							<button class="dropdown-item btn" type="button"
+								data-toggle="modal" data-target="#saveConfirmDialog"
+								th:hidden="${btnSaveSts}" id="btnSave" th:text="${btnSave}"></button>
+							<button class="dropdown-item btn" type="button"
+								data-toggle="modal" onClick="onSubmit()"
+								th:hidden="${btnSubmit}" value="submit" name="action">Submit</button>
+							<button class="dropdown-item btn" type="button"
+								th:hidden="${btnReject}" id="btnReject" data-toggle="modal"
+								data-target="#rejectModal">Reject</button>
+							<button class="dropdown-item btn" type="button"
+								th:hidden="${btnRework}" id="btnRework" data-toggle="modal"
+								data-target="#reworkModal">Rework</button>
+							<button class="dropdown-item btn" type="button" onClick="onDeactivate()"
+								th:hidden="${btnDeactivate}" id="btnDeactivate" data-toggle="modal"
+								data-target="#deactivateModal">Deactivate</button>
+							<button class="dropdown-item btn" type="button" onClick="onActivate()"
+								th:hidden="${btnActivate}" id="btnActivate" data-toggle="modal"
+								data-target="#activateModal">Activate</button>
+						</div>
+
+						<a class="btn btn-primary" style="width: 90px;" type="button"
+							id="btnViewCancel" data-toggle="modal" data-target="#cancelConfirmDialog"
+							th:href="@{/main/material/rawMatlList}">Cancel</a>
+						<a class="btn btn-primary" style="width: 90px;" type="button"
+							hidden="true" id="btnEditCancel"
+							th:href="@{/main/material/rawMatlFormView(matlId=${rawMatlId})}">Cancel</a>
+						<button class="btn btn-primary"
+							style="width: 100px; float: right;" type="button" id="btnNext">Next
+							Step</button>
+
+						<!-- FSGS) Hani 1/3/2021 Add/changed - Add cancel confirm dialog START -->
+						<div class="modal fade" id="cancelConfirmDialog" tabindex="-1"
+							role="dialog" aria-hidden="true">
+							<div class="modal-dialog modal-dialog-centered" role="document">
+								<div class="modal-content">
+									<div class="modal-header">
+										<h5 class="modal-title">Cancel Confirmation</h5>
+										<button type="button" class="close" data-dismiss="modal"
+											aria-label="Close">
+											<span aria-hidden="true">&times;</span>
+										</button>
+									</div>
+									<div class="modal-body">
+										<span th:if="${screenMode == 'add'}">Are you sure to
+											cancel this record?</span> <span
+											th:if="${screenMode == 'view'}">Are you sure to go
+											back to Raw Material Listing?</span>
+									</div>
+									<div class="modal-footer">
+										<button type="submit" class="btn btn-primary"
+												onclick="onCancel()">Confirm</button>
+										<button type="button" class="btn btn-secondary"
+											data-dismiss="modal">Cancel</button>
+									</div>
+								</div>
+							</div>
+						</div>
+						<!-- FSGS) Hani 1/3/2021 Add/changed - Add cancel confirm dialog END -->
+
+						<div class="modal fade" id="saveConfirmDialog" tabindex="-1"
+							role="dialog" aria-hidden="true">
+							<div class="modal-dialog modal-dialog-centered" role="document">
+								<div class="modal-content">
+									<div class="modal-header">
+										<h5 class="modal-title">Save Confirmation</h5>
+										<button type="button" class="close" data-dismiss="modal"
+											aria-label="Close">
+											<span aria-hidden="true">&times;</span>
+										</button>
+									</div>
+									<div class="modal-body">Are you sure to save this
+										record?</div>
+									<div class="modal-footer">
+										<button type="submit" class="btn btn-primary" form="mainForm"
+											value="save" name="action">Confirm</button>
+										<button type="button" class="btn btn-secondary"
+											data-dismiss="modal">Cancel</button>
+									</div>
+								</div>
+							</div>
+						</div>
+
+						
+
+					</div>
+				</div>
+			</main>
+		</div>
+	</div>
+
+	<script type="text/javascript" src="../../js/scripts.js"></script>
+
+	<script type="text/javascript">
+
+		function onPageLoad() {
+			var currTab = "[(${currTab})]";
+			setMatlName();
+
+			if (currTab === "manufacturer") {
+				$('#tab a[href="#manfacturerTab"]').tab('show');
+			}
+
+			if (currTab === "ingredient") {
+				$('#tab a[href="#ingredientTab"]').tab('show');
+			}
+
+			if (currTab === "regulation") {
+				$('#tab a[href="#regulationTab"]').tab('show');
+			}
+
+			if (currTab === "attachment") {
+				$('#tab a[href="#attachTab"]').tab('show');
+			}
+
+			var screenMode = "[(${screenMode})]";
+
+			if (screenMode === "add") {
+				enabledField();
+				//document.getElementById("rawMatlName").removeAttribute(
+				//		"readonly");
+				document.getElementById("lblSuppl").hidden = true;
+				document.getElementById("inputVipdFile").hidden = false;
+				document.getElementById("inputSupplierFile").hidden = false;
+				document.getElementById("inputVipdFileField").hidden = false;
+				document.getElementById("inputSupplierFileField").hidden = false;
+				document.getElementById("btnAudit").hidden = true;
+				document.getElementById("attachFileName").hidden = true;
+				document.getElementById("rmFsId").disabled = false;
+
+				//$("#rawMatlName").addClass("form-control");
+				//$("#rawMatlName").removeClass("form-control-plaintext");
+				screenClassControl("form-control", "form-control-plaintext");
+			} else if (screenMode === "edit") {
+				enabledField();
+				document.getElementById("lblSuppl").hidden = true;
+				document.getElementById("inputVipdFile").hidden = false;
+				document.getElementById("inputSupplierFile").hidden = false;
+				document.getElementById("inputVipdFileField").hidden = false;
+				document.getElementById("inputSupplierFileField").hidden = false;
+				document.getElementById("matlAsterisk").hidden = true;
+				document.getElementById("btnManfAdd").disabled = false;
+				document.getElementById("btnIngAdd").disabled = false;
+				document.getElementById("btnRegAdd").disabled = false;
+				document.getElementById("btnAttachAdd").disabled = false;
+				document.getElementById("btnEditCancel").hidden = false;
+				document.getElementById("btnViewCancel").hidden = true;
+				document.getElementById("attachFileName").hidden = true;
+
+				//$("#rawMatlName").addClass("form-control-plaintext");
+				//$("#rawMatlName").removeClass("form-control");
+				screenClassControl("form-control", "form-control-plaintext");
+			} else if (screenMode === "view") {
+				document.getElementById("matlAsterisk").hidden = true;
+				document.getElementById("attachFileName").hidden = false;
+
+				//$("#rawMatlName").addClass("form-control-plaintext");
+				//$("#rawMatlName").removeClass("form-control");
+				screenClassControl("form-control-plaintext", "form-control");
+			}
+		}
+
+		// FSGS) Hani 1/3/2021 Add/changed - Add cancel confirm dialog START
+		function onCancel() {
+			window.location = "[[@{/main/material/rawMatlList}]]";
+		}
+		// FSGS) Hani 1/3/2021 Add/changed - Add cancel confirm dialog END
+
+		function screenClassControl(add, remove) {
+			// Manufacturer Tab
+			$("#rawMatlName").addClass(add);
+			$("#rawMatlName").removeClass(remove);
+			$("#manfTsNo").addClass(add);
+			$("#manfTsNo").removeClass(remove);
+			$("#mfrautocomplete").addClass(add);
+			$("#mfrautocomplete").removeClass(remove);
+			$("#manfIns").addClass(add);
+			$("#manfIns").removeClass(remove);
+			$("#manfENo").addClass(add);
+			$("#manfENo").removeClass(remove);
+			$("#manfFema").addClass(add);
+			$("#manfFema").removeClass(remove);
+			$("#manfJecfa").addClass(add);
+			$("#manfJecfa").removeClass(remove);
+			$("#manfCas").addClass(add);
+			$("#manfCas").removeClass(remove);
+			$("#manfGmo").addClass(add);
+			$("#manfGmo").removeClass(remove);
+			//$("#manfFlavorStatus").addClass(add);
+			//$("#manfFlavorStatus").removeClass(remove);
+			//$("#manfFlavorStatus2").addClass(add);
+			//$("#manfFlavorStatus2").removeClass(remove);
+
+			// Ingredient Tab
+			$("#ingContent").addClass(add);
+			$("#ingContent").removeClass(remove);
+			$("#ingPercent").addClass(add);
+			$("#ingPercent").removeClass(remove);
+			$("#ingIns").addClass(add);
+			$("#ingIns").removeClass(remove);
+			$("#ingENo").addClass(add);
+			$("#ingENo").removeClass(remove);
+			$("#ingFema").addClass(add);
+			$("#ingFema").removeClass(remove);
+			$("#ingJecfa").addClass(add);
+			$("#ingJecfa").removeClass(remove);
+			$("#ingCas").addClass(add);
+			$("#ingCas").removeClass(remove);
+
+			// Remark Tab
+			$("#remark").addClass(add);
+			$("#remark").removeClass(remove);
+
+			// Attach Tab
+			$("#attachTitle").addClass(add);
+			$("#attachTitle").removeClass(remove);
+		}
+
+		function enabledField() {
+			// Manufacturer Tab
+			document.getElementById("rawMatlName").disabled = false;
+			document.getElementById("manfTsNo").disabled = false;
+			document.getElementById("mfrautocomplete").disabled = false;
+			document.getElementById("supplier").hidden = false;
+			document.getElementById("vipdDate").disabled = false;
+			document.getElementById("supplierDate").disabled = false;
+			document.getElementById("countryOfOrigin").disabled = false;
+			document.getElementById("manfIns").disabled = false;
+			document.getElementById("manfENo").disabled = false;
+			document.getElementById("manfFema").disabled = false;
+			document.getElementById("manfJecfa").disabled = false;
+			document.getElementById("manfCas").disabled = false;
+			document.getElementById("manfGmo").disabled = false;
+			//document.getElementById("manfFlavorStatus").disabled = false;
+			//document.getElementById("rmFsId").disabled = false;
+			document.getElementById("manfPHO").disabled = false;
+
+			// Ingredient Tab
+			document.getElementById("ingManufacturer").disabled = false;
+			document.getElementById("ingContent").disabled = false;
+			document.getElementById("ingPercent").disabled = false;
+			document.getElementById("ingIns").disabled = false;
+			document.getElementById("ingENo").disabled = false;
+			document.getElementById("ingFema").disabled = false;
+			document.getElementById("ingJecfa").disabled = false;
+			document.getElementById("ingCas").disabled = false;
+
+			// Regulation Tab
+			document.getElementById("regCountryId").disabled = false;
+			document.getElementById("regFinalStatus").disabled = false;
+
+			var supplDeclare = document.getElementsByName("manfSupplDeclare");
+			if (supplDeclare !== null) {
+				for (var i = 0; i < supplDeclare.length; i++) {
+					supplDeclare[i].disabled = false;
+				}
+			}
+
+			// Remark Tab
+			document.getElementById("remark").disabled = false;
+
+			// Attach Tab
+			document.getElementById("attachTitle").disabled = false;
+			document.getElementById("attachCategory").disabled = false;
+			document.getElementById("attachFile").disabled = false;
+			document.getElementById("attachFile").hidden = false;
+			document.getElementById("attachFileLabel").hidden = false;
+		}
+
+		function onInitManufacturer() {
+			document.getElementById("btnNext").hidden = false;
+		}
+
+		function onInitIngredient() {
+			setMatlName();
+			document.getElementById("btnNext").hidden = false;
+		}
+
+		function onInitRegulation() {
+			setMatlName();
+			document.getElementById("btnNext").hidden = false;
+		}
+
+		function onInitRemark() {
+			setMatlName();
+			document.getElementById("btnNext").hidden = true;
+		}
+
+		function onInitAttach() {
+			setMatlName();
+			document.getElementById("btnNext").hidden = false;
+		}
+
+		function setMatlName() {
+			var rawMatlDisp = document.getElementsByName("rawMatlDisplay");
+			for ( var x in rawMatlDisp) {
+				rawMatlDisp[x].value = document.getElementById("rawMatlName").value;
+			}
+		}
+
+		function onSubmit() {
+			var rawMatlId = "[(${rawMatlId})]";
+			var matlStatus = "[(${matlStatus})]";
+
+			if (rawMatlId) {
+				$.ajax({
+					url : "[[@{/main/material/rawMatlFormCheck?id=}]]" + rawMatlId,
+					type : "GET",
+					success : function(data) {
+						var prRmStatsItems = data.linkedPrRmStats;
+						var prItems = data.linkedPr;
+						var prlinkdiv = document.getElementById("prLink");
+						var prrmstatlinkdiv = document.getElementById("prRmStatLink");
+
+						if (prRmStatsItems !== 0 || prItems !== 0) {
+							if (prRmStatsItems !== 0 && prRmStatsItems.length !== 0 
+									&& (matlStatus === '3' || matlStatus === '8' || matlStatus === '6')) {
+								var linkedPrRmStatTable = document.getElementById("linkedPrRmStatTable");
+								var rowCount = linkedPrRmStatTable.rows.length;
+								for (var i = 1; i < rowCount; i++) {
+									linkedPrRmStatTable.deleteRow(1);
+								}
+
+								for ( var x in prRmStatsItems) {
+									var row = linkedPrRmStatTable.insertRow(1);
+									var cell1 = row.insertCell(0);
+									var cell2 = row.insertCell(1);
+									var cell3= row.insertCell(2);
+									var cell4= row.insertCell(3);
+									cell1.innerHTML = prRmStatsItems[x].prCode;
+									cell2.innerHTML = prRmStatsItems[x].prName;
+									cell3.innerHTML = prRmStatsItems[x].rawMatlName;
+									cell4.innerHTML = prRmStatsItems[x].countryName;
+								}								
+							} else {
+								prrmstatlinkdiv.style.display="none";
+							}
+							
+							if (prItems !== 0 || prItems.length !== 0 
+									&& (matlStatus === '3' || matlStatus === '8')) {								
+								var linkedPrTable = document.getElementById("linkedPrTable");
+								var rowCount = linkedPrTable.rows.length;
+								for (var i = 1; i < rowCount; i++) {
+									linkedPrTable.deleteRow(1);
+								}
+		
+								for ( var x in prItems) {
+									var row = linkedPrTable.insertRow(1);
+									var cell1 = row.insertCell(0);
+									var cell2 = row.insertCell(1);
+									var cell3= row.insertCell(2);
+									cell1.innerHTML = prItems[x].prCode;
+									cell2.innerHTML = prItems[x].prName;
+									cell3.innerHTML = prItems[x].prodRecipeRecStatus;
+								}									
+							} else {
+								prlinkdiv.style.display="none";
+							}	
+							
+							$('#prLinkConfirmDialog').modal('show');
+							
+							if(prRmStatsItems === 0 && prItems.length === 0) {
+								$('#submitConfirmDialog').modal('show');
+							}
+						} else {
+							$('#submitConfirmDialog').modal('show');
+						}
+					}
+				});
+			} else {
+				$('#submitConfirmDialog').modal('show');
+			}
+		}
+
+		function onManfSupplDeclareChanged() {
+			var manfSupplDeclare = document
+					.getElementsByName("manfSupplDeclare");
+
+			if (manfSupplDeclare !== null) {
+				var notPermitted = false;
+				for (var i = 0; i < manfSupplDeclare.length; i++) {
+					if (manfSupplDeclare[i].value == 0
+							|| manfSupplDeclare[i].value == 2
+							|| manfSupplDeclare[i].value == 3
+							|| manfSupplDeclare[i].value == 4) {
+						notPermitted = true;
+					}
+				}
+
+				if (notPermitted) {
+					document.getElementById("regFinalStatus").value = 2;
+				} else {
+					document.getElementById("regFinalStatus").value = 1;
+				}
+			}
+
+		}
+
+		$('#btnNext').click(
+				function(e) {
+					e.preventDefault();
+					$('.nav-tabs .active').parent().next('li').find('a')
+							.trigger('click');
+					document.documentElement.scrollTop = 0;
+				});
+
+		$(".custom-file-input").on(
+				"change",
+				function() {
+					var fileName = $(this).val().split("\\").pop();
+					$(this).siblings(".custom-file-label").addClass("selected")
+							.html(fileName);
+				});
+
+		var attachFile = document.getElementById("attachFile");
+		var vipdFile = document.getElementById("vipdFile");
+		var supplierFile = document.getElementById("supplierFile");
+
+		attachFile.onchange = function() {
+			if (this.files[0].size > 104857600) {
+				this.value = "";
+				document.getElementById("attachFileLabel").innerHTML = "Choose file";
+
+				showAlert(1);
+			} else {
+				if (!checkExt(this.value)) {
+					showAlert(2);
+					this.value = "";
+					document.getElementById("attachFileLabel").innerHTML = "Choose file";
+				}
+			}
+		};
+
+		vipdFile.onchange = function() {
+			if (this.files[0].size > 104857600) {
+				this.value = "";
+				document.getElementById("vipdFileLabel").innerHTML = "Choose file";
+
+				showAlert(1);
+			} else {
+				if (!checkExt(this.value)) {
+					showAlert(2);
+					this.value = "";
+					document.getElementById("vipdFileLabel").innerHTML = "Choose file";
+				}
+			}
+		};
+		
+		supplierFile.onchange = function() {
+			if (this.files[0].size > 104857600) {
+				this.value = "";
+				document.getElementById("supplierFileLabel").innerHTML = "Choose file";
+
+				showAlert(1);
+			} else {
+				if (!checkExt(this.value)) {
+					showAlert(2);
+					this.value = "";
+					document.getElementById("supplierFileLabel").innerHTML = "Choose file";
+				}
+			}
+		};
+		
+		function onRegCountryChange() {
+			var rawMatlId = "[(${rawMatlId})]";
+			if (rawMatlId) {
+				document.getElementById("divRegRef").hidden=false;
+			}
+			
+			var ctx = "[[@{/}]]"; 
+			var id = document.getElementById("regCountryId").value;
+			$.ajax({
+				url : ctx+"main/material/regCountryOnChange?countryId="
+						+ id,
+				type : "GET",
+				success : function(fragment) {
+					$("#reg1").replaceWith(fragment); // update snippet of page
+				}
+			});
+		}
+		/*
+		  $(document).ready(function(){		
+			var arrayReturn = [];
+			$.ajax({
+				url: "[[@{/main/material/mfrAutocomplete}]]",
+				async: true,
+				dataType: 'json',
+				success: function (data) {
+					for (var i = 0, len = data.length; i < len; i++) {
+						//var id = (data[i].id).toString();
+						arrayReturn.push({'value' : data[i].value, 'data' : data[i].label});
+					}
+					//send parse data to autocomplete function
+					loadSuggestions(arrayReturn);
+				}
+			});
+			function loadSuggestions(options) {
+				$('#mfrautocomplete').autocomplete({
+					lookup: options,
+					onSelect: function (suggestion) {
+						$('#manufacturer').html(suggestion.id);
+					}
+				});
+			}
+		  });*/
+		  
+	    $(document).ready(function() {
+	        $("#mfrautocomplete").autocomplete({
+	            minLength : 1,
+	            source : "[[@{/main/material/mfrAutocomplete}]]",
+	            focus : function(e, ui) {
+	            	this.value = ui.item.label;
+	            	return false;
+	            },
+	            select : function(e, ui) {
+	            	this.value = ui.item.label;
+	                $("#manufacturer").val(ui.item.value);
+	                return false;
+	            }
+	        })
+	    });
+		  
+		
+		function onDeactivate() {
+			var rawMatlId = "[(${rawMatlId})]";
+			var ctx = "[[@{/}]]";
+			var type = "deactivate";
+			if (rawMatlId) {
+				$.ajax({
+					url : ctx + "main/material/rawMatlFormCheck?type=" + type
+							+ "&id=" + rawMatlId,
+					type : "GET",
+					success : function(data) {
+						var prItems = data.linkedPr;						
+						
+						if(prItems !== 0 ){
+							var linkedPrTable = document.getElementById("linkedPrTableDeact");
+							var rowCount = linkedPrTable.rows.length;
+							for (var i = 1; i < rowCount; i++) {
+								linkedPrTable.deleteRow(1);
+							}
+	
+							for ( var x in prItems) {
+								var row = linkedPrTable.insertRow(1);
+								var cell1 = row.insertCell(0);
+								var cell2 = row.insertCell(1);
+								var cell3= row.insertCell(2);
+								cell1.innerHTML = prItems[x].prCode;
+								cell2.innerHTML = prItems[x].prName;
+								cell3.innerHTML = prItems[x].prodRecipeRecStatus;
+							}	
+							document.getElementById("btnConfirmDeact").hidden="true";
+							document.getElementById("divRemarkDeact").hidden="true";
+						} else {
+							document.getElementById("prLinkDeact").hidden="true";
+						}
+					}
+				});
+			}
+
+		}
+
+		function onActivate() {
+
+		}
+		
+		function openRegForm(){
+			var screenMode = "[(${screenMode})]";
+			var rawMatlId = "[(${rawMatlId})]";
+			// view mode
+			var regCountry = "[(${regCountry})]";
+			
+			if(screenMode !== "view"){
+				// add/edit mode
+				regCountry = document.getElementById("regCountryId").value;
+			}
+			
+			var ctx = "[[@{/}]]";
+			var url = "main/material/reglFileRmForm2?country="+regCountry+"&matl="+rawMatlId;
+			window.open(ctx+url, '_blank', '');
+		}
+		
+		function refCtyClick(){
+			document.getElementById("divRegRef").hidden=false;
+		}
+	</script>
+</body>
+</html>

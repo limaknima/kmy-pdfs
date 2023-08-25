@@ -1,0 +1,300 @@
+package com.fms.pfc.app;
+
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.nio.file.FileStore;
+import java.nio.file.FileSystems;
+import java.nio.file.FileVisitResult;
+import java.nio.file.Files;
+import java.nio.file.InvalidPathException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.SimpleFileVisitor;
+import java.nio.file.attribute.BasicFileAttributes;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.List;
+import java.util.stream.Collectors;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
+
+import javax.swing.filechooser.FileSystemView;
+
+import org.springframework.mail.SimpleMailMessage;
+import org.springframework.mail.javamail.JavaMailSender;
+
+import com.fms.pfc.domain.dto.LabelAndValueDto;
+
+public class Testing {
+
+	private static JavaMailSender javaMailSender;
+	public static void main(String[] arg) throws Exception {
+		/*String str = "a,b,c,d,e,f";
+		List<String> li = Stream.of(str.split(",", -1)).collect(Collectors.toList());
+//		li.forEach(arg0->System.out.println("li="+arg0));
+
+		try {
+//			zipFolder(Paths.get("C:/pfc/temp"), Paths.get("C:/pfc/temp.zip"));
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+		List<String> str2 = Arrays.asList(new String[] { "a", "b", "c", "d", "e", "f" });
+
+		compareList(li, str2);
+		
+		int i=0;
+		
+		System.out.println(">> null?"+Objects.isNull(i));
+		*/
+		
+		//sendEmail();
+		
+		/*String pattern = "yyyy-MM-dd HH:mm:ss";
+		SimpleDateFormat simpleDateFormat = new SimpleDateFormat(pattern);
+		String date = simpleDateFormat.format(new Date());
+		System.out.println(">> date="+date);
+		
+		String strDate = "07/11/2022 03:43:29 PM";
+		pattern = "dd/MM/yyyy hh:mm:ss a";
+		simpleDateFormat = new SimpleDateFormat(pattern);
+		Date dt = simpleDateFormat.parse(strDate);
+		System.out.println(">> dt="+dt);
+		
+		pattern = "yyyy-MM-dd HH:mm:ss";
+		simpleDateFormat = new SimpleDateFormat(pattern);
+		date = simpleDateFormat.format(dt);
+		System.out.println(">> date dt="+date);*/
+		
+		/*StringBuffer tt = new StringBuffer();
+		
+		if(Objects.isNull(tt)) System.out.println("is null");
+		if(StringUtils.isEmpty(tt.toString())) System.out.println("is empty");
+		
+		List<String> arr = Arrays.asList("a","b","c");
+		String ss = String.join("\n\r", arr);
+		System.out.println("ss="+ss);
+		
+		Integer int1 = null;
+		Integer int2 = 2;
+		
+		if(Objects.equals(int1, int2)) {
+			System.out.println("EQ");
+			
+		}
+		
+		List<String> reglInfoList = new ArrayList<String>();
+		reglInfoList.add("arr");
+		int reDoRowNo = 0;
+		for (int row = 0; row < reglInfoList.size(); row++) {
+			System.out.println("reDoRowNo start row="+row);
+			reglInfoList.get(row);
+			reDoRowNo++;
+			System.out.println("reDoRowNo="+reDoRowNo);
+		}
+		
+		for(int i = 3; i > 0; i--) {
+			System.out.println(" i >>>> "+i);
+		}
+		
+		testDate();*/
+		
+		//testGetUuid();
+		//testUsb();
+		//HDD_SerialNo();
+		//yearDropdownItems();
+		isPathValid("/abc/def.txt");
+	}
+
+	private static void zipFolder(Path sourceFolderPath, Path zipPath) throws Exception {
+		ZipOutputStream zos = new ZipOutputStream(new FileOutputStream(zipPath.toFile()));
+		Files.walkFileTree(sourceFolderPath, new SimpleFileVisitor<Path>() {
+			public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+				zos.putNextEntry(new ZipEntry(sourceFolderPath.relativize(file).toString()));
+				Files.copy(file, zos);
+				zos.closeEntry();
+				return FileVisitResult.CONTINUE;
+			}
+		});
+		zos.close();
+	}
+
+	private static void compareList(List<String> db, List<String> ui) {
+		List<String> del = db.stream().filter(arg0 -> !ui.contains(arg0)).collect(Collectors.toList());
+		del.forEach(System.out::println);
+
+		System.out.println("<>");
+
+		List<String> add = ui.stream().filter(arg0 -> !db.contains(arg0)).collect(Collectors.toList());
+		add.forEach(System.out::println);
+	}
+	
+	private static void sendEmail() throws Exception {
+		SimpleMailMessage msg = new SimpleMailMessage();
+		msg.setTo("amin.kamil@gmail.com");
+		msg.setSubject("Boot test");
+		msg.setText("Boot test");
+		
+		javaMailSender.send(msg);
+	}
+	
+	private static void testDate() {
+		SimpleDateFormat simpleDateFormat = new SimpleDateFormat("dd/MM/yyyy");		
+		String vipdDate = "21/01/2018";
+		Date vipd = new Date();
+		try {
+			vipd = simpleDateFormat.parse(vipdDate);
+			System.out.println(">> dt="+vipd);
+		} catch (ParseException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		LocalDate crrDate = LocalDate.now().plusDays(1);
+		
+		for(int i = 3; i >= 0;i --) {
+			LocalDate expiredDate = vipd.toInstant().atZone(ZoneId.systemDefault()).toLocalDate()
+					.plusYears(5);
+			LocalDate remindDate = expiredDate.minusDays(i);
+			int diff = crrDate.compareTo(remindDate);
+			
+			
+			if(diff == 0) {
+				System.out.println("testDate() ... vipdDate="+vipdDate+"; expired = "+expiredDate+"; rem="+remindDate+"; diff = "+diff+"; today = "+crrDate+" >>> Send reminder ... ");
+			} else {
+				System.out.println("testDate() ... vipdDate="+vipdDate+"; expired = "+expiredDate+"; rem="+remindDate+"; diff = "+diff+"; today = "+crrDate);
+			}
+		}
+		
+		
+	}
+	
+	private static void testGetUuid() throws IOException {
+		for (final FileStore store: FileSystems.getDefault().getFileStores()) {
+			System.out.println(">> store name: "+store.name());
+			System.out.println(">> store type: "+store.type());
+			System.out.println(">> store toString: "+store.toString());
+			System.out.println(">> store getTotalSpace: "+store.getTotalSpace()); 
+			System.out.println(">> store getAttribute: "+store.getAttribute("Class GUID")); //Class GUID
+		}
+	}
+	
+	private static void testUsb() {
+		System.out.println("File system roots returned by   FileSystemView.getFileSystemView():");
+	      FileSystemView fsv = FileSystemView.getFileSystemView();
+	      File[] roots = fsv.getRoots();
+	      for (int i = 0; i < roots.length; i++)
+	      {
+	        System.out.println("Root: " + roots[i]);
+	      }
+
+	      System.out.println("Home directory: " + fsv.getHomeDirectory());
+
+	      System.out.println("File system roots returned by File.listRoots():");
+
+	      File[] f = File.listRoots();
+	      for (int i = 0; i < f.length; i++)
+	      {
+	        System.out.println("Drive: " + f[i]);
+	        System.out.println("Display name: " + fsv.getSystemDisplayName(f[i]));
+	        System.out.println("Is drive: " + fsv.isDrive(f[i]));
+	        System.out.println("Is floppy: " + fsv.isFloppyDrive(f[i]));
+	        System.out.println("Readable: " + f[i].canRead());
+	        System.out.println("Writable: " + f[i].canWrite());
+	      }
+	}
+	
+	private static void HDD_SerialNo(){
+	    StringBuffer HDD_Serial=new StringBuffer();
+	    String HDD_Number;
+	    Runtime rt = Runtime.getRuntime();
+	    try {
+	        Process process=rt.exec(new String[]{"CMD", "/C", "WMIC diskdrive get Model, serialnumber"});
+	        String s = null;
+	        //Reading sucessful output of the command
+	        BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+	        while ((s = reader.readLine()) != null) {
+	            HDD_Serial.append(s);
+	            //System.out.println("HDD_Serial >> "+HDD_Serial.toString());
+	        }
+	        // Reading error if any
+	        reader = new BufferedReader(new InputStreamReader(process.getErrorStream()));
+	        while ((s = reader.readLine()) != null) {
+	         System.out.print(s);
+	        }
+	    } catch (IOException e) {
+	        e.printStackTrace();
+	    }
+	    
+	    HDD_Number = HDD_Serial.toString();
+	    
+	    System.out.println("HDD_Number >> "+HDD_Number);
+	}
+	
+	private static List<LabelAndValueDto> yearDropdownItems() {
+		Calendar cal = Calendar.getInstance();
+		cal.setTime(new Date());
+		int currentYear = cal.get(Calendar.YEAR);
+		int yearCount = 20;
+
+		LabelAndValueDto dt = new LabelAndValueDto(String.valueOf(currentYear), String.valueOf(currentYear));
+		List<LabelAndValueDto> result = new ArrayList<LabelAndValueDto>();
+		result.add(dt);
+
+		for (int idx = 1; idx <= yearCount; idx++) {
+			LabelAndValueDto d = new LabelAndValueDto(String.valueOf(currentYear - idx),
+					String.valueOf(currentYear - idx));
+			result.add(d);
+			
+			System.out.println("adding year >>> "+d.getStrValue());
+		}
+
+		return result;
+	}
+	
+	private static boolean isPathValid(String path) {
+
+		try {
+
+			Paths.get(path);
+
+		} catch (InvalidPathException ex) {
+			System.err.println("in-valid path " + path);
+			return false;
+		}
+		
+		System.out.println("valid path " + path);
+
+		return true;
+	}
+	
+	public static boolean isValidFilePath(String filePath) {
+		if (isNullOrEmpty(filePath)) {
+			return false;
+		}
+
+		String path = filePath.trim();
+
+		// Validate publish settings path
+		File file = new File(path);
+		if ((!file.exists()) || file.isDirectory()) {
+			return false;
+		} else {
+			return true;
+		}
+	}
+
+	public static boolean isNullOrEmpty(String value) {
+		return (value == null) || (value.trim().length() == 0);
+
+	}
+}

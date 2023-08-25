@@ -1,0 +1,153 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  
+  <parent>
+    <groupId>com.fms</groupId>
+    <artifactId>pfc-parent</artifactId>
+    <version>0.0.1-SNAPSHOT</version>
+  </parent>
+  
+  <artifactId>pfc-app</artifactId>
+  <name>pfc-app</name>
+  <description>pfc-app</description>
+  <packaging>war</packaging>
+  
+  <dependencies>
+  	<dependency>
+         <groupId>org.springframework.boot</groupId>
+         <artifactId>spring-boot-autoconfigure</artifactId>
+     </dependency>
+     <dependency>
+         <groupId>org.springframework.boot</groupId>
+         <artifactId>spring-boot-devtools</artifactId>
+         <optional>true</optional>
+     </dependency>
+     
+     <dependency>
+  		<groupId>com.fms</groupId>
+  		<artifactId>pfc-actuator</artifactId>
+  		<version>0.0.1-SNAPSHOT</version>
+  	</dependency>
+	<dependency>
+  		<groupId>com.fms</groupId>
+  		<artifactId>pfc-controller</artifactId>
+  		<version>0.0.1-SNAPSHOT</version>
+  	</dependency>
+	<dependency>
+  		<groupId>com.fms</groupId>
+  		<artifactId>pfc-domain</artifactId>
+  		<version>0.0.1-SNAPSHOT</version>
+  	</dependency>
+	<dependency>
+  		<groupId>com.fms</groupId>
+  		<artifactId>pfc-exception</artifactId>
+  		<version>0.0.1-SNAPSHOT</version>
+  	</dependency>
+	<dependency>
+  		<groupId>com.fms</groupId>
+  		<artifactId>pfc-repository</artifactId>
+  		<version>0.0.1-SNAPSHOT</version>
+  	</dependency>
+	<dependency>
+  		<groupId>com.fms</groupId>
+  		<artifactId>pfc-repository-impl</artifactId>
+  		<version>0.0.1-SNAPSHOT</version>
+  	</dependency>
+	<dependency>
+  		<groupId>com.fms</groupId>
+  		<artifactId>pfc-service</artifactId>
+  		<version>0.0.1-SNAPSHOT</version>
+  	</dependency>
+	<dependency>
+  		<groupId>com.fms</groupId>
+  		<artifactId>pfc-service-impl</artifactId>
+  		<version>0.0.1-SNAPSHOT</version>
+  	</dependency>
+	<dependency>
+  		<groupId>com.fms</groupId>
+  		<artifactId>pfc-validation</artifactId>
+  		<version>0.0.1-SNAPSHOT</version>
+  	</dependency>
+	<dependency>
+  		<groupId>com.fms</groupId>
+  		<artifactId>pfc-web</artifactId>
+  		<version>0.0.1-SNAPSHOT</version>
+  	</dependency>
+
+	<dependency>
+		<groupId>com.microsoft.sqlserver</groupId>
+		<artifactId>mssql-jdbc</artifactId>
+	</dependency>
+	<dependency>
+		<groupId>org.springframework.boot</groupId>
+		<artifactId>spring-boot-starter-tomcat</artifactId>
+		<scope>provided</scope>
+	</dependency>
+  </dependencies>
+  
+  <!-- Provide default value here to avoid null in file name -->
+  <properties>
+  	<build.warname/>
+  </properties>
+  
+  <profiles>
+     <profile>
+         <id>dev</id>
+         <properties>
+             <spring.profiles.active>dev</spring.profiles.active>
+             <build.warname>${artifactId}</build.warname>
+         </properties>
+         <activation>
+             <activeByDefault>true</activeByDefault>
+         </activation>
+     </profile>
+     <profile>
+         <id>sit</id>
+         <properties>
+             <spring.profiles.active>sit</spring.profiles.active>
+             <build.warname>pfc-sit</build.warname>
+         </properties>
+     </profile>
+     <profile>
+         <id>uat</id>
+         <properties>
+             <spring.profiles.active>uat</spring.profiles.active>
+             <build.warname>pfc-test</build.warname>
+         </properties>
+     </profile>
+     <profile>
+         <id>prod</id>
+         <properties>
+             <spring.profiles.active>prod</spring.profiles.active>
+             <build.warname>${artifactId}</build.warname>
+         </properties>
+     </profile>
+ </profiles>
+  
+  <build>
+  		<finalName>${build.warname}</finalName>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <source>1.8</source>
+                    <target>1.8</target>
+                </configuration>
+            </plugin>
+            <plugin>
+            	<groupId>org.apache.maven.plugins</groupId>
+            	<artifactId>maven-war-plugin</artifactId>
+            </plugin>
+        </plugins>
+        
+        <resources>
+            <resource>
+                <directory>src/main/resources</directory>
+                <filtering>true</filtering>
+            </resource>
+        </resources>
+        
+    </build>
+  
+</project>

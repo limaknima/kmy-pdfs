@@ -1,0 +1,7 @@
+package com.fms.pfc.domain.model.main;
+
+import java.io.Serializable;
+
+public class G2LotView  implements Serializable{
+
+}

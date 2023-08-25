@@ -1,0 +1,52 @@
+package com.fms.pfc.controller.base;
+
+import java.util.HashMap;
+import java.util.Map;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.MessageSource;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.context.annotation.SessionScope;
+
+import com.fms.pfc.common.Authority;
+import com.fms.pfc.service.api.base.MenuRoleFunctionService;
+import com.fms.pfc.service.api.base.TrxHisService;
+import com.fms.pfc.validation.common.CommonValidation;
+
+@Controller
+@SessionScope
+public class MenuRoleFunctionController {
+	private final Logger logger = LoggerFactory.getLogger(MenuRoleFunctionController.class);
+	
+	private Authority auth;
+	private CommonValidation commonValServ;
+	private MessageSource msgSource;
+	private TrxHisService trxHistServ;
+	private MenuRoleFunctionService mrfServ;
+	
+	private Map<String, Object> model = new HashMap<String, Object>();
+	private String screenMode = "";
+
+	private static String MENU_LBL = "";
+	private static String ROLE_LBL = "";
+	private static String FUNCTION_LBL = "";
+	private static String MODULE_NAME = "";
+	private static final String ERR_MSG_UNIQUE = " already exist ";
+	private static final String BREAKLINE = ".<br />";
+	private static final int MENU_ITEM_ID = 809;
+	
+	@Autowired
+	public MenuRoleFunctionController(Authority auth, CommonValidation commonValServ, MessageSource msgSource,
+			TrxHisService trxHistServ, MenuRoleFunctionService mrfServ) {
+		super();
+		this.auth = auth;
+		this.commonValServ = commonValServ;
+		this.msgSource = msgSource;
+		this.trxHistServ = trxHistServ;
+		this.mrfServ = mrfServ;
+	}
+	
+	
+}

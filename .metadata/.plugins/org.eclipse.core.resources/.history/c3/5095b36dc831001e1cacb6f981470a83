@@ -1,0 +1,55 @@
+package com.fms.pfc.controller.base;
+
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.util.List;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.env.Environment;
+import org.springframework.stereotype.Service;
+
+import com.fms.pfc.common.AlertDefEnum;
+import com.fms.pfc.domain.model.AlertMessage;
+import com.fms.pfc.domain.model.main.OnDemandSearch;
+import com.fms.pfc.service.api.base.AlertMessageService;
+import com.fms.pfc.service.api.main.OnDemandSearchService;
+
+@Service
+public class FileCompareJobProcess {
+	private final Logger logger = LoggerFactory.getLogger(FileCompareJobProcess.class);
+
+	private Environment env;
+	private AlertMessageService alertMsgServ;
+	private OnDemandSearchService odsServ;
+
+	@Autowired
+	public FileCompareJobProcess(Environment env, AlertMessageService alertMsgServ, OnDemandSearchService odsServ) {
+		this.env = env;
+		this.alertMsgServ = alertMsgServ;
+		this.odsServ = odsServ;
+	}
+
+	public void process() {
+		LocalDate crrDate = LocalDate.now();
+		String asOfDateStr = crrDate.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
+		int retention = Integer.valueOf(env.getProperty("task.reminder.retention"));
+		String roles = env.getProperty("task.reminder.roles");
+		AlertMessage alertMsg = alertMsgServ.searchAlertById(AlertDefEnum.FILE_COMPARE.strValue());
+
+		// check from ProdFile tables
+		List<OnDemandSearch> search = odsServ.searchByCriteria(0, "", "", "", "", "", "", null, null);
+		// based on current date, check the files existence
+		if (!search.isEmpty()) {
+			// 1- by file record created time
+			// 2- by physical file of that record
+
+		}
+
+		// 3- by completed G2 lot no completion - check if file already exists
+		// hpl, model, year, month
+
+		// 4- email result to user
+	}
+}

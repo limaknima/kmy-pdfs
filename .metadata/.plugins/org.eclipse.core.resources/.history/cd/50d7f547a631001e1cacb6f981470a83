@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+<title>PFC - On Demand Compare</title>
+<link rel="icon" type="image/ico" th:href="@{/static/favicon.ico}">
+<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.0/css/all.css">
+<link rel="stylesheet" type="text/css" th:href="@{/css/styles.css}" />
+<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css">
+<link rel="stylesheet" type="text/css" href="//cdn.datatables.net/1.10.20/css/dataTables.material.css">
+
+<script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+<script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.datatables.net/1.10.20/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.10.20/js/dataTables.bootstrap4.min.js"></script>
+
+<script src="//cdnjs.cloudflare.com/ajax/libs/moment.js/2.8.4/moment.min.js"></script>
+<script src="//cdn.datatables.net/plug-ins/1.10.22/sorting/datetime-moment.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/js/bootstrap-datepicker.min.js"></script>
+</head>
+
+<body class="sb-nav-fixed">
+	<div th:replace="/header :: navBar"></div>
+	<div id="layoutSidenav">
+		<div th:replace="/header :: sideNavBar"></div>
+		<div id="layoutSidenav_content">
+			<main>
+				<div class="container-fluid" id="content">
+					<br />				
+					<ol class="breadcrumb mb-4">
+						<li class="breadcrumb-item active" ><a th:href="@{/}"><i class="fa fa-home"></i></a></li>
+						<li class="breadcrumb-item active" ><a th:href="@{/menu/prodFileMenu}"><span th:text="#{menuProdFile}"></span></a></li>
+						<li class="breadcrumb-item active" ><span th:text="#{moduleOnDemandList}"></span></li>
+					</ol>
+					<div class="alert alert-danger alert-dismissible" th:if=${error}>
+						<a class="close" data-dismiss="alert" aria-label="close">&times;</a>
+						<a th:utext="${error}"></a>
+					</div>
+					<div class="alert alert-success alert-dismissible" th:if=${success}>
+						<a class="close" data-dismiss="alert" aria-label="close">&times;</a>
+						<a th:utext="${success}"></a>
+					</div>
+					<div id="accordion">
+						<div class="card">
+							<div class="card-header" id="headingOne">
+								<div class="d-flex justify-content-between">
+									<div class="left"><span th:text="#{lblSeachCriteria}"></span></div>
+									<div class="right">
+										<span class="clickable" data-toggle="collapse"
+											data-target="#collapseOne" aria-expanded="true"
+											aria-controls="collapseOne"> <i
+											class="fas fa-angle-down" style="cursor: pointer;"></i>
+										</span>
+									</div>
+								</div>
+							</div>
+							<div id="collapseOne" class="collapse show"
+								aria-labelledby="headingOne" data-parent="#accordion">
+								<div class="card-body">
+									<form
+										th:action="@{/main/pfc/onDemandSearch}"
+										method="POST">
+										<div class="form-group row">
+											<label class="col-sm-2 col-form-label" th:text="#{lblHpl}"></label>
+											<div class="row col-sm-7">
+												<label class="col-form-label">:</label>
+												<div class="col col-sm-8">
+													<select id="searchHplId" class="custom-select" name="searchHplId" th:value="${searchHplId}" 
+														onchange="onHplSelectItemsChange()">
+														<option value="" selected hidden="true">Please Select</option>
+														<option th:each="hplItem: ${searchHplItems}"
+															th:value="${hplItem.pkHplId}"
+															th:text="${hplItem.hplName}"
+															th:selected="${hplItem.pkHplId} == ${searchHplId}"/>
+													</select>
+												</div>
+											</div>
+										</div>
+										<div class="form-group row">
+											<label class="col-sm-2 col-form-label" th:text="#{lblG2LotNo}"></label>
+											<div class="row col-sm-7">
+												<label class="col-form-label">:</label>
+												<div class="col">
+													<input type="text" class="form-control" id="searchG2Lot"
+														th:value="${searchG2Lot}" name="searchG2Lot" maxlength=100>
+												</div>
+												<div class="col col-sm-4">
+													<select class="custom-select" name="searchG2LotExp">
+														<option value="1" th:selected="${searchG2LotExp=='1'}">Any</option>
+														<option value="2" th:selected="${searchG2LotExp=='2'}">End with</option>
+														<option value="3" th:selected="${searchG2LotExp=='3'}">Exact match</option>
+														<option value="4" th:selected="${searchG2LotExp=='4'}">Start
+															with</option>
+													</select>
+												</div>
+											</div>
+										</div>
+										<div class="form-group row">
+											<label class="col-sm-2 col-form-label" th:text="#{lblFileName}"></label>
+											<div class="row col-sm-7">
+												<label class="col-form-label">:</label>
+												<div class="col">
+													<input type="text" class="form-control" id="searchFileName"
+														th:value="${searchFileName}" name="searchFileName" maxlength=100>
+												</div>
+												<div class="col col-sm-4">
+													<select class="custom-select" name="searchFileNameExp">
+														<option value="1" th:selected="${searchFileNameExp=='1'}">Any</option>
+														<option value="2" th:selected="${searchFileNameExp=='2'}">End with</option>
+														<option value="3" th:selected="${searchFileNameExp=='3'}">Exact match</option>
+														<option value="4" th:selected="${searchFileNameExp=='4'}">Start
+															with</option>
+													</select>
+												</div>
+											</div>
+										</div>
+										<div class="form-group row">
+											<label class="col-sm-2 col-form-label" th:text="#{lblFilePath}"></label>
+											<div class="row col-sm-7">
+												<label class="col-form-label">:</label>
+												<div class="col">
+													<input type="text" class="form-control" id="searchPath"
+														th:value="${searchPath}" name="searchPath" maxlength=100>
+												</div>
+												<div class="col col-sm-4">
+													<select class="custom-select" name="searchPathExp">
+														<option value="1" th:selected="${searchPathExp=='1'}">Any</option>
+														<option value="2" th:selected="${searchPathExp=='2'}">End with</option>
+														<option value="3" th:selected="${searchPathExp=='3'}">Exact match</option>
+														<option value="4" th:selected="${searchPathExp=='4'}">Start
+															with</option>
+													</select>
+												</div>
+											</div>
+										</div>
+										<div class="form-group row">
+											<label class="col-sm-2 col-form-label" th:text="#{lblFromDate}"></label> <label
+												class="col-form-label">:</label>
+											<div class="row col-sm-9">
+												<div class="row col-sm-4">
+													<div class="col">
+														<div class="input-group date">
+															<input type="text" class="form-control"
+																placeholder="dd/mm/yyyy" name="fromDate"
+																autocomplete="off" th:value="*{fromDate}" />
+															<div class="input-group-append">
+																<span class="input-group-text"><i
+																	class="far fa-calendar-alt"></i></span>
+															</div>
+														</div>
+													</div>
+												</div>
+												<label class="col-sm-1 col-form-label"
+													 th:text="#{lblToDate}"></label> <label
+													class="col-form-label">:</label>
+												<div class="row col-sm-4">
+													<div class="col">
+														<div class="input-group date">
+															<input type="text" class="form-control"
+																autocomplete="off" placeholder="dd/mm/yyyy"
+																name="toDate" th:value="*{toDate}" />
+															<div class="input-group-append">
+																<span class="input-group-text"><i
+																	class="far fa-calendar-alt"></i></span>
+															</div>
+														</div>
+													</div>
+												</div>
+											</div>
+										</div>
+										<div class="form-group row">
+											<div class="col-sm-2"></div>
+											<div class="col-sm-5">
+												<label class="col-form-label"></label>
+												<button class="btn btn-primary" type="submit"
+													style="margin-right: 5px; width: 90px;" th:text="#{btnSearch}"></button>
+												<a class="btn btn-primary" type="button"
+													th:href="onDemandList" style="width: 90px;" th:text="#{btnReset}"></a>
+											</div>
+										</div>
+									</form>
+								</div>
+							</div>
+						</div>
+					</div>
+					<br />				
+					<div class="card">
+						<div class="card-header" id="headingTwo"><span th:text="#{lblSeachResult}"></span></div>
+						<div class="card-body">
+							<form action="#" th:action="@{/main/pfc/onDemandListDel}"
+								method="post">
+								<div class="d-flex justify-content-end">
+									<div class="right">
+										<button class="btn btn-danger" id="btnDelete" type="button"
+											data-toggle="modal" data-target="#confirmDialog"
+											style="width: 90px;" disabled="disabled" th:text="#{btnDelete}"></button>
+										<a class="btn btn-primary" href="prodFileForm" 
+											style="width: 90px;" th:text="#{btnAdd}"></a> 
+									</div>
+								</div>
+								<!-- Modal -->
+								<div class="modal fade" id="confirmDialog" tabindex="-1"
+									role="dialog" aria-hidden="true">
+									<div class="modal-dialog modal-dialog-centered" role="document">
+										<div class="modal-content">
+											<div class="modal-header">
+												<h5 class="modal-title">Delete Confirmation</h5>
+												<button type="button" class="close" data-dismiss="modal"
+													aria-label="Close">
+													<span aria-hidden="true">&times;</span>
+												</button>
+											</div>
+											<div class="modal-body">Do you want to delete this
+												record?</div>
+											<div class="modal-footer">
+												<button type="submit" class="btn btn-primary">Confirm</button>
+												<button type="button" class="btn btn-secondary"
+													data-dismiss="modal">Cancel</button>
+											</div>
+										</div>
+									</div>
+								</div>
+								<table class="table table-bordered" id="idTable">
+									<thead>
+										<tr>
+											<th scope="col" width="40px"><input type="checkbox"
+												id="checkAll"></th>
+											<th scope="col" th:text="#{lblHpl}"></th>
+											<th scope="col" th:text="#{lblG2LotNo}"></th>										
+											<th scope="col" th:text="#{lblFileName}"></th>										
+											<th scope="col" th:text="#{lblFileSize}"></th>
+											<th scope="col" th:text="#{lblFilePath}"></th>	
+											<th scope="col" th:text="#{lblAlertType}"></th>	
+										</tr>
+									</thead>
+									<tbody>
+										<tr th:block th:each="odsItem: ${odsAllItems}">
+											<td><input type="checkbox" style="margin-top: 5px;"
+												onclick="delButtonToggle()" th:value="${odsItem.fileId}"
+												name="tableRow" id="tableRow"/></td>
+											<td	th:text="${odsItem.hplName}"></td>
+											<td th:text="${odsItem.g2Lot}"></td>
+											<td th:text="${odsItem.fileName}"></td>
+											<td th:text="${odsItem.fileSize}"></td>
+											<td th:text="${odsItem.filePath}"></td>
+											<td th:text="${odsItem.alertType}"></td>
+										</tr>
+									</tbody>
+								</table>
+							</form>
+						</div>
+					</div>
+				</div>
+			</main>
+		</div>
+	</div>
+	<script type="text/javascript">
+		function clearSearch() {
+			window.location = "[[@{/main/pfc/onDemandSearch}]]";
+		}
+		
+		function onHplSelectItemsChange(){
+			var searchHplId = document.getElementById("searchHplId");			
+			var ctx = "[[@{/}]]"; 
+			//var pkHplModelIdTemp = "[(${pkHplModelIdTemp})]";
+
+			
+		}
+			
+	</script>
+
+	<script type="text/javascript" src="../../js/scripts.js"></script>
+
+</body>
+
+<style>
+.dataTables_length {
+	margin-top: -30px;
+}
+
+</style>
+
+</html>

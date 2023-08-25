@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+<title>PFC - User Profile Form</title>
+<link rel="icon" type="image/ico" th:href="@{/static/favicon.ico}">
+<link rel="stylesheet" type="text/css" th:href="@{/css/styles.css}" />
+<link rel="stylesheet" type="text/css" th:href="@{/css/bootstrap-duallistbox.css}">
+<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/css/bootstrap-datepicker.css" />
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/js/all.min.js"></script>
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/js/bootstrap-datepicker.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.rawgit.com/google/code-prettify/master/loader/run_prettify.js"></script>
+<script type="text/javascript" src="../../../js/jquery.bootstrap-duallistbox.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/1000hz-bootstrap-validator/0.11.9/validator.min.js"></script>
+
+<style>
+.form-group.required .control-label:after {
+	content: " *";
+	color: red;
+}
+</style>
+</head>
+
+<body onload="init()" class="sb-nav-fixed">
+	<div th:replace="/header :: navBar"></div>
+	<div id="layoutSidenav">
+		<div th:replace="/header :: sideNavBar"></div>
+		<div id="layoutSidenav_content">
+			<main>
+				<div class="container-fluid" id="content">
+					<br />
+					<ol class="breadcrumb mb-4">
+						<li class="breadcrumb-item active" ><a th:href="@{/}"><i class="fa fa-home"></i></a></li>
+						<li class="breadcrumb-item active" ><a th:href="@{/menu/adminMenu}"><span th:text="#{menuAdmin}"></span></a></li>
+						<li class="breadcrumb-item active" >User Profile</li>
+					</ol>
+					<div class="alert alert-danger alert-dismissible" th:if=${error}>
+						<a class="close" data-dismiss="alert" aria-label="close">&times;</a>
+						<a th:utext="${error}"></a>
+					</div>
+					<div class="alert alert-success alert-dismissible" th:if=${success}>
+						<a class="close" data-dismiss="alert" aria-label="close">&times;</a>
+						<a th:utext="${success}"></a>
+					</div>
+					<form id="mainForm"
+						th:action="@{/base/admin/userProfile/userProfileForm}"
+						th:object="${userProfileItem}" method="POST"
+						data-toggle="validator" novalidate="true">
+						<div class="card">
+							<div class="card-header" id="headingTwo" th:text="${header}"></div>
+							<a class="card-header" id="updateMode" hidden="true"
+								th:text="${updateMode}"></a> <a class="card-header"
+								hidden="true" id="formMode" th:text="${mode}"></a>
+							<div class="card-body">
+								<div id="userIdTitle" class="form-group row">
+									<label class="col-sm-3 col-form-label control-label" th:text="#{lblUserId}"></label>
+									<div class="row col-sm-7">
+										<label class="col-form-label">:</label>
+										<div class="col">
+											<input type="text" id="userId" readonly maxlength="20"
+												class="form-control-plaintext" th:field="*{userId}" required>
+										</div>
+									</div>
+								</div>
+								<div id="userNameTitle" class="form-group row">
+									<label class="col-sm-3 col-form-label control-label" th:text="#{lblUserName}"></label>
+									<div class="row col-sm-7">
+										<label class="col-form-label">:</label>
+										<div class="col">
+											<input type="text" id="userName" readonly maxlength="50"
+												class="form-control-plaintext" th:field="*{userName}"
+												required>
+										</div>
+									</div>
+								</div>
+								<div id="emailTitle" class="form-group row">
+									<label class="col-sm-3 col-form-label control-label" th:text="#{lblEmail}"></label>
+									<div class="row col-sm-7">
+										<label class="col-form-label">:</label>
+										<div class="col">
+											<input type="text" id="email" readonly maxlength="50"
+												class="form-control-plaintext" th:field="*{email}" required>
+										</div>
+									</div>
+								</div>
+								<div id="orgTitle" class="form-group row">
+									<label class="col-sm-3 col-form-label control-label" th:text="#{lblOrgName}"></label>
+									<div class="row col-sm-5">
+										<label class="col-form-label">:</label>
+										<div class="col">
+											<select disabled class="custom-select" id="orgId"
+												th:field="*{orgId}" required>
+												<option value="" selected hidden="true">Please
+													Select</option>
+												<option th:each="oItem : ${organizationItem}"
+													th:value="${oItem.orgaID}" th:utext="${oItem.orgaName}">
+												</option>
+											</select>
+										</div>
+									</div>
+								</div>
+								<div class="form-group row">
+									<label class="col-sm-3 col-form-label control-label" th:text="#{lblEffcDate}"></label>
+									<div class="row col-sm-3">
+										<label class="col-form-label">:</label>
+										<div class="col">
+											<div class="input-group date">
+												<input type="text" class="form-control" readonly
+													placeholder="dd/mm/yyyy" id="effecDate" autocomplete="off"
+													th:field="*{effecDateFr}" />
+												<div class="input-group-append">
+													<span class="input-group-text"> <i
+														class="far fa-calendar-alt"></i>
+													</span>
+												</div>
+											</div>
+										</div>
+									</div>
+									<label class="col-sm-1 col-form-label"
+										style="margin-right: 2px;">To</label>
+									<div class="row col-sm-3">
+										<label class="col-form-label">:</label>
+										<div class="col">
+											<div class="input-group date">
+												<input type="text" class="form-control" readonly
+													placeholder="dd/mm/yyyy" id="expDate" autocomplete="off"
+													th:field="*{effecDateTo}" />
+												<div class="input-group-append">
+													<span class="input-group-text"> <i
+														class="far fa-calendar-alt"></i>
+													</span>
+												</div>
+											</div>
+										</div>
+									</div>
+								</div>
+								<div class="form-group row">
+									<label class="col-sm-3 col-form-label control-label" th:text="#{lblNotiPref}"></label> <label class="col-form-label">:</label>
+									<div class="col col-sm-4">
+										<select th:field="*{alertPre}" disabled
+											class="custom-select" id="alertPre">
+											<option value="2" selected hidden="true">Notification</option>
+											<option value="1">Email</option>
+											<option value="2">Notification</option>
+											<option value="3">Email and Notification</option>
+										</select>
+									</div>
+								</div>
+								<div class="form-group row">
+									<label class="col-sm-3 col-form-label control-label" th:text="#{lblInactive}"></label>
+									<div class="row col-sm-5">
+										<label class="col-form-label">:</label>
+										<div class="col">
+											<div class="form-check" style="padding-top: 10px;">
+												<a class="form-check-input" hidden="true" id="enableChk"
+													th:text="${enableChk}"></a> <input class="form-check-input"
+													type="hidden" id="disabledFlag1" name="checkbox" disabled
+													th:checked="${checkbox}" value="Y"> <input
+													class="form-check-input" type="checkbox" id="disabledFlag2"
+													name="checkbox" disabled th:checked="${checkbox}" value="N">
+											</div>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+						<div class="card">
+							<div class="card-header" id="headingTwo">User Group and
+								User Role</div><!-- FSGS) Azmeer 02/03/2021 - Change header from Profile to Role -->
+							<div class="card-body">
+								<div id="grpIdTitle" class="form-group row">
+									<label class="col-sm-3 col-form-label control-label">User
+										Group</label> <label class="col-form-label">:</label>
+									<div class="col col-sm-4">
+										<select th:field="*{groupId}" class="custom-select"
+											id="grpId" required disabled>
+											<option value="" selected hidden="true">Please
+												Select</option>
+											<!-- <option hidden="true">Please Select</option> -->
+											<option th:each="gItem : ${groupItem}"
+												th:value="${gItem.groupId}" th:utext="${gItem.groupName}">
+											</option>
+										</select>
+									</div>
+								</div>
+								<div id="usrRoleTitle" class="form-group row">
+									<label class="col-sm-3 col-form-label control-label">User
+										Role</label> <label class="col-form-label">:</label>
+									<div class="col col-sm-8">
+										<div>
+											<ul class="list-group" id="roleView">
+												<li class="list-group-item" id="userRole1"
+													th:each="urItem : ${userRoleItem}"
+													th:value="${urItem.roleId}" th:utext="${urItem.roleName}">
+												</li>
+											</ul>
+										</div>
+										<div id="roleChoice" hidden="true">
+											<select multiple="multiple" size="10" name="userRole"
+												data-error="User role cannot be empty!" required="required"
+												class="demo2">
+												<option th:each="rItem : ${roleItem}"
+													th:value="${rItem.roleId}" th:utext="${rItem.roleName}">
+												</option>
+												<option id="userRole1" th:each="urItem : ${userRoleItem}"
+													th:value="${urItem.roleId}" th:utext="${urItem.roleName}"
+													selected></option>
+											</select>
+											<div class="help-block with-errors"></div>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+					</form>
+					<div style="margin-top: 5px">
+						<div class="form-group row">
+							<div class="row col-sm-12" id="recordTime">
+								<div class="col">
+									<p style="float: left;">
+										Create by <a th:text="${creator}"></a> on <a
+											th:text="${createdDate}"></a>
+									</p>
+									<p style="float: right; margin-right: -30px;">
+										Modified by <a th:text="${modifier}"></a> on <a
+											th:text="${modifiedDate}"></a>
+									</p>
+								</div>
+							</div>
+							<div class="row col-sm-7">
+								<div class="col">
+									<button type="button" class="btn btn-primary dropdown-toggle"
+										data-toggle="dropdown" aria-haspopup="true"
+										aria-expanded="false" id="btnEdit" th:hidden="${btnActionHid}">Action</button>
+									<div class="dropdown-menu">
+										<button class="dropdown-item btn" onclick="enableEditMode()" th:hidden="${btnEditHid}">Edit</button>
+										<a class="form-check-input" hidden="true" id="resetChk"
+											th:text="${resetChk}"></a>
+										<button class="dropdown-item btn" th:hidden="${btnResetPassHid}"
+											data-toggle="modal" data-target="#confirmDialog1" id="reset">Reset
+											password</button>
+
+										<a class="form-check-input" hidden="true" id="unlockChk"
+											th:text="${unlockChk}"></a>
+										<button class="dropdown-item btn" hidden="true"
+											data-toggle="modal" data-target="#confirmDialog2" id="unlock">Unlock
+											account</button>
+											
+										<a class="form-check-input" hidden="true" id="lockChk"
+											th:text="${lockChk}"></a>
+										<button class="dropdown-item btn" hidden="true"
+											data-toggle="modal" data-target="#confirmDialog3" id="lock">Lock
+											account</button>
+									</div>
+									<button class="btn btn-primary" form="mainForm" type="submit"
+										style="width: 90px;" hidden="true" id="btnSave">Save</button>
+									<a class="btn btn-primary" style="width: 90px;" type="button"
+										id="btnCancel"
+										th:href="@{/base/admin/userProfile/userProfileList}">Cancel</a>
+									<button class="btn btn-primary" style="width: 90px;"
+										hidden="true" id="btnConfirmCancel" type="button"
+										data-toggle="modal" data-target="#confirmDialog">Cancel</button>
+									<!-- Confirmation message -->
+									<div class="modal fade" id="confirmDialog" tabindex="-1"
+										role="dialog" aria-hidden="true">
+										<div class="modal-dialog modal-dialog-centered"
+											role="document">
+											<div class="modal-content">
+												<div class="modal-header">
+													<h5 class="modal-title" th:text="${confirmHeader}"></h5>
+													<button type="button" class="close" data-dismiss="modal"
+														aria-label="Close">
+														<span aria-hidden="true">&times;</span>
+													</button>
+												</div>
+												<div class="modal-body" th:text="${confirmMsg}"></div>
+												<div class="modal-footer">
+													<button class="btn btn-primary" onclick="onCancel()">Confirm</button>
+													<button type="button" class="btn btn-secondary"
+														data-dismiss="modal">Cancel</button>
+												</div>
+											</div>
+										</div>
+									</div>
+									<div class="modal fade" id="confirmDialog1" tabindex="-1"
+										role="dialog" aria-hidden="true">
+										<div class="modal-dialog modal-dialog-centered"
+											role="document">
+											<div class="modal-content">
+												<div class="modal-header">
+													<h5 class="modal-title" th:text="${resetHeader}"></h5>
+													<button type="button" class="close" data-dismiss="modal"
+														aria-label="Close">
+														<span aria-hidden="true">&times;</span>
+													</button>
+												</div>
+												<div class="modal-body" th:text="${resetMsg}"></div>
+												<div class="modal-footer">
+													<button class="btn btn-primary" form="mainForm"
+														type="submit" value="reset" name="manfAction">Confirm</button>
+													<button type="button" class="btn btn-secondary"
+														data-dismiss="modal">Cancel</button>
+												</div>
+											</div>
+										</div>
+									</div>
+									<div class="modal fade" id="confirmDialog2" tabindex="-1"
+										role="dialog" aria-hidden="true">
+										<div class="modal-dialog modal-dialog-centered"
+											role="document">
+											<div class="modal-content">
+												<div class="modal-header">
+													<h5 class="modal-title" th:text="${unlockHeader}"></h5>
+													<button type="button" class="close" data-dismiss="modal"
+														aria-label="Close">
+														<span aria-hidden="true">&times;</span>
+													</button>
+												</div>
+												<div class="modal-body" th:text="${unlockMsg}"></div>
+												<div class="modal-footer">
+													<button class="btn btn-primary" form="mainForm"
+														type="submit" value="unlock" name="manfAction">Confirm</button>
+													<button type="button" class="btn btn-secondary"
+														data-dismiss="modal">Cancel</button>
+												</div>
+											</div>
+										</div>
+									</div>
+									<div class="modal fade" id="confirmDialog3" tabindex="-1"
+										role="dialog" aria-hidden="true">
+										<div class="modal-dialog modal-dialog-centered"
+											role="document">
+											<div class="modal-content">
+												<div class="modal-header">
+													<h5 class="modal-title" th:text="${lockHeader}"></h5>
+													<button type="button" class="close" data-dismiss="modal"
+														aria-label="Close">
+														<span aria-hidden="true">&times;</span>
+													</button>
+												</div>
+												<div class="modal-body" th:text="${lockMsg}"></div>
+												<div class="modal-footer">
+													<button class="btn btn-primary" form="mainForm"
+														type="submit" value="lock" name="manfAction">Confirm</button>
+													<button type="button" class="btn btn-secondary"
+														data-dismiss="modal">Cancel</button>
+												</div>
+											</div>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</main>
+		</div>
+	</div>
+	<script type="text/javascript">
+		function init() {
+
+			var mode = document.getElementById("formMode").text;
+			var updateMode = document.getElementById("updateMode").text;
+			var resetChk = document.getElementById("resetChk").text;
+			var unlockChk = document.getElementById("unlockChk").text;
+			var lockChk = document.getElementById("lockChk").text;
+			console.log("unlockChk="+unlockChk);
+			console.log("lockChk="+lockChk);
+			//Enable form for add
+			if (mode == "add") {
+				enableEditMode();
+
+				$("#userIdTitle").addClass("required");
+				$("#userId").addClass("form-control");
+				$("#userId").removeClass("form-control-plaintext");
+				document.getElementById("userId").removeAttribute("readonly");
+			}
+
+			if (updateMode == "updateForm") {
+				enableEditMode();
+			}
+
+			/*if (resetChk == "reset") {
+				document.getElementById("reset").hidden = false;
+			}*/
+
+			if (unlockChk == "unlock") {
+				document.getElementById("unlock").hidden = false;
+			}
+			
+			if (lockChk == "lock") {
+				document.getElementById("lock").hidden = false;
+			}
+		}
+
+		var demo2 = $('.demo2').bootstrapDualListbox({
+			preserveSelectionOnMove : 'moved',
+			moveOnSelect : false,
+		});
+
+		///* Enable form when edit or add */
+		function enableEditMode() {
+
+			var mode = document.getElementById("formMode").text;
+			var chk = document.getElementById("enableChk").text;
+			console.log("Check status");
+			console.log(chk);
+			if (mode == "view") {
+				document.getElementById("headingTwo").textContent = "Edit User Profile";
+			}
+
+			document.getElementById("recordTime").hidden = true;
+
+			$("#userNameTitle").addClass("required");
+			$("#userName").addClass("form-control");
+			$("#userName").removeClass("form-control-plaintext");
+			document.getElementById("userName").removeAttribute("readonly");
+
+			$("#emailTitle").addClass("required");
+			$("#email").addClass("form-control");
+			$("#email").removeClass("form-control-plaintext");
+			document.getElementById("email").removeAttribute("readonly");
+
+			$("#orgTitle").addClass("required");
+			$("#orgId").addClass("form-control");
+			$("#orgId").removeClass("form-control-plaintext");
+			document.getElementById("orgId").removeAttribute("disabled");
+
+			$("#effecDate").addClass("form-control");
+			$("#effecDate").removeClass("form-control-plaintext");
+			document.getElementById("effecDate").removeAttribute("readonly");
+
+			$("#expDate").addClass("form-control");
+			$("#expDate").removeClass("form-control-plaintext");
+			document.getElementById("expDate").removeAttribute("readonly");
+
+			$("#alertPre").addClass("form-control");
+			$("#alertPre").removeClass("form-control-plaintext");
+			document.getElementById("alertPre").removeAttribute("disabled");
+
+			$("#grpIdTitle").addClass("required");
+			$("#grpId").addClass("form-control");
+			$("#grpId").removeClass("form-control-plaintext");
+			document.getElementById("grpId").removeAttribute("disabled");
+
+			$("#usrRoleTitle").addClass("required");
+			$("#roleView").hide()
+			document.getElementById("roleChoice").hidden = false;
+
+			document.getElementById("btnSave").hidden = false;
+			document.getElementById("btnEdit").hidden = true;
+			document.getElementById("btnCancel").hidden = true;
+			document.getElementById("btnConfirmCancel").hidden = false;
+		}
+
+		function onCancel() {
+			window.location = "[[@{/base/admin/userProfile/userProfileList}]]";
+		}
+	</script>
+
+	<script type="text/javascript" src="../../../js/scripts.js"></script>
+
+</body>
+</html>

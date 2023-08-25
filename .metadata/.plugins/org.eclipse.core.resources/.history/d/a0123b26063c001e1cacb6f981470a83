@@ -1,0 +1,172 @@
+package com.fms.pfc.common;
+
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
+import java.util.List;
+import java.util.Locale;
+import java.util.stream.Collectors;
+
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.MessageSource;
+import org.springframework.core.env.Environment;
+import org.springframework.stereotype.Service;
+
+import com.fms.pfc.domain.dto.main.G2LotViewDto;
+import com.fms.pfc.domain.model.AlertMessage;
+import com.fms.pfc.domain.model.UsrProfile;
+import com.fms.pfc.domain.model.main.OnDemandSearch;
+import com.fms.pfc.domain.model.main.ProdFileSearch;
+import com.fms.pfc.service.api.base.AlertMessageService;
+import com.fms.pfc.service.api.base.UserProfileService;
+import com.fms.pfc.service.api.main.G2LotViewService;
+import com.fms.pfc.service.api.main.OnDemandSearchService;
+import com.fms.pfc.service.api.main.ProdFileService;
+
+@Service
+public class FileCompareJobProcess {
+	private final Logger logger = LoggerFactory.getLogger(FileCompareJobProcess.class);
+
+	private Environment env;
+	private AlertMessageService alertMsgServ;
+	private OnDemandSearchService odsServ;
+	private G2LotViewService g2Serv;
+	private ProdFileService pfServ;
+	private SendAlertAndEmailService sendServ;
+	private MessageSource msgSource;
+	private UserProfileService usrProfServ;
+	
+	private static String LBL_HPL = "";
+	private static String LBL_G2LOT = "";
+	private static String LBL_FILENAME = "";
+	private static String LBL_FILESIZE = "";
+	private static String LBL_FILEPATH = "";
+	private static String LBL_ALERTTYPE = "";
+	private static String LBL_FROMDATE = "";
+	private static String LBL_TODATE = "";
+	private static String MODULE_NAME = "";
+	private static final int EMAIL_LIST_LIMIT = 50;
+	private static final String FROM_EMAIL = "PDFS - System";
+
+	@Autowired
+	public FileCompareJobProcess(Environment env, AlertMessageService alertMsgServ, OnDemandSearchService odsServ,
+			G2LotViewService g2Serv, ProdFileService pfServ, SendAlertAndEmailService sendServ, MessageSource msgSource, UserProfileService usrProfServ) {
+		this.env = env;
+		this.alertMsgServ = alertMsgServ;
+		this.odsServ = odsServ;
+		this.g2Serv = g2Serv;
+		this.pfServ = pfServ;
+		this.sendServ = sendServ;
+		this.msgSource = msgSource;
+		this.usrProfServ = usrProfServ;
+	}
+
+	public void process() {
+		LocalDate todayDate = LocalDate.now();
+		String toDate = todayDate.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
+		
+		LocalDate backDate = todayDate.minusDays(2);
+		String fromDate = backDate.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
+		
+		long daysBetween = ChronoUnit.DAYS.between(backDate, todayDate);
+		
+		AlertMessage alertMsg = alertMsgServ.searchAlertById("FILE_COMPARE");
+		
+		List<String> hplList = g2Serv.hplList();
+		
+		// loop each hpl
+		for (String hpl : hplList) {
+			// check from ODS tables - g2 completion lot vs prod file table
+			List<OnDemandSearch> search = odsServ.searchByCriteria(hpl, "", "", "", "", "", "", fromDate, toDate);
+			// filter by alert other than OK
+			search = search.stream().filter(arg0 -> !StringUtils.equalsIgnoreCase(arg0.getAlert(), "ok"))
+					.collect(Collectors.toList());
+			if (!search.isEmpty()) {
+				// find user list based on group = hpl
+				List<UsrProfile> userProfiles = usrProfServ.findUsersByGroup(hpl).stream()
+						.filter(usr -> usr.getDisabledFlag().equals(String.valueOf(CommonConstants.FLAG_NO)))
+						.collect(Collectors.toList());
+
+				if (!search.isEmpty()) {
+					String tblStr = genEmailBody(search);
+					String[] cc = null;
+					for (UsrProfile usr : userProfiles) {
+						String subject = alertMsg.getSubject();
+						String content = alertMsg.getDescription().replace("[@Name]", usr.getUserName()).replace("[@Table]",
+								tblStr);
+
+						sendServ.sendAlertAndEmail(FROM_EMAIL, hpl, usr, subject, content, true);
+						// sendEmailHtml(usr.getEmail(), subject, content, cc);
+					}
+				}
+			}
+
+		}
+
+	}
+
+	private String convertIntStr(int dm) {
+		String result = "";
+		if (dm > 0 && dm < 10)
+			result = "0" + dm;
+		else
+			result = String.valueOf(dm);
+		return result;
+	}
+
+	private void sendAlert() {
+		// TODO Auto-generated method stub
+		
+	}
+
+	private String genEmailBody(List<OnDemandSearch> searchList) {
+		StringBuffer stringBuffer = generateCommonHtmlHead();
+		int rowno = 1;
+		for (OnDemandSearch ods : searchList) {
+			generateTdData(stringBuffer, rowno, ods);
+			rowno++;
+		}
+		generateCommonFooter(stringBuffer);
+		return stringBuffer.toString();
+	}
+
+	private StringBuffer generateCommonHtmlHead() {
+		StringBuffer stringBuffer = new StringBuffer();
+		return stringBuffer.append("<head>").append("</head>").append("<body>").append("<table border=1>")
+				.append("<tr>").append("<th>").append(LBL_HPL).append("</th>").append("<th>").append(LBL_G2LOT)
+				.append("</th>").append("<th>").append(LBL_FILENAME).append("</th>").append("<th>").append(LBL_FILESIZE)
+				.append(" (KB) ").append("</th>").append("<th>").append(LBL_FILEPATH).append("</th>").append("<th>")
+				.append(LBL_ALERTTYPE).append("</th>").append("</tr>");
+	}
+
+	private void generateCommonFooter(StringBuffer stringBuffer) {
+		stringBuffer.append("</table></body>");
+	}
+
+	private void generateTdData(StringBuffer stringBuffer, int rowno, OnDemandSearch ods) {
+		stringBuffer.append("<tr>");
+		stringBuffer.append("<td align ='right'>").append(rowno).append("</td>");
+		stringBuffer.append("<td align ='center'>").append(ods.getHpl()).append("</td>");
+		stringBuffer.append("<td>").append(ods.getLot()).append("</td>");
+		stringBuffer.append("<td>").append(ods.getFileName()).append("</td>");
+		stringBuffer.append("<td align ='center'>").append(ods.getFileSize()).append("</td>");
+		stringBuffer.append("<td>").append(ods.getFilePath()).append("</td>");
+		stringBuffer.append("<td>").append(ods.getAlert()).append("</td>");
+		stringBuffer.append("</tr>");
+	}
+	
+	private void getAllLabels() {
+		LBL_HPL = msgSource.getMessage("lblHpl", null, Locale.getDefault());
+		LBL_G2LOT = msgSource.getMessage("lblG2LotNo", null, Locale.getDefault());
+		LBL_FILENAME = msgSource.getMessage("lblFileName", null, Locale.getDefault());
+		LBL_FILESIZE = msgSource.getMessage("lblFileSize", null, Locale.getDefault());
+		LBL_FILEPATH = msgSource.getMessage("lblFilePath", null, Locale.getDefault());
+		LBL_ALERTTYPE = msgSource.getMessage("lblAlertType", null, Locale.getDefault());
+		LBL_FROMDATE = msgSource.getMessage("lblFromDate", null, Locale.getDefault());
+		LBL_TODATE = msgSource.getMessage("lblToDate", null, Locale.getDefault());
+		MODULE_NAME = msgSource.getMessage("moduleOnDemand", null, Locale.getDefault());
+	}
+}

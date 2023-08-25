@@ -1,0 +1,224 @@
+package com.fms.pfc.controller.base;
+
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.context.annotation.SessionScope;
+import org.springframework.web.servlet.ModelAndView;
+
+import com.fms.pfc.common.Authority;
+import com.fms.pfc.domain.dto.LabelAndValueDto;
+import com.fms.pfc.domain.model.Usr;
+import com.fms.pfc.service.api.base.AlertService;
+import com.fms.pfc.service.api.base.LoginService;
+import com.fms.pfc.service.api.main.G2LotViewService;
+import com.fms.pfc.service.api.main.ProdFileService;
+
+@Controller
+@SessionScope
+public class MenuController {
+	
+	private final Logger logger = LoggerFactory.getLogger(MenuController.class);
+			
+	private LoginService logServ;
+	private AlertService alertServ;	
+	private Authority auth;
+	private G2LotViewService g2Serv;
+	private ProdFileService pfServ;
+	
+	@Autowired
+	public MenuController(LoginService logServ, AlertService alertServ, Authority auth, G2LotViewService g2Serv, ProdFileService pfServ) {
+		super();
+		this.logServ = logServ;
+		this.alertServ = alertServ;
+		this.auth = auth;
+		this.g2Serv = g2Serv;
+		this.pfServ = pfServ;
+	}
+
+	@GetMapping("/")
+	public ModelAndView loadHomepage(HttpServletRequest request) {
+
+		Map<String, Object> model = new HashMap<String, Object>();
+
+		model = auth.onPageLoad(model, request);
+		Usr usr = logServ.searchUser(request.getRemoteUser());
+		model.put("loggedUserName", usr.getUserName());
+
+		int alertCnt = alertServ.getCount(request.getRemoteUser());
+
+		Date todayDate = new Date();
+		boolean changePass = false;
+		if (usr.getPasswordSetDate() != null) {
+			if (todayDate.after(usr.getPasswordSetDate())) {
+				changePass = true;
+			}
+		}
+
+		boolean showReminder = false;
+		if (alertCnt > 0 || changePass) {
+			showReminder = true;
+		}
+
+		model.put("alertCount", alertCnt);
+		model.put("changePass", changePass);
+		model.put("showReminder", showReminder);
+		// for quick info card
+        model.put("lotCount", g2Serv.countAll());
+        model.put("prodFileCount", pfServ.countAll());
+        // for chart
+        {
+        	List<Object[]> result = g2Serv.lotCountByHpl();
+        	List<LabelAndValueDto> dtos = new ArrayList<LabelAndValueDto>();
+        	for (Object[] object : result) {
+				logger.debug("{}",object);
+				LabelAndValueDto dto = new LabelAndValueDto((String)object[0], (int)object[1]);
+				dtos.add(dto);
+			}
+        	List<String> cols = dtos.stream().map(arg0 -> arg0.getLabel()).collect(Collectors.toList());
+        	List<Integer> data = dtos.stream().map(arg0 -> arg0.getValue()).collect(Collectors.toList());
+        	//List<String> cols = result.stream().map(arg0 -> (String)arg0[0]).collect(Collectors.toList());
+        	//List<Integer> data = result.stream().map(arg0 -> (Integer)arg0[1]).collect(Collectors.toList());
+        	model.put("lotCountByHpl", dtos);
+        	logger.debug("cols.toArray(){}",cols);
+        	model.put("cols", cols.toArray());
+        	model.put("data", data.toArray());
+        	
+//        	JsonArray jsonArrayCategory = new JsonArray();
+//    		JsonArray jsonArraySeries = new JsonArray();
+//    		JsonObject jsonObject = new JsonObject();
+//    		result.forEach(data->{
+//    			jsonArrayCategory.add((String) data[0]);
+//    			jsonArraySeries.add((Integer) data[1]);
+//    		});
+//    		jsonObject.add("categories", jsonArrayCategory);
+//    		jsonObject.add("series", jsonArraySeries);
+//        	model.put("lotCountByHpl", jsonObject);
+        }
+
+		return new ModelAndView("homepage", model);
+	}
+
+	@GetMapping("/menu/regulationMenu")
+	public ModelAndView regulationMenu(HttpServletRequest request, HttpServletResponse response) {
+
+		Map<String, Object> model = new HashMap<String, Object>();
+
+		model = auth.onPageLoad(model, request);
+		auth.isAuthUrl(request, response);
+
+		return new ModelAndView("menu/regulationMenu", model);
+	}
+
+	@GetMapping("/menu/rawMaterialMenu")
+	public ModelAndView rawMaterialMenu(HttpServletRequest request, HttpServletResponse response) {
+
+		Map<String, Object> model = new HashMap<String, Object>();
+
+		model = auth.onPageLoad(model, request);
+		auth.isAuthUrl(request, response);
+
+		return new ModelAndView("menu/rawMaterialMenu", model);
+	}
+
+	@GetMapping("/menu/recipeMenu")
+	public ModelAndView recipeMenu(HttpServletRequest request, HttpServletResponse response) {
+
+		Map<String, Object> model = new HashMap<String, Object>();
+
+		model = auth.onPageLoad(model, request);
+		auth.isAuthUrl(request, response);
+
+		return new ModelAndView("menu/recipeMenu", model);
+	}
+
+	@GetMapping("/menu/permissibilityMenu")
+	public ModelAndView permissibilityMenu(HttpServletRequest request, HttpServletResponse response) {
+
+		Map<String, Object> model = new HashMap<String, Object>();
+
+		model = auth.onPageLoad(model, request);
+		auth.isAuthUrl(request, response);
+
+		return new ModelAndView("menu/permissibilityMenu", model);
+	}
+
+	@GetMapping("/menu/letterMenu")
+	public ModelAndView letterMenu(HttpServletRequest request, HttpServletResponse response) {
+
+		Map<String, Object> model = new HashMap<String, Object>();
+
+		model = auth.onPageLoad(model, request);
+		auth.isAuthUrl(request, response);
+
+		return new ModelAndView("menu/letterMenu", model);
+	}
+
+	@GetMapping("/menu/reportMenu")
+	public ModelAndView reportMenu(HttpServletRequest request, HttpServletResponse response) {
+
+		Map<String, Object> model = new HashMap<String, Object>();
+
+		model = auth.onPageLoad(model, request);
+		auth.isAuthUrl(request, response);
+
+		return new ModelAndView("menu/reportMenu", model);
+	}
+
+	@GetMapping("/menu/adminMenu")
+	public ModelAndView adminMenu(HttpServletRequest request, HttpServletResponse response) {
+
+		Map<String, Object> model = new HashMap<String, Object>();
+
+		model = auth.onPageLoad(model, request);
+		auth.isAuthUrl(request, response);
+
+		return new ModelAndView("menu/adminMenu", model);
+	}
+
+	@GetMapping("/menu/maintenanceMenu")
+	public ModelAndView maintenanceMenu(HttpServletRequest request, HttpServletResponse response) {
+
+		Map<String, Object> model = new HashMap<String, Object>();
+
+		model = auth.onPageLoad(model, request);
+		auth.isAuthUrl(request, response);
+
+		return new ModelAndView("menu/maintenanceMenu", model);
+	}
+
+	@GetMapping("/menu/activityMenu")
+	public ModelAndView activityMenu(HttpServletRequest request, HttpServletResponse response) {
+
+		Map<String, Object> model = new HashMap<String, Object>();
+
+		model = auth.onPageLoad(model, request);
+		auth.isAuthUrl(request, response);
+
+		return new ModelAndView("menu/activityMenu", model);
+	}
+
+	@GetMapping("/menu/prodFileMenu")
+	public ModelAndView prodFileMenu(HttpServletRequest request, HttpServletResponse response) {
+
+		Map<String, Object> model = new HashMap<String, Object>();
+
+		model = auth.onPageLoad(model, request);
+		auth.isAuthUrl(request, response);
+
+		return new ModelAndView("menu/prodFileMenu", model);
+	}
+
+}

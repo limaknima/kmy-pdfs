@@ -1,0 +1,738 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Created with Jaspersoft Studio version 6.11.0.final using JasperReports Library version 6.11.0-0c4056ccaa4d25a5a8c45672d2f764ea3498bebb  -->
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="RA103" pageWidth="595" pageHeight="842" whenNoDataType="NoDataSection" columnWidth="555" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" uuid="c37eabf4-e712-4bf4-9f51-4803efaffb37">
+	<property name="com.jaspersoft.studio.data.sql.tables" value=""/>
+	<property name="com.jaspersoft.studio.data.defaultdataadapter" value="local-mssql"/>
+	<property name="com.jaspersoft.studio.unit." value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.pageHeight" value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.pageWidth" value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.topMargin" value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.bottomMargin" value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.leftMargin" value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.rightMargin" value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.columnWidth" value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.columnSpacing" value="pixel"/>
+	<style name="Table_TH" mode="Opaque" backcolor="#F0F8FF">
+		<box>
+			<topPen lineWidth="0.5" lineColor="#000000"/>
+			<bottomPen lineWidth="0.5" lineColor="#000000"/>
+		</box>
+	</style>
+	<style name="Table_CH" mode="Opaque" backcolor="#BFE1FF">
+		<box>
+			<topPen lineWidth="0.5" lineColor="#000000"/>
+			<bottomPen lineWidth="0.5" lineColor="#000000"/>
+		</box>
+	</style>
+	<style name="Table_TD" mode="Opaque" backcolor="#FFFFFF">
+		<box>
+			<topPen lineWidth="0.5" lineColor="#000000"/>
+			<bottomPen lineWidth="0.5" lineColor="#000000"/>
+		</box>
+	</style>
+	<subDataset name="DS-CHG_LOG" uuid="f649bc74-1d74-4a70-823e-535236f91318">
+		<property name="com.jaspersoft.studio.data.sql.tables" value=""/>
+		<property name="com.jaspersoft.studio.data.defaultdataadapter" value="local-mssql"/>
+		<parameter name="convLogDate" class="java.lang.String"/>
+		<parameter name="rType" class="java.lang.Integer"/>
+		<queryString language="SQL">
+			<![CDATA[select * from CHANGE_HISTORY_LOG c
+where 1=1
+and CONVERT(VARCHAR, c.LOG_DATETIME, 120) = $P{convLogDate}
+and c.RECORD_TYPE_ID=$P{rType}
+and c.CHANGE_HISTORY_ID not in (
+	select d.CHANGE_HISTORY_ID from CHANGE_HISTORY_LOG d
+	where 1=1
+	and d.RECORD_TYPE_ID=201
+	and (
+		d.FIELD_NAME='Supplier ID'
+		and d.TABLE_NAME='Raw Material Manufacturer Supplier'
+		and ISNULL(d.NEW_VALUE,'')=''
+		and d.FUNCTION_TYPE=3
+	)
+)
+order by c.LOG_DATETIME desc]]>
+		</queryString>
+		<field name="CHANGE_HISTORY_ID" class="java.lang.Long">
+			<property name="com.jaspersoft.studio.field.label" value="CHANGE_HISTORY_ID"/>
+		</field>
+		<field name="LOG_DATETIME" class="java.sql.Timestamp">
+			<property name="com.jaspersoft.studio.field.label" value="LOG_DATETIME"/>
+		</field>
+		<field name="FUNCTION_TYPE" class="java.lang.Integer">
+			<property name="com.jaspersoft.studio.field.label" value="FUNCTION_TYPE"/>
+		</field>
+		<field name="TABLE_NAME" class="java.lang.String">
+			<property name="com.jaspersoft.studio.field.label" value="TABLE_NAME"/>
+		</field>
+		<field name="PK_VALUE" class="java.lang.String">
+			<property name="com.jaspersoft.studio.field.label" value="PK_VALUE"/>
+		</field>
+		<field name="FIELD_NAME" class="java.lang.String">
+			<property name="com.jaspersoft.studio.field.label" value="FIELD_NAME"/>
+		</field>
+		<field name="OLD_VALUE" class="java.lang.String">
+			<property name="com.jaspersoft.studio.field.label" value="OLD_VALUE"/>
+		</field>
+		<field name="NEW_VALUE" class="java.lang.String">
+			<property name="com.jaspersoft.studio.field.label" value="NEW_VALUE"/>
+		</field>
+		<field name="USER_ID" class="java.lang.String">
+			<property name="com.jaspersoft.studio.field.label" value="USER_ID"/>
+		</field>
+		<field name="OLD_VAL_OBJ" class="java.lang.Object">
+			<property name="com.jaspersoft.studio.field.label" value="OLD_VAL_OBJ"/>
+		</field>
+		<field name="NEW_VAL_OBJ" class="java.lang.Object">
+			<property name="com.jaspersoft.studio.field.label" value="NEW_VAL_OBJ"/>
+		</field>
+		<field name="RECORD_TYPE_ID" class="java.lang.Integer">
+			<property name="com.jaspersoft.studio.field.label" value="RECORD_TYPE_ID"/>
+		</field>
+		<field name="RECORD_REF" class="java.lang.String">
+			<property name="com.jaspersoft.studio.field.label" value="RECORD_REF"/>
+		</field>
+	</subDataset>
+	<parameter name="userId" class="java.lang.String"/>
+	<parameter name="logIDList" class="java.util.Collection">
+		<defaultValueExpression><![CDATA[new java.util.ArrayList()]]></defaultValueExpression>
+	</parameter>
+	<parameter name="columnName" class="java.lang.String"/>
+	<queryString language="SQL">
+		<![CDATA[with c_rec as (
+	select 
+		r.RAW_MATL_ID as R_ID, r.RAW_MATL_NAME as R_NAME, 201 as R_TYPE, r.CREATOR_ID, r.CREATED_DATETIME 
+		, r.MODIFIER_ID, r.MODIFIED_DATETIME
+	from RAW_MATERIAL r
+	union all
+	select 
+		pr.PR_ID as R_ID, pr.PR_NAME as R_NAME, 301 as R_TYPE, pr.CREATOR_ID, pr.CREATED_DATETIME 
+		, pr.MODIFIER_ID, pr.MODIFIED_DATETIME
+	from PRODUCT_RECIPE pr 
+)
+select 
+	t.*
+	, c.*
+	, (select count(1) from CHANGE_HISTORY_LOG cl where cl.LOG_DATETIME=t.LOG_DATETIME) as CL_CNT
+	, CONVERT(VARCHAR, t.LOG_DATETIME, 120) as CONV_LOG_DATE 
+from TRX_HISTORY_LOG t
+inner join c_rec c on c.R_ID = t.RECORD_REF and c.R_TYPE=t.RECORD_TYPE_ID
+where 1=1
+and $X{IN,t.LOG_ID,logIDList}
+order by t.LOG_DATETIME desc]]>
+	</queryString>
+	<field name="LOG_ID" class="java.lang.Long">
+		<property name="com.jaspersoft.studio.field.label" value="LOG_ID"/>
+	</field>
+	<field name="LOG_DATETIME" class="java.sql.Timestamp">
+		<property name="com.jaspersoft.studio.field.label" value="LOG_DATETIME"/>
+	</field>
+	<field name="LOG_DESC" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="LOG_DESC"/>
+	</field>
+	<field name="USER_ID" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="USER_ID"/>
+	</field>
+	<field name="FUNCTION_TYPE" class="java.lang.Integer">
+		<property name="com.jaspersoft.studio.field.label" value="FUNCTION_TYPE"/>
+	</field>
+	<field name="RECORD_REF" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="RECORD_REF"/>
+	</field>
+	<field name="RECORD_TYPE_ID" class="java.lang.Integer">
+		<property name="com.jaspersoft.studio.field.label" value="RECORD_TYPE_ID"/>
+	</field>
+	<field name="SEARCH_STRING" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="SEARCH_STRING"/>
+	</field>
+	<field name="R_ID" class="java.lang.Integer">
+		<property name="com.jaspersoft.studio.field.label" value="R_ID"/>
+	</field>
+	<field name="R_NAME" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="R_NAME"/>
+	</field>
+	<field name="R_TYPE" class="java.lang.Integer">
+		<property name="com.jaspersoft.studio.field.label" value="R_TYPE"/>
+	</field>
+	<field name="CREATOR_ID" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="CREATOR_ID"/>
+	</field>
+	<field name="CREATED_DATETIME" class="java.sql.Timestamp">
+		<property name="com.jaspersoft.studio.field.label" value="CREATED_DATETIME"/>
+	</field>
+	<field name="MODIFIER_ID" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="MODIFIER_ID"/>
+	</field>
+	<field name="MODIFIED_DATETIME" class="java.sql.Timestamp">
+		<property name="com.jaspersoft.studio.field.label" value="MODIFIED_DATETIME"/>
+	</field>
+	<field name="CL_CNT" class="java.lang.Integer">
+		<property name="com.jaspersoft.studio.field.label" value="CL_CNT"/>
+	</field>
+	<field name="CONV_LOG_DATE" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="CONV_LOG_DATE"/>
+	</field>
+	<group name="GroupTrx">
+		<groupExpression><![CDATA[$F{LOG_ID}]]></groupExpression>
+		<groupHeader>
+			<band height="100">
+				<property name="com.jaspersoft.studio.unit.height" value="px"/>
+				<textField>
+					<reportElement x="0" y="60" width="130" height="30" uuid="60d28ebc-c28b-43fc-a441-39c18a2f117e">
+						<property name="com.jaspersoft.studio.unit.width" value="px"/>
+						<property name="com.jaspersoft.studio.unit.y" value="px"/>
+					</reportElement>
+					<textElement>
+						<font fontName="Arial"/>
+					</textElement>
+					<textFieldExpression><![CDATA[new java.text.SimpleDateFormat("dd/MM/yyy hh:mm:ss a").format($F{LOG_DATETIME})]]></textFieldExpression>
+				</textField>
+				<textField>
+					<reportElement x="130" y="60" width="100" height="30" uuid="f5996c63-d8b0-43ba-8607-0444d83ef013">
+						<property name="com.jaspersoft.studio.unit.y" value="px"/>
+					</reportElement>
+					<textElement>
+						<font fontName="Arial"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$F{USER_ID}]]></textFieldExpression>
+				</textField>
+				<textField>
+					<reportElement x="230" y="60" width="100" height="30" uuid="b61d83fa-2284-4ff6-b4ab-43e09650b718">
+						<property name="com.jaspersoft.studio.unit.y" value="px"/>
+					</reportElement>
+					<textElement>
+						<font fontName="Arial"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$F{FUNCTION_TYPE}.intValue()==1?"Insert":
+$F{FUNCTION_TYPE}.intValue()==2?"Update":
+$F{FUNCTION_TYPE}.intValue()==3?"Delete":""]]></textFieldExpression>
+				</textField>
+				<textField isBlankWhenNull="true">
+					<reportElement x="330" y="60" width="220" height="30" uuid="fd61df0c-87a0-424c-b821-45232af57de2">
+						<property name="com.jaspersoft.studio.unit.width" value="px"/>
+						<property name="com.jaspersoft.studio.unit.y" value="px"/>
+					</reportElement>
+					<textElement>
+						<font fontName="Arial"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$F{SEARCH_STRING}]]></textFieldExpression>
+				</textField>
+				<staticText>
+					<reportElement mode="Opaque" x="0" y="30" width="130" height="30" backcolor="rgba(191, 225, 255, 0.39215687)" uuid="f5f6ea60-dda4-4426-84da-c68d44cddac5">
+						<property name="com.jaspersoft.studio.unit.y" value="px"/>
+					</reportElement>
+					<box>
+						<pen lineColor="#FFFFFF"/>
+					</box>
+					<textElement textAlignment="Left" verticalAlignment="Middle">
+						<font fontName="Arial" size="12" isBold="false"/>
+					</textElement>
+					<text><![CDATA[Date and Time]]></text>
+				</staticText>
+				<staticText>
+					<reportElement mode="Opaque" x="130" y="30" width="100" height="30" backcolor="rgba(191, 225, 255, 0.39215687)" uuid="3e23d3e3-afb2-454e-b42e-063b9c86ad99">
+						<property name="com.jaspersoft.studio.unit.width" value="px"/>
+						<property name="com.jaspersoft.studio.unit.y" value="px"/>
+					</reportElement>
+					<box>
+						<pen lineColor="#FFFFFF"/>
+					</box>
+					<textElement textAlignment="Left" verticalAlignment="Middle">
+						<font fontName="Arial" size="12" isBold="false"/>
+					</textElement>
+					<text><![CDATA[User ID]]></text>
+				</staticText>
+				<staticText>
+					<reportElement mode="Opaque" x="230" y="30" width="100" height="30" backcolor="rgba(191, 225, 255, 0.39215687)" uuid="48d513bc-f537-4bbe-be10-02976385dd24">
+						<property name="com.jaspersoft.studio.unit.width" value="px"/>
+						<property name="com.jaspersoft.studio.unit.y" value="px"/>
+					</reportElement>
+					<box>
+						<pen lineColor="#FFFFFF"/>
+					</box>
+					<textElement textAlignment="Left" verticalAlignment="Middle">
+						<font fontName="Arial" size="12" isBold="false"/>
+					</textElement>
+					<text><![CDATA[Action Taken]]></text>
+				</staticText>
+				<staticText>
+					<reportElement mode="Opaque" x="330" y="30" width="220" height="30" backcolor="rgba(191, 225, 255, 0.39215687)" uuid="6749092f-e290-4ca5-a351-51d83abb3a03">
+						<property name="com.jaspersoft.studio.unit.width" value="px"/>
+						<property name="com.jaspersoft.studio.unit.y" value="px"/>
+					</reportElement>
+					<box>
+						<pen lineColor="#FFFFFF"/>
+					</box>
+					<textElement textAlignment="Left" verticalAlignment="Middle">
+						<font fontName="Arial" size="12" isBold="false"/>
+					</textElement>
+					<text><![CDATA[Traceability Remark]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="0" y="0" width="555" height="30" uuid="0286e927-1e8f-490d-83ed-ac4c7394720c">
+						<property name="com.jaspersoft.studio.unit.x" value="px"/>
+						<property name="com.jaspersoft.studio.unit.y" value="px"/>
+						<property name="com.jaspersoft.studio.unit.width" value="px"/>
+						<property name="com.jaspersoft.studio.unit.height" value="px"/>
+					</reportElement>
+					<textElement>
+						<font fontName="Arial" size="14" isBold="true" isUnderline="true"/>
+					</textElement>
+					<text><![CDATA[Activity Log]]></text>
+				</staticText>
+			</band>
+		</groupHeader>
+		<groupFooter>
+			<band height="20">
+				<property name="com.jaspersoft.studio.unit.height" value="px"/>
+				<rectangle>
+					<reportElement x="0" y="10" width="555" height="1" uuid="7229f75e-3078-4b57-8108-7f9e77fed18f">
+						<property name="com.jaspersoft.studio.unit.width" value="px"/>
+						<property name="com.jaspersoft.studio.unit.height" value="px"/>
+					</reportElement>
+				</rectangle>
+			</band>
+		</groupFooter>
+	</group>
+	<title>
+		<band height="50" splitType="Stretch">
+			<property name="com.jaspersoft.studio.unit.height" value="px"/>
+			<staticText>
+				<reportElement x="0" y="0" width="555" height="40" uuid="f1757b05-a53f-479d-a1e5-577b1d7cb6a3">
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+				</reportElement>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Arial" size="20" isBold="true" isUnderline="false"/>
+				</textElement>
+				<text><![CDATA[Traceability Report]]></text>
+			</staticText>
+			<rectangle>
+				<reportElement x="0" y="40" width="555" height="1" uuid="f257f9f2-8777-4faf-914f-b29b783ea972">
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+				</reportElement>
+			</rectangle>
+		</band>
+	</title>
+	<pageHeader>
+		<band height="120" splitType="Stretch">
+			<property name="com.jaspersoft.studio.unit.height" value="px"/>
+			<printWhenExpression><![CDATA[$V{PAGE_NUMBER}==1]]></printWhenExpression>
+			<textField>
+				<reportElement x="120" y="10" width="435" height="30" uuid="60deaab5-af7a-49e8-be03-b612d1f57703"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Arial" size="14" isBold="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{R_NAME}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement mode="Opaque" x="0" y="40" width="110" height="30" backcolor="rgba(191, 225, 255, 0.39215687)" uuid="34d53772-3280-4c62-9c60-2efd07e6f3b4">
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+				</reportElement>
+				<box>
+					<pen lineColor="#FFFFFF"/>
+				</box>
+				<textElement textAlignment="Left" verticalAlignment="Middle">
+					<font fontName="Arial" size="12" isBold="false"/>
+				</textElement>
+				<text><![CDATA[Creator Name]]></text>
+			</staticText>
+			<staticText>
+				<reportElement mode="Opaque" x="290" y="70" width="110" height="30" backcolor="rgba(191, 225, 255, 0.39215687)" uuid="a503803f-8505-412d-85d8-30cf1041b33c">
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+				</reportElement>
+				<box>
+					<pen lineColor="#FFFFFF"/>
+				</box>
+				<textElement textAlignment="Left" verticalAlignment="Middle">
+					<font fontName="Arial" size="12" isBold="false"/>
+				</textElement>
+				<text><![CDATA[Last Modified Date]]></text>
+			</staticText>
+			<staticText>
+				<reportElement mode="Opaque" x="0" y="70" width="110" height="30" backcolor="rgba(191, 225, 255, 0.39215687)" uuid="473190c5-b64c-4d53-940d-a3dc73fe8073">
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+				</reportElement>
+				<box>
+					<pen lineColor="#FFFFFF"/>
+				</box>
+				<textElement textAlignment="Left" verticalAlignment="Middle">
+					<font fontName="Arial" size="12" isBold="false"/>
+				</textElement>
+				<text><![CDATA[Created Date]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="400" y="70" width="10" height="30" uuid="b49f1896-0428-4413-95a2-24786f5cff02"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Arial" size="12"/>
+				</textElement>
+				<text><![CDATA[ :]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="110" y="40" width="10" height="30" uuid="34368355-38ec-4fd0-9246-2ab36d7bd93a"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Arial" size="12"/>
+				</textElement>
+				<text><![CDATA[ :]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="110" y="70" width="10" height="30" uuid="d020bd69-a280-4553-8417-5546bd8b330a"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Arial" size="12"/>
+				</textElement>
+				<text><![CDATA[ :]]></text>
+			</staticText>
+			<textField>
+				<reportElement x="120" y="40" width="130" height="30" uuid="ad9c6219-d287-4fac-9acb-7e02aa589ec0">
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+				</reportElement>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Arial"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{CREATOR_ID}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="120" y="70" width="130" height="30" uuid="47183b55-d6a0-4826-b9ae-e72392ae7a2b">
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+				</reportElement>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Arial"/>
+				</textElement>
+				<textFieldExpression><![CDATA[new java.text.SimpleDateFormat("dd/MM/yyy hh:mm:ss a").format($F{CREATED_DATETIME})]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement mode="Opaque" x="290" y="40" width="110" height="30" backcolor="rgba(191, 225, 255, 0.39215687)" uuid="a8ecba85-6b63-4893-900b-e349ebefcc0d">
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+				</reportElement>
+				<box>
+					<pen lineColor="#FFFFFF"/>
+				</box>
+				<textElement textAlignment="Left" verticalAlignment="Middle">
+					<font fontName="Arial" size="12" isBold="false"/>
+				</textElement>
+				<text><![CDATA[Modifier Name]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="400" y="40" width="10" height="30" uuid="ca42b0dd-f9a9-4f6a-9fdc-9fa4cc33700a"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Arial" size="12"/>
+				</textElement>
+				<text><![CDATA[ :]]></text>
+			</staticText>
+			<textField isBlankWhenNull="true">
+				<reportElement x="410" y="40" width="130" height="30" uuid="b4e78457-5721-45be-ac23-6c06fe68f4b9">
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+				</reportElement>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Arial"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{MODIFIER_ID}]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement x="410" y="70" width="130" height="30" uuid="7a063194-daec-4ce1-86d3-4693f3ed136c">
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+				</reportElement>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Arial"/>
+				</textElement>
+				<textFieldExpression><![CDATA[new java.text.SimpleDateFormat("dd/MM/yyy hh:mm:ss a").format($F{MODIFIED_DATETIME})]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement x="110" y="10" width="10" height="30" uuid="2cbdc41f-44e7-47fb-918e-d3dbd9e5e15b"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Arial" size="12"/>
+				</textElement>
+				<text><![CDATA[ :]]></text>
+			</staticText>
+			<textField>
+				<reportElement mode="Opaque" x="0" y="10" width="110" height="30" backcolor="rgba(191, 225, 255, 0.39215687)" uuid="5a1c6ef2-8198-4c2a-b030-58b70a79c3aa">
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+				</reportElement>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Arial" size="12"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{columnName}]]></textFieldExpression>
+			</textField>
+		</band>
+	</pageHeader>
+	<detail>
+		<band height="100" splitType="Stretch">
+			<property name="com.jaspersoft.studio.unit.height" value="px"/>
+			<printWhenExpression><![CDATA[$F{FUNCTION_TYPE}.intValue()!=1 && $F{CL_CNT}.intValue()!=0]]></printWhenExpression>
+			<componentElement>
+				<reportElement x="0" y="0" width="555" height="100" uuid="d0647f2b-0e34-4423-a0a5-0985d2f64ae1">
+					<property name="com.jaspersoft.studio.layout" value="com.jaspersoft.studio.editor.layout.VerticalRowLayout"/>
+					<property name="com.jaspersoft.studio.table.style.table_header" value="Table_TH"/>
+					<property name="com.jaspersoft.studio.table.style.column_header" value="Table_CH"/>
+					<property name="com.jaspersoft.studio.table.style.detail" value="Table_TD"/>
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+					<property name="com.jaspersoft.studio.unit.y" value="px"/>
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+				</reportElement>
+				<jr:table xmlns:jr="http://jasperreports.sourceforge.net/jasperreports/components" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports/components http://jasperreports.sourceforge.net/xsd/components.xsd">
+					<datasetRun subDataset="DS-CHG_LOG" uuid="b8870bd5-4bff-4ef5-ac70-72ec4176c725">
+						<datasetParameter name="convLogDate">
+							<datasetParameterExpression><![CDATA[$F{CONV_LOG_DATE}]]></datasetParameterExpression>
+						</datasetParameter>
+						<datasetParameter name="rType">
+							<datasetParameterExpression><![CDATA[$F{R_TYPE}]]></datasetParameterExpression>
+						</datasetParameter>
+						<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
+					</datasetRun>
+					<jr:column width="100" uuid="1fa4df46-9dba-4287-b1e8-50a648dd3b8a">
+						<property name="com.jaspersoft.studio.components.table.model.column.name" value="Column1"/>
+						<jr:tableHeader style="Table_TH" height="30" rowSpan="1">
+							<staticText>
+								<reportElement x="0" y="0" width="100" height="30" uuid="30193776-bea9-495a-8414-d1a57af39c73">
+									<property name="com.jaspersoft.studio.unit.x" value="px"/>
+									<property name="com.jaspersoft.studio.unit.y" value="px"/>
+									<property name="com.jaspersoft.studio.unit.width" value="px"/>
+									<property name="com.jaspersoft.studio.unit.height" value="px"/>
+								</reportElement>
+								<textElement>
+									<font fontName="Arial" size="14" isBold="true" isUnderline="true"/>
+								</textElement>
+								<text><![CDATA[Details]]></text>
+							</staticText>
+						</jr:tableHeader>
+						<jr:columnHeader style="Table_CH" height="30" rowSpan="1">
+							<property name="com.jaspersoft.studio.unit.width" value="px"/>
+							<staticText>
+								<reportElement x="0" y="0" width="100" height="30" uuid="36aeaa60-864e-47cc-bcf8-668ccb8bf1f3"/>
+								<textElement textAlignment="Left">
+									<font fontName="Arial" size="12"/>
+								</textElement>
+								<text><![CDATA[Action Taken]]></text>
+							</staticText>
+						</jr:columnHeader>
+						<jr:detailCell style="Table_TD" height="40">
+							<property name="com.jaspersoft.studio.unit.height" value="px"/>
+							<textField>
+								<reportElement x="0" y="0" width="100" height="40" uuid="43983f7c-6e83-40c8-a146-fad308ce9319"/>
+								<textElement>
+									<font fontName="Arial"/>
+								</textElement>
+								<textFieldExpression><![CDATA[$F{FUNCTION_TYPE}.intValue()==1?"Insert":
+$F{FUNCTION_TYPE}.intValue()==2?"Update":
+$F{FUNCTION_TYPE}.intValue()==3?"Delete":""]]></textFieldExpression>
+							</textField>
+						</jr:detailCell>
+					</jr:column>
+					<jr:column width="110" uuid="6cc46e73-dcdc-4869-a448-7f6bb94bbe5e">
+						<property name="com.jaspersoft.studio.components.table.model.column.name" value="Column2"/>
+						<jr:tableHeader style="Table_TH" height="30" rowSpan="1"/>
+						<jr:columnHeader style="Table_CH" height="30" rowSpan="1">
+							<property name="com.jaspersoft.studio.unit.width" value="px"/>
+							<staticText>
+								<reportElement x="0" y="0" width="110" height="30" uuid="1bc04d7a-ab34-4b5d-9018-914326ef53f1"/>
+								<textElement textAlignment="Left">
+									<font fontName="Arial" size="12"/>
+								</textElement>
+								<text><![CDATA[Reference]]></text>
+							</staticText>
+						</jr:columnHeader>
+						<jr:detailCell style="Table_TD" height="40">
+							<textField>
+								<reportElement x="0" y="0" width="110" height="40" uuid="ca4e092d-5d23-4b0e-8077-5d44c71112a2"/>
+								<textElement>
+									<font fontName="Arial"/>
+								</textElement>
+								<textFieldExpression><![CDATA[$F{TABLE_NAME}]]></textFieldExpression>
+							</textField>
+						</jr:detailCell>
+					</jr:column>
+					<jr:column width="100" uuid="d2d2ba20-f48f-4b75-8384-862a61e920a1">
+						<property name="com.jaspersoft.studio.components.table.model.column.name" value="Column3"/>
+						<jr:tableHeader style="Table_TH" height="30" rowSpan="1"/>
+						<jr:columnHeader style="Table_CH" height="30" rowSpan="1">
+							<property name="com.jaspersoft.studio.unit.width" value="px"/>
+							<staticText>
+								<reportElement x="0" y="0" width="100" height="30" uuid="13e21138-2571-48db-84a4-d4b848cba24d"/>
+								<textElement textAlignment="Left">
+									<font fontName="Arial" size="12"/>
+								</textElement>
+								<text><![CDATA[Field]]></text>
+							</staticText>
+						</jr:columnHeader>
+						<jr:detailCell style="Table_TD" height="40">
+							<textField>
+								<reportElement x="0" y="0" width="100" height="40" uuid="6ffe8b99-da44-4e65-b1db-facccafb2f4c"/>
+								<textElement>
+									<font fontName="Arial"/>
+								</textElement>
+								<textFieldExpression><![CDATA[$F{FIELD_NAME}]]></textFieldExpression>
+							</textField>
+						</jr:detailCell>
+					</jr:column>
+					<jr:column width="120" uuid="31e87e3d-5f29-42d8-8ecb-413475b133e2">
+						<property name="com.jaspersoft.studio.components.table.model.column.name" value="Column4"/>
+						<jr:tableHeader style="Table_TH" height="30" rowSpan="1"/>
+						<jr:columnHeader style="Table_CH" height="30" rowSpan="1">
+							<property name="com.jaspersoft.studio.unit.width" value="px"/>
+							<staticText>
+								<reportElement x="0" y="0" width="120" height="30" uuid="08bdea56-3284-4f4c-9d83-78b0cc60ba6f"/>
+								<textElement textAlignment="Left">
+									<font fontName="Arial" size="12"/>
+								</textElement>
+								<text><![CDATA[Old Value]]></text>
+							</staticText>
+						</jr:columnHeader>
+						<jr:detailCell style="Table_TD" height="40">
+							<textField isBlankWhenNull="true">
+								<reportElement x="0" y="0" width="120" height="40" uuid="ff0815f1-9861-4d05-8022-1981a7351d4d"/>
+								<textElement>
+									<font fontName="Arial"/>
+								</textElement>
+								<textFieldExpression><![CDATA[($F{FIELD_NAME}.equals( "Document Type" ) &&  $F{OLD_VALUE}.equals("1") )?"Image":
+($F{FIELD_NAME}.equals( "Document Type" ) &&  $F{OLD_VALUE}.equals("2") )?"Document":
+($F{FIELD_NAME}.equals( "Document Type" ) &&  $F{OLD_VALUE}.equals("3") )?"Media":
+($F{FIELD_NAME}.equals( "Document Type" ) &&  $F{OLD_VALUE}.equals("4") )?"PDF":
+
+($F{FIELD_NAME}.equals( "Record Status" ) &&  $F{OLD_VALUE}.equals("1") )?"Draft":
+($F{FIELD_NAME}.equals( "Record Status" ) &&  $F{OLD_VALUE}.equals("2") )?"Pending Authorization":
+($F{FIELD_NAME}.equals( "Record Status" ) &&  $F{OLD_VALUE}.equals("3") )?"Completed":
+($F{FIELD_NAME}.equals( "Record Status" ) &&  $F{OLD_VALUE}.equals("4") )?"Rejected":
+($F{FIELD_NAME}.equals( "Record Status" ) &&  $F{OLD_VALUE}.equals("5") )?"Rework":
+($F{FIELD_NAME}.equals( "Record Status" ) &&  $F{OLD_VALUE}.equals("6") )?"Rework Pending Authorization":
+($F{FIELD_NAME}.equals( "Record Status" ) &&  $F{OLD_VALUE}.equals("7") )?"Pending Confirmation":
+($F{FIELD_NAME}.equals( "Record Status" ) &&  $F{OLD_VALUE}.equals("8") )?"Changed - Pending Authorization":
+($F{FIELD_NAME}.equals( "Record Status" ) &&  $F{OLD_VALUE}.equals("9") )?"Changed - Pending Confirmation":
+($F{FIELD_NAME}.equals( "Record Status" ) &&  $F{OLD_VALUE}.equals("10") )?"Changed - Rework":
+
+(($F{FIELD_NAME}.equals( "Final Status" ) || $F{FIELD_NAME}.equals( "VIPD Status" ) || $F{FIELD_NAME}.equals( "System Final Status" ) ) &&  $F{OLD_VALUE}.equals("1") )?"Permitted":
+(($F{FIELD_NAME}.equals( "Final Status" ) || $F{FIELD_NAME}.equals( "VIPD Status" ) || $F{FIELD_NAME}.equals( "System Final Status" ) ) &&  $F{OLD_VALUE}.equals("2") )?"Not Permitted":
+(($F{FIELD_NAME}.equals( "Final Status" ) || $F{FIELD_NAME}.equals( "VIPD Status" ) || $F{FIELD_NAME}.equals( "System Final Status" ) ) &&  $F{OLD_VALUE}.equals("3") )?"Not Sure":
+(($F{FIELD_NAME}.equals( "Final Status" ) || $F{FIELD_NAME}.equals( "VIPD Status" ) || $F{FIELD_NAME}.equals( "System Final Status" ) ) &&  $F{OLD_VALUE}.equals("4") )?"N/A":
+(($F{FIELD_NAME}.equals( "Final Status" ) || $F{FIELD_NAME}.equals( "VIPD Status" ) || $F{FIELD_NAME}.equals( "System Final Status" ) ) &&  $F{OLD_VALUE}.equals("0") )?"N/A":
+
+$F{OLD_VALUE}]]></textFieldExpression>
+							</textField>
+						</jr:detailCell>
+					</jr:column>
+					<jr:column width="120" uuid="a8bac2e2-273a-4870-a8b2-f4483320156a">
+						<property name="com.jaspersoft.studio.components.table.model.column.name" value="Column5"/>
+						<jr:tableHeader style="Table_TH" height="30" rowSpan="1"/>
+						<jr:columnHeader style="Table_CH" height="30" rowSpan="1">
+							<property name="com.jaspersoft.studio.unit.width" value="px"/>
+							<staticText>
+								<reportElement x="0" y="0" width="120" height="30" uuid="6e171289-47d9-48a1-995e-b9386454cf12"/>
+								<textElement textAlignment="Left">
+									<font fontName="Arial" size="12"/>
+								</textElement>
+								<text><![CDATA[New Value]]></text>
+							</staticText>
+						</jr:columnHeader>
+						<jr:detailCell style="Table_TD" height="40">
+							<textField isBlankWhenNull="true">
+								<reportElement x="0" y="0" width="120" height="40" uuid="f2cc661b-1c35-4e24-a6a0-365da5c2fd5d"/>
+								<textElement>
+									<font fontName="Arial"/>
+								</textElement>
+								<textFieldExpression><![CDATA[($F{FIELD_NAME}.equals( "Supplier ID" ) && $F{FUNCTION_TYPE}.intValue()==3 && ($F{NEW_VALUE}==null || $F{NEW_VALUE}.equals("")))?$F{OLD_VALUE}: 
+
+($F{FIELD_NAME}.equals( "Document Type" ) &&  $F{NEW_VALUE}.equals("1") )?"Image":
+($F{FIELD_NAME}.equals( "Document Type" ) &&  $F{NEW_VALUE}.equals("2") )?"Document":
+($F{FIELD_NAME}.equals( "Document Type" ) &&  $F{NEW_VALUE}.equals("3") )?"Media":
+($F{FIELD_NAME}.equals( "Document Type" ) &&  $F{NEW_VALUE}.equals("4") )?"PDF":
+
+($F{FIELD_NAME}.equals( "Record Status" ) &&  $F{NEW_VALUE}.equals("1") )?"Draft":
+($F{FIELD_NAME}.equals( "Record Status" ) &&  $F{NEW_VALUE}.equals("2") )?"Pending Authorization":
+($F{FIELD_NAME}.equals( "Record Status" ) &&  $F{NEW_VALUE}.equals("3") )?"Completed":
+($F{FIELD_NAME}.equals( "Record Status" ) &&  $F{NEW_VALUE}.equals("4") )?"Rejected":
+($F{FIELD_NAME}.equals( "Record Status" ) &&  $F{NEW_VALUE}.equals("5") )?"Rework":
+($F{FIELD_NAME}.equals( "Record Status" ) &&  $F{NEW_VALUE}.equals("6") )?"Rework Pending Authorization":
+($F{FIELD_NAME}.equals( "Record Status" ) &&  $F{NEW_VALUE}.equals("7") )?"Pending Confirmation":
+($F{FIELD_NAME}.equals( "Record Status" ) &&  $F{NEW_VALUE}.equals("8") )?"Changed - Pending Authorization":
+($F{FIELD_NAME}.equals( "Record Status" ) &&  $F{NEW_VALUE}.equals("9") )?"Changed - Pending Confirmation":
+($F{FIELD_NAME}.equals( "Record Status" ) &&  $F{NEW_VALUE}.equals("10") )?"Changed - Rework":
+
+(($F{FIELD_NAME}.equals( "Final Status" ) || $F{FIELD_NAME}.equals( "VIPD Status" ) || $F{FIELD_NAME}.equals( "System Final Status" ) ) &&  $F{NEW_VALUE}.equals("1") )?"Permitted":
+(($F{FIELD_NAME}.equals( "Final Status" ) || $F{FIELD_NAME}.equals( "VIPD Status" ) || $F{FIELD_NAME}.equals( "System Final Status" ) ) &&  $F{NEW_VALUE}.equals("2") )?"Not Permitted":
+(($F{FIELD_NAME}.equals( "Final Status" ) || $F{FIELD_NAME}.equals( "VIPD Status" ) || $F{FIELD_NAME}.equals( "System Final Status" ) ) &&  $F{NEW_VALUE}.equals("3") )?"Not Sure":
+(($F{FIELD_NAME}.equals( "Final Status" ) || $F{FIELD_NAME}.equals( "VIPD Status" ) || $F{FIELD_NAME}.equals( "System Final Status" ) ) &&  $F{NEW_VALUE}.equals("4") )?"N/A":
+(($F{FIELD_NAME}.equals( "Final Status" ) || $F{FIELD_NAME}.equals( "VIPD Status" ) || $F{FIELD_NAME}.equals( "System Final Status" ) ) &&  $F{NEW_VALUE}.equals("0") )?"N/A":
+
+$F{NEW_VALUE}]]></textFieldExpression>
+							</textField>
+						</jr:detailCell>
+					</jr:column>
+				</jr:table>
+			</componentElement>
+		</band>
+	</detail>
+	<pageFooter>
+		<band height="36" splitType="Stretch">
+			<textField>
+				<reportElement x="460" y="20" width="40" height="16" uuid="b3400115-1a95-46a2-be24-66681b2e6f01">
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+					<property name="com.jaspersoft.studio.unit.y" value="px"/>
+				</reportElement>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Arial" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA["Page " + $V{PAGE_NUMBER}]]></textFieldExpression>
+			</textField>
+			<textField evaluationTime="Report">
+				<reportElement x="513" y="20" width="42" height="16" uuid="60cc9fb4-9fac-4487-b620-94117fb69cc5">
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+				</reportElement>
+				<textElement textAlignment="Left" verticalAlignment="Middle">
+					<font fontName="Arial" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[" of " + $V{PAGE_NUMBER}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement x="0" y="20" width="44" height="16" uuid="98e20d89-839f-4793-8764-df56dbc077c3">
+					<property name="com.jaspersoft.studio.unit.y" value="px"/>
+				</reportElement>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Arial" size="8"/>
+				</textElement>
+				<text><![CDATA[Printed by :]]></text>
+			</staticText>
+			<textField pattern="dd/mm/yyyy" isBlankWhenNull="true">
+				<reportElement x="134" y="20" width="100" height="16" uuid="7245ae7d-4050-4a1f-adb1-0f673e2539e4">
+					<property name="com.jaspersoft.studio.unit.y" value="px"/>
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+				</reportElement>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Arial" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[new java.text.SimpleDateFormat("dd/MM/yyy hh:mm:ss a").format(new java.util.Date())]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement x="118" y="20" width="16" height="16" uuid="bcefd8cf-1000-48e5-8603-46594448013d">
+					<property name="com.jaspersoft.studio.unit.y" value="px"/>
+				</reportElement>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Arial" size="8"/>
+				</textElement>
+				<text><![CDATA[on]]></text>
+			</staticText>
+			<textField>
+				<reportElement x="44" y="20" width="74" height="16" uuid="1a3215b4-bb1d-4399-a05e-5b04d3ccefc7">
+					<property name="com.jaspersoft.studio.unit.y" value="px"/>
+				</reportElement>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Arial"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{userId}]]></textFieldExpression>
+			</textField>
+		</band>
+	</pageFooter>
+	<noData>
+		<band height="30">
+			<property name="com.jaspersoft.studio.unit.height" value="px"/>
+			<staticText>
+				<reportElement x="0" y="0" width="555" height="30" forecolor="#FF0000" uuid="d8a75e61-1cfd-40b3-a4df-b6f749605e46">
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+				</reportElement>
+				<textElement textAlignment="Center">
+					<font fontName="Arial" size="14"/>
+				</textElement>
+				<text><![CDATA[No data found or the data is insufficient to generate the report.]]></text>
+			</staticText>
+		</band>
+	</noData>
+</jasperReport>

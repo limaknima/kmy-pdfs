@@ -1,0 +1,332 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Created with Jaspersoft Studio version 6.11.0.final using JasperReports Library version 6.11.0-0c4056ccaa4d25a5a8c45672d2f764ea3498bebb  -->
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="testpr1_1" pageWidth="800" pageHeight="595" orientation="Landscape" columnWidth="800" leftMargin="0" rightMargin="0" topMargin="0" bottomMargin="0" uuid="1f3e085f-d86f-424d-b3b0-837f826e3a41">
+	<property name="com.jaspersoft.studio.data.sql.tables" value=""/>
+	<property name="com.jaspersoft.studio.data.defaultdataadapter" value="local-mssql"/>
+	<property name="com.jaspersoft.studio.unit." value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.pageHeight" value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.pageWidth" value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.topMargin" value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.bottomMargin" value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.leftMargin" value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.rightMargin" value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.columnWidth" value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.columnSpacing" value="pixel"/>
+	<style name="Table_TH" mode="Opaque" backcolor="#F0F8FF">
+		<box>
+			<pen lineWidth="0.5" lineColor="#000000"/>
+			<topPen lineWidth="0.5" lineColor="#000000"/>
+			<leftPen lineWidth="0.5" lineColor="#000000"/>
+			<bottomPen lineWidth="0.5" lineColor="#000000"/>
+			<rightPen lineWidth="0.5" lineColor="#000000"/>
+		</box>
+	</style>
+	<style name="Table_CH" mode="Opaque" backcolor="#BFE1FF">
+		<box>
+			<pen lineWidth="0.5" lineColor="#000000"/>
+			<topPen lineWidth="0.5" lineColor="#000000"/>
+			<leftPen lineWidth="0.5" lineColor="#000000"/>
+			<bottomPen lineWidth="0.5" lineColor="#000000"/>
+			<rightPen lineWidth="0.5" lineColor="#000000"/>
+		</box>
+	</style>
+	<style name="Table_TD" mode="Opaque" backcolor="#FFFFFF">
+		<box>
+			<pen lineWidth="0.5" lineColor="#000000"/>
+			<topPen lineWidth="0.5" lineColor="#000000"/>
+			<leftPen lineWidth="0.5" lineColor="#000000"/>
+			<bottomPen lineWidth="0.5" lineColor="#000000"/>
+			<rightPen lineWidth="0.5" lineColor="#000000"/>
+		</box>
+	</style>
+	<subDataset name="Dataset1" uuid="fee6f9ac-8b16-4c1b-8166-2d35aeba9526">
+		<property name="com.jaspersoft.studio.data.sql.tables" value=""/>
+		<property name="com.jaspersoft.studio.data.defaultdataadapter" value="local-mssql"/>
+		<parameter name="rmid" class="java.lang.Integer"/>
+		<parameter name="countryid" class="java.lang.String"/>
+		<queryString language="SQL">
+			<![CDATA[select 
+	s.RAW_MATL_ID
+	, v.VENDOR_NAME
+	,CASE S.VIPD_STATUS 
+		WHEN 1 THEN 'PERMITTED' 
+		WHEN 2 THEN 'NOT PERMITTED' 
+		WHEN 3 THEN 'NOT SURE' 
+		WHEN 4 THEN 'N/A'
+		ELSE 'N/A'
+	END AS VIPD_STATUS
+	,CASE S.FINAL_STATUS 
+		WHEN 1 THEN 'PERMITTED' 
+		WHEN 2 THEN 'NOT PERMITTED' 
+		WHEN 3 THEN 'NOT SURE' 
+		ELSE 'N/A'
+	END AS FINAL_STATUS
+	, c.COUNTRY_NAME
+from RM_STAT s
+left outer join REF_COUNTRY c on c.COUNTRY_ID = s.COUNTRY_ID
+left outer join vendor v on v.vendor_id = s.MANF_ID
+where 1=1
+and s.RAW_MATL_ID =  $P{rmid} 
+and s.country_id =  $P{countryid}]]>
+		</queryString>
+		<field name="VENDOR_NAME" class="java.lang.String">
+			<property name="com.jaspersoft.studio.field.label" value="VENDOR_NAME"/>
+		</field>
+		<field name="VIPD_STATUS" class="java.lang.String">
+			<property name="com.jaspersoft.studio.field.label" value="VIPD_STATUS"/>
+		</field>
+	</subDataset>
+	<parameter name="rmid" class="java.lang.Integer"/>
+	<queryString language="SQL">
+		<![CDATA[select  
+	distinct(c.COUNTRY_NAME)
+	,CASE S.FINAL_STATUS 
+		WHEN 1 THEN 'PERMITTED' 
+		WHEN 2 THEN 'NOT PERMITTED' 
+		WHEN 3 THEN 'NOT SURE' 
+		ELSE 'N/A'
+	END AS FINAL_STATUS
+	, s.RAW_MATL_ID
+	, s.COUNTRY_ID
+	, re.REG_NAME
+	, re.REF_URL1
+	, re.REMARKS
+from RM_STAT s
+left outer join REF_COUNTRY c on c.COUNTRY_ID = s.COUNTRY_ID
+left outer join vendor v on v.vendor_id = s.MANF_ID
+left outer join REGULATION re on re.RAW_MATL_ID = s.RAW_MATL_ID and re.COUNTRY_ID = s.COUNTRY_ID
+where 1=1
+and s.RAW_MATL_ID = $P{rmid}]]>
+	</queryString>
+	<field name="COUNTRY_NAME" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="COUNTRY_NAME"/>
+	</field>
+	<field name="FINAL_STATUS" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="FINAL_STATUS"/>
+	</field>
+	<field name="RAW_MATL_ID" class="java.lang.Integer">
+		<property name="com.jaspersoft.studio.field.label" value="RAW_MATL_ID"/>
+	</field>
+	<field name="COUNTRY_ID" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="COUNTRY_ID"/>
+	</field>
+	<field name="REG_NAME" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="REG_NAME"/>
+	</field>
+	<field name="REF_URL1" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="REF_URL1"/>
+	</field>
+	<field name="REMARKS" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="REMARKS"/>
+	</field>
+	<columnHeader>
+		<band height="30" splitType="Stretch">
+			<staticText>
+				<reportElement mode="Opaque" x="400" y="0" width="150" height="30" backcolor="#BFE1FF" uuid="3be91a36-b630-4919-8262-e3acd4a6fddd">
+					<property name="com.jaspersoft.studio.spreadsheet.connectionID" value="dbea36ea-6c3c-421b-9c33-1075a0af5058"/>
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+				</reportElement>
+				<box>
+					<topPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center">
+					<font fontName="Arial" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Country]]></text>
+			</staticText>
+			<staticText>
+				<reportElement mode="Opaque" x="300" y="0" width="100" height="30" backcolor="#BFE1FF" uuid="754e9117-b55c-48b3-afab-e96a955f76a9">
+					<property name="com.jaspersoft.studio.spreadsheet.connectionID" value="0ff489b7-472d-4b9e-830b-3796d5fd61c5"/>
+				</reportElement>
+				<box>
+					<topPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center">
+					<font fontName="Arial" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Final Status]]></text>
+			</staticText>
+			<staticText>
+				<reportElement mode="Opaque" x="0" y="0" width="150" height="30" backcolor="#BFE1FF" uuid="919d3523-419a-4e35-aa9d-d63b4f45be7b">
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+				</reportElement>
+				<box>
+					<topPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center">
+					<font fontName="Arial" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Manufacturer]]></text>
+			</staticText>
+			<staticText>
+				<reportElement mode="Opaque" x="150" y="0" width="150" height="30" backcolor="#BFE1FF" uuid="b7a755db-dc19-4785-ad68-7e60164b2f3b">
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+				</reportElement>
+				<box>
+					<topPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center">
+					<font fontName="Arial" isBold="true"/>
+				</textElement>
+				<text><![CDATA[VIPD Status]]></text>
+			</staticText>
+			<staticText>
+				<reportElement mode="Opaque" x="550" y="0" width="100" height="30" backcolor="#BFE1FF" uuid="a5d01bc8-2234-41d3-8cd6-2b2b63905e26">
+					<property name="com.jaspersoft.studio.spreadsheet.connectionID" value="27fc290a-c256-4018-886d-a5a92815e1de"/>
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+				</reportElement>
+				<box>
+					<topPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center">
+					<font fontName="Arial" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Regulation]]></text>
+			</staticText>
+			<staticText>
+				<reportElement mode="Opaque" x="650" y="0" width="150" height="30" backcolor="#BFE1FF" uuid="267b93b6-df27-4d4a-a367-3760e62893cf">
+					<property name="com.jaspersoft.studio.spreadsheet.connectionID" value="24e4e963-b6b9-4b0b-a5be-79fa25c5bda2"/>
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+					<property name="com.jaspersoft.studio.unit.x" value="px"/>
+				</reportElement>
+				<box>
+					<topPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center">
+					<font fontName="Arial" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Reference]]></text>
+			</staticText>
+		</band>
+	</columnHeader>
+	<detail>
+		<band height="30" splitType="Stretch">
+			<textField>
+				<reportElement stretchType="RelativeToBandHeight" x="400" y="0" width="150" height="30" uuid="ce61a1ea-7b37-4566-b524-d6e93ca452d7">
+					<property name="com.jaspersoft.studio.spreadsheet.connectionID" value="dbea36ea-6c3c-421b-9c33-1075a0af5058"/>
+					<property name="com.jaspersoft.studio.unit.x" value="px"/>
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+				</reportElement>
+				<box>
+					<topPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center">
+					<font fontName="Arial"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{COUNTRY_NAME}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement stretchType="RelativeToBandHeight" x="300" y="0" width="100" height="30" uuid="e541d794-2488-45d0-b064-55de7d25694f">
+					<property name="com.jaspersoft.studio.spreadsheet.connectionID" value="0ff489b7-472d-4b9e-830b-3796d5fd61c5"/>
+				</reportElement>
+				<box>
+					<topPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center">
+					<font fontName="Arial"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{FINAL_STATUS}]]></textFieldExpression>
+			</textField>
+			<componentElement>
+				<reportElement x="0" y="0" width="300" height="30" isPrintWhenDetailOverflows="true" uuid="8a37d598-9486-4440-80fe-f88b34ec280d">
+					<property name="com.jaspersoft.studio.layout" value="com.jaspersoft.studio.editor.layout.VerticalRowLayout"/>
+					<property name="com.jaspersoft.studio.table.style.table_header" value="Table_TH"/>
+					<property name="com.jaspersoft.studio.table.style.column_header" value="Table_CH"/>
+					<property name="com.jaspersoft.studio.table.style.detail" value="Table_TD"/>
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+				</reportElement>
+				<jr:table xmlns:jr="http://jasperreports.sourceforge.net/jasperreports/components" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports/components http://jasperreports.sourceforge.net/xsd/components.xsd">
+					<datasetRun subDataset="Dataset1" uuid="91709611-d109-4a34-9b1e-e3c6c787ed91">
+						<datasetParameter name="rmid">
+							<datasetParameterExpression><![CDATA[$P{rmid}]]></datasetParameterExpression>
+						</datasetParameter>
+						<datasetParameter name="countryid">
+							<datasetParameterExpression><![CDATA[$F{COUNTRY_ID}]]></datasetParameterExpression>
+						</datasetParameter>
+						<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
+					</datasetRun>
+					<jr:column width="150" uuid="38aaf507-9a23-4293-89ba-f80b815619c6">
+						<property name="com.jaspersoft.studio.components.table.model.column.name" value="Column1"/>
+						<jr:detailCell style="Table_TD" height="30">
+							<textField>
+								<reportElement x="0" y="0" width="150" height="30" uuid="176eabb7-1257-41cc-82d5-1359f5e50d15"/>
+								<textElement>
+									<font fontName="Arial"/>
+								</textElement>
+								<textFieldExpression><![CDATA[$F{VENDOR_NAME}]]></textFieldExpression>
+							</textField>
+						</jr:detailCell>
+					</jr:column>
+					<jr:column width="150" uuid="c8d911ca-269a-45d1-a144-565a00aa99e8">
+						<property name="com.jaspersoft.studio.components.table.model.column.name" value="Column2"/>
+						<jr:detailCell style="Table_TD" height="30">
+							<textField>
+								<reportElement x="0" y="0" width="150" height="30" uuid="bafacbbd-7ebd-4e10-aaac-477d1200ae15"/>
+								<textElement textAlignment="Center">
+									<font fontName="Arial"/>
+								</textElement>
+								<textFieldExpression><![CDATA[$F{VIPD_STATUS}]]></textFieldExpression>
+							</textField>
+						</jr:detailCell>
+					</jr:column>
+				</jr:table>
+			</componentElement>
+			<textField isBlankWhenNull="true">
+				<reportElement stretchType="RelativeToBandHeight" x="550" y="0" width="100" height="30" uuid="63d6a9d1-f59a-42cf-a890-3aa655fe23b7">
+					<property name="com.jaspersoft.studio.spreadsheet.connectionID" value="27fc290a-c256-4018-886d-a5a92815e1de"/>
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+				</reportElement>
+				<box>
+					<topPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement>
+					<font fontName="Arial"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{REG_NAME}]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement stretchType="RelativeToBandHeight" x="650" y="0" width="150" height="30" uuid="c5ef257f-c776-434c-bac5-17a9233798d1">
+					<property name="com.jaspersoft.studio.spreadsheet.connectionID" value="24e4e963-b6b9-4b0b-a5be-79fa25c5bda2"/>
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+				</reportElement>
+				<box>
+					<topPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement>
+					<font fontName="Arial"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{REF_URL1}]]></textFieldExpression>
+			</textField>
+		</band>
+	</detail>
+</jasperReport>

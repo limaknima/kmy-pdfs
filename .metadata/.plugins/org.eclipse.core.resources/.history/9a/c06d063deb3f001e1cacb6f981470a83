@@ -1,0 +1,307 @@
+package com.fms.pfc.common;
+
+import java.io.Serializable;
+
+public class CommonConstants implements Serializable {
+
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+
+	public Object getConstant(String constant)
+			throws IllegalArgumentException, SecurityException, IllegalAccessException, NoSuchFieldException {
+		return this.getClass().getField(constant).get(this);
+	}
+
+	/*
+	 * BCrypt log rounds
+	 */
+	public static int BCRYPT_STRENGTH = 10;
+
+	/*
+	 * COMMON STATIC VALUES
+	 *
+	 * used for resource bundle
+	 */
+	public static final String RESOURCE_BUNDLE_NAME = "messages";
+	public static final String LOCALE_DEFAULT = "ms_MY";
+	public static final String LOCALE_MALAY = "ms_MY";
+	public static final String LOCALE_ENGLISH = "en";
+	public static final String KEY_PLEASE_SELECT = "labelPleaseSelect";
+
+	/*
+	 * REPORT PARAMETERS
+	 *
+	 * used for REPORT_FORMAT
+	 */
+	public static final String REPORT_FORMAT_HTML = "HTML";
+	public static final String REPORT_FORMAT_PDF = "PDF";
+	public static final String REPORT_FORMAT_XLSX = "XLSX";
+
+	/*
+	 * REPORT REVIEW TYPE
+	 */
+	public static final int REPORT_PREVIEW_PDF_TYPE = 1;
+	public static final int REPORT_PREVIEW_EXCEL_TYPE = 2;
+
+	/*
+	 * DATABASE STATIC VALUES
+	 *
+	 * used for flag fields with suffix "_FLAG" e.g. "DISABLED_FLAG"
+	 */
+	public static final char FLAG_YES = 'Y';
+	public static final char FLAG_NO = 'N';
+
+	/*
+	 * used for USR.ALERT_PREFERENCE field
+	 */
+	public static final int MESSAGE_PREF_EMAIL = 1; /* email */
+	public static final int MESSAGE_PREF_NOTIFICATION = 2; /* system notification */
+	public static final int MESSAGE_PREF_EMAIL_NOTIFICATION = 3; /* email & system notification */
+
+	/*
+	 * used for ALERT_DEF.ALERT_DEF_ID field
+	 */
+	// task description with prefix TASK_
+	public static final String MESSAGE_DEF_ID_TASK_PENDING_ACTION = "TASK_PENDING_ACTION";
+	public static final String MESSAGE_DEF_ID_TASK_PENDING_APPROVAL = "TASK_PENDING_APPROVAL";
+	public static final String MESSAGE_DEF_ID_TASK_PENDING_REWORK = "TASK_PENDING_REWORK";
+	// notification message via system notification or email with prefix MSG_
+	public static final String MESSAGE_DEF_ID_MSG_RECORD_REJECTED = "MSG_RECORD_REJECTED";
+	public static final String MESSAGE_DEF_ID_MSG_RECORD_APPROVED = "MSG_RECORD_APPROVED";
+	public static final String MESSAGE_DEF_ID_MSG_RECORD_UPDATED = "MSG_RECORD_UPDATED";
+	public static final String MESSAGE_DEF_ID_MSG_CHANGE_REJECTED = "MSG_CHANGE_REJECTED";
+	public static final String MESSAGE_DEF_ID_MSG_ASSIGN_TASK = "MSG_ASSIGN_TASK";
+	public static final String MESSAGE_DEF_ID_MSG_RECORD_DELETED = "MSG_RECORD_DELETED";
+	// User Profile
+	public static final String MESSAGE_DEF_ID_MSG_USER_CREATION = "MSG_USER_CREATION";
+	public static final String MESSAGE_DEF_ID_MSG_PASSWORD_RESET = "MSG_PASSWORD_RESET";
+
+	/*
+	 * used for ORG.ORG_ID field
+	 */
+	public static final String ORG_ID_AMBKL = "AMBKL"; // Ajinomoto
+
+	// PFC
+	public static final String ORG_ID_KMY = "KMY"; // KAYAKU MALAYSIA
+
+	// used for FUNCTION_TYPE field
+	public static final int FUNCTION_TYPE_INSERT = 1;
+	public static final int FUNCTION_TYPE_UPDATE = 2;
+	public static final int FUNCTION_TYPE_DELETE = 3;
+	public static final int FUNCTION_TYPE_SEARCH = 4;
+	public static final int FUNCTION_TYPE_VIEW = 5;
+	public static final int FUNCTION_TYPE_PURGE = 6;
+	public static final int FUNCTION_TYPE_DOWNLOAD = 7;
+	public static final int FUNCTION_TYPE_COPY = 8;
+	public static final int FUNCTION_TYPE_RENEW = 9;
+	public static final int FUNCTION_TYPE_UPLOAD = 10;
+
+	/*
+	 * used for _SEARCH_OPTION field
+	 */
+	public static final int SEARCH_OPTION_CONTAIN = 1;
+	public static final int SEARCH_OPTION_END = 2;
+	public static final int SEARCH_OPTION_EXACT = 3;
+	public static final int SEARCH_OPTION_START = 4;
+	public static final int SEARCH_OPTION_EQUAL = 5;
+	public static final int SEARCH_OPTION_LESS_THAN = 6;
+	public static final int SEARCH_OPTION_MORE_THAN = 7;
+
+	// used for WF_CHECKER_TYPE field
+	public static final int WF_CHECKER_TYPE_USER = 1;
+	public static final int WF_CHECKER_TYPE_GROUP = 2;
+
+	// used for ACTOR_TYPE field
+	public static final int ACTOR_TYPE_USER = 1;
+	public static final int ACTOR_TYPE_GROUP = 2;
+	public static final int ACTOR_TYPE_ANALYST = 3;
+	public static final int ACTOR_TYPE_SUPERVISOR = 4;
+
+	// used for TASK_ACTION field
+	public static final int TASK_ACTION_SUBMIT = 1;
+	public static final int TASK_ACTION_REJECT = 2;
+	public static final int TASK_ACTION_REWORK = 3;
+	public static final int TASK_ACTION_REWORK_SUBMIT = 4;
+	public static final int TASK_ACTION_CANCELLED = 5;
+	public static final int TASK_ACTION_FORWARD = 6;
+	public static final int TASK_ACTION_DEACTIVATE = 7;
+	public static final int TASK_ACTION_ACTIVATE = 8;
+
+	// used for PROCESS_TYPE field
+	public static final int PROCESS_TYPE_RAW_MATL = 1;
+	public static final int PROCESS_TYPE_PROD_RECP = 2;
+
+	/*
+	 * IMPORTANT NOTE: used for *.RECORD_TYPE_ID field, which are not defined in
+	 * RECORD_TYPE table
+	 *
+	 * 1-100 reserved for BASE, ADMIN & MAINT tables 101-1000 reserved for BUSINESS
+	 * tables 1001- reserved for future use
+	 */
+	public static final int RECORD_TYPE_ID_TASK = 1;
+	public static final int RECORD_TYPE_ID_NOTIFICATION = 2;
+	public static final int RECORD_TYPE_ID_MY_PROFILE = 3;
+	public static final int RECORD_TYPE_ID_ORGANISATION = 4;
+	public static final int RECORD_TYPE_ID_USER_PROFILE = 5;
+	public static final int RECORD_TYPE_ID_USER_GROUP = 6;
+	public static final int RECORD_TYPE_ID_USER_ROLE = 7;
+	public static final int RECORD_TYPE_ID_JOB_SCHEDULER = 8;
+	public static final int RECORD_TYPE_ID_ALERT = 9;
+	public static final int RECORD_TYPE_ID_ACTIVITY_LOG = 10;
+	public static final int RECORD_TYPE_ID_REF_COUNTRY = 11;
+	public static final int RECORD_TYPE_ID_VENDOR = 12;
+	public static final int RECORD_TYPE_ID_FUNC_EXE = 13;
+	public static final int RECORD_TYPE_ID_ATTACHMENT = 14;
+	public static final int RECORD_TYPE_ID_TRACE_LOG = 15;
+	public static final int RECORD_TYPE_ID_FLV_STATUS = 16;
+	public static final int RECORD_TYPE_ID_LETTER_TYPE = 17;
+	public static final int RECORD_TYPE_ID_LETTER_CONF = 18;
+	public static final int RECORD_TYPE_ID_FOLD_CATG_CONF = 19;
+	public static final int RECORD_TYPE_ID_FILE_TYPE_SZ = 20;
+	public static final int RECORD_TYPE_ID_HPL = 21;
+	public static final int RECORD_TYPE_ID_USB_CONF = 22;
+	public static final int RECORD_TYPE_ID_G2_LOT_LIST = 23;
+
+	public static final int RECORD_TYPE_ID_REGL = 101;
+	public static final int RECORD_TYPE_ID_RAW_MATL = 201;
+	public static final int RECORD_TYPE_ID_RAW_MATL_AMEND_FS = 202;
+	public static final int RECORD_TYPE_ID_PROD_RECP = 301;
+	public static final int RECORD_TYPE_ID_PROD_RECP_DECL = 302;
+	public static final int RECORD_TYPE_ID_PERMS_COMPL = 401;
+	public static final int RECORD_TYPE_ID_REPORT_RM = 501;
+	public static final int RECORD_TYPE_ID_REPORT_PR = 502;
+	public static final int RECORD_TYPE_ID_PROD_FILE = 601;
+	public static final int RECORD_TYPE_ID_ON_DEMAND = 602;
+
+	public static final String RECORD_TYPE_ID_HPL_IF = "IF";
+	public static final String RECORD_TYPE_ID_HPL_MGG = "MGG";
+	public static final String RECORD_TYPE_ID_HPL_GTMS = "GTMS";
+	public static final String RECORD_TYPE_ID_HPL_SQ = "SQ";
+
+	// used for GROUP_ID field - predefined value used in authorization module
+	public static final String GROUP_ID_FR = "FR";
+	public static final String GROUP_ID_QA = "QA";
+	public static final String GROUP_ID_MKTG = "MKTG";
+	public static final String GROUP_ID_IT = "IT";
+
+	// PFC
+	public static final String GROUP_ID_IF = "IF";
+	public static final String GROUP_ID_MGG = "MGG";
+	public static final String GROUP_ID_GTMS = "GTMS";
+	public static final String GROUP_ID_SQ = "SQ";
+
+	// used for ROLE_ID field - predefined value used in authorization module
+	public static final String ROLE_ID_MAKER = "MKR";
+	public static final String ROLE_ID_CHECKER = "CKR";
+	public static final String ROLE_ID_SUPERUSER = "SUSR";
+	public static final String ROLE_ID_HOD = "HOD";
+
+	// PFC
+	public static final String ROLE_ID_FILE_MAN = "FILE_MAN";
+	public static final String ROLE_ID_USR = "USR";
+	public static final String ROLE_ID_ADM = "ADM";
+
+	// used for COUNTRY_ID field
+	public static final String COUNTRY_ID_LOCAL = "MY";
+
+	/*
+	 * used for _STATUS field
+	 */
+	// Common statuses
+	public static final int RECORD_STATUS_DRAFT = 1; // Draft
+	public static final int RECORD_STATUS_PENDING_AUTH = 2; // Pending Authorization
+	public static final int RECORD_STATUS_SUBMITTED = 3; // Submitted
+	public static final int RECORD_STATUS_REJECTED = 4; // Rejected
+	public static final int RECORD_STATUS_REWORK = 5; // Rework
+	public static final int RECORD_STATUS_REWORK_PENDING_AUTH = 6; // Rework – Pending Authorization
+	public static final int RECORD_STATUS_PENDING_CONFIRM = 7; // Pending Confirmation
+	public static final int RECORD_STATUS_CHG_PENDING_AUTH = 8; // Changed – Pending Authorization
+	public static final int RECORD_STATUS_CHG_PENDING_CONFIRM = 9; // Changed – Pending Confirmation
+	public static final int RECORD_STATUS_CHG_REWORK = 10; // Changed – rework
+	public static final int RECORD_STATUS_PEND_DEACTIVATE = 11; // Pending Deactivate
+	public static final int RECORD_STATUS_DEACTIVATED = 12; // Deactivated
+	public static final int RECORD_STATUS_PEND_ACTIVATE = 13; // Pending Activate
+
+	/*
+	 * used for *.USER_ID field.
+	 */
+	// IMPORTANT NOTE: restricted to "system" type of user, which internally refer
+	// by system or application
+	public static final String USER_ID_SYSTEM = "system";
+
+	/*
+	 * used for vendor type
+	 */
+	public static final int VENDOR_TYPE_MFR = 1; // Manufacturer
+	public static final int VENDOR_TYPE_SUPPL = 2; // Supplier
+	public static final int VENDOR_TYPE_MFR_SUPPL = 3; // Manufacturer & Supplier
+
+	/*
+	 * used for VIPD/FINAL status
+	 */
+	public static final int VF_STATUS_NA = 0;
+	public static final int VF_STATUS_PERMITTED = 1;
+	public static final int VF_STATUS_NOT_PERMITTED = 2;
+	public static final int VF_STATUS_NOT_SURE = 3;
+	public static final int VF_STATUS_YET_COMPELTE = 4; // Status yet_complete is same as N/A
+
+	/*
+	 * Used for jasperreports report_id
+	 */
+	public static final String REPORT_ID_AUTH_LOG = "RA101";
+	public static final String REPORT_ID_FUNC_EXE = "RA102";
+	public static final String REPORT_ID_TRACE_LOG = "RA103";
+	public static final String REPORT_ID_RAW_MATL = "RO201";
+	public static final String REPORT_ID_PROD_RECP = "RO301";
+	public static final String REPORT_ID_PROD_DECL = "RO302";
+	public static final String REPORT_ID_PERM_COMPL = "RO401";
+	public static final String REPORT_ID_ON_DEMD_SR = "RO601";
+
+	/* File size limite = 100MB */
+	public static final long FILE_SIZE_LIMITATION = 104857600;
+
+	/* Common constants for perform task */
+	public static final String PERFORM_TASK_EVERY_DAY = "1"; // Every day
+	public static final String PERFORM_TASK_EVERY_OPTION_DAY = "2"; // Every option day
+	public static final String PERFORM_TASK_EVERY_HOUR = "5"; // Every hour
+	public static final String PERFORM_TASK_EVERY_OPTION_HOUR = "6"; // Every option hour
+	public static final String PERFORM_TASK_EVERY_MINUTE = "7"; // Every minute
+	public static final String PERFORM_TASK_EVERY_OPTION_MINUTE = "8"; // Every option minute
+	public static final String PERFORM_TASK_WEEKDAYS = "3"; // Weekday
+	public static final String PERFORM_TASK_MONTHLY = "4"; // Monthly
+
+	public static final String PERFORM_TASK_MONDAY = "1";
+	public static final String PERFORM_TASK_TUESDAY = "2";
+	public static final String PERFORM_TASK_WEDNESDAY = "3";
+	public static final String PERFORM_TASK_THURSDAY = "4";
+	public static final String PERFORM_TASK_FRIDAY = "5";
+	public static final String PERFORM_TASK_SATURDAY = "6";
+	public static final String PERFORM_TASK_SUNDAY = "7";
+
+	public static final String MONDAY = "MONDAY";
+	public static final String TUESDAY = "TUESDAY";
+	public static final String WEDNESDAY = "WEDNESDAY";
+	public static final String THURSDAY = "THURSDAY";
+	public static final String FRIDAY = "FRIDAY";
+	public static final String SATURDAY = "SATURDAY";
+	public static final String SUNDAY = "SUNDAY";
+
+	public static final String RADIO_BUTTON_CHECKED = "CHECKED";
+	public static final String RADIO_BUTTON_UNCHECKED = "";
+
+	/* Screen/Form mode */
+	public static final String SCREEN_MODE_ADD = "add";
+	public static final String SCREEN_MODE_EDIT = "edit";
+	public static final String SCREEN_MODE_VIEW = "view";
+
+	public static final String HPL_LOT_KEY_LOT = "lot";
+	public static final String HPL_LOT_KEY_MODEL = "model";
+	public static final String HPL_LOT_KEY_YEAR = "year";
+	public static final String HPL_LOT_KEY_MONTH = "month";
+	public static final String HPL_LOT_KEY_DAY = "day";
+	public static final String HPL_LOT_KEY_PRODLN = "prodLn";
+	public static final String HPL_LOT_KEY_SEQ = "seq";
+
+}

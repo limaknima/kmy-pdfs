@@ -1,0 +1,8 @@
+package com.fms.pfc.service.api.base;
+
+import org.springframework.stereotype.Service;
+
+@Service
+public class MenuRoleFunctionService {
+
+}

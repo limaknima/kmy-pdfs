@@ -1,0 +1,47 @@
+package com.fms.pfc.controller.main;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpSession;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.context.annotation.SessionScope;
+
+import com.fms.pfc.service.api.main.G2LotViewService;
+
+@Controller
+@SessionScope
+public class CommonController {
+	private static final Logger logger = LoggerFactory.getLogger(CommonController.class);
+
+	private G2LotViewService g2LotServ;
+
+	@Autowired
+	public CommonController(G2LotViewService g2LotServ) {
+		super();
+		this.g2LotServ = g2LotServ;
+	}
+
+	@GetMapping(value = "/main/pfc/api/getHplModelByHpl")
+	@ResponseBody
+	public Map<String, Object> getHplModelByHpl(@RequestParam(name = "hpl") String hpl, HttpServletRequest request,
+			HttpSession session) {
+		logger.debug("getHplModelByHpl() hpl={}", hpl);
+
+		List<String> all = g2LotServ.hplModelList(hpl);
+
+		Map<String, Object> model = new HashMap<String, Object>();
+		model.put("items", all);
+
+		return model;
+	}
+}

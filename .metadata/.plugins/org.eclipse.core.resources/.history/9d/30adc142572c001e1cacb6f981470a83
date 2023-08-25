@@ -1,0 +1,121 @@
+package com.fms.pfc.service.api.main;
+
+import java.util.Date;
+import java.util.List;
+import java.util.Objects;
+
+import javax.transaction.Transactional;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import com.fms.pfc.domain.converter.main.FoldCatgConfConverter;
+import com.fms.pfc.domain.dto.main.FoldCatgConfDto;
+import com.fms.pfc.domain.dto.main.HplModelDto;
+import com.fms.pfc.domain.dto.main.RelPathDto;
+import com.fms.pfc.domain.model.main.FoldCatgConf;
+import com.fms.pfc.domain.model.main.FoldCatgConfSearch;
+import com.fms.pfc.repository.main.api.FoldCatgConfRepository;
+import com.fms.pfc.repository.main.api.FoldCatgConfSearchRepository;
+import com.fms.pfc.repository.main.api.RelPathRepository;
+
+@Service
+public class FoldCatgConfService {
+
+	private final Logger logger = LoggerFactory.getLogger(FoldCatgConf.class);
+
+	private FoldCatgConfRepository foldCatgRepo;
+	private FoldCatgConfConverter foldCatgConv;
+	private RelPathRepository relPathRepo;
+	private RelPathService relPathServ;
+	private HplModelService hplModelServ;
+	private FoldCatgConfSearchRepository foldCatgSearchRepo;
+
+	@Autowired
+	public FoldCatgConfService(FoldCatgConfRepository foldCatgRepo, RelPathRepository relPathRepo,
+			FoldCatgConfConverter foldCatgConv, RelPathService relPathServ, HplModelService hplModelServ,
+			FoldCatgConfSearchRepository foldCatgSearchRepo) {
+		super();
+		this.foldCatgRepo = foldCatgRepo;
+		this.relPathRepo = relPathRepo;
+		this.foldCatgConv = foldCatgConv;
+		this.relPathServ = relPathServ;
+		this.hplModelServ = hplModelServ;
+		this.foldCatgSearchRepo = foldCatgSearchRepo;
+	}
+
+	public FoldCatgConf findById(int id) {
+		return foldCatgRepo.findById(id).orElse(null);
+	}
+
+	public FoldCatgConfDto findDtoById(int id) {
+		FoldCatgConf obj = findById(id);
+		return foldCatgConv.entityToDto(obj);
+
+	}
+
+	public List<FoldCatgConfDto> findAllDto() {
+		List<FoldCatgConf> ls = foldCatgRepo.findAll();
+		return foldCatgConv.entityToDtoList(ls);
+	}
+
+	public List<FoldCatgConfDto> searchByCriteria(String hpl, String model, String year, String month, String day,
+			String prodLn, String seq) {
+		List<FoldCatgConf> ls = foldCatgRepo.searchByCriteria(hpl, model, year, month, day, prodLn, seq);
+		return foldCatgConv.entityToDtoList(ls);
+	}
+
+	public List<FoldCatgConfSearch> searchByCriteria2(Integer searchHplId, Integer searchHplModelId, String searchYear,
+			String searchMth, String searchDay, String prodLn, String prodLnExp, String seqNo, String seqNoExp) {
+		List<FoldCatgConfSearch> ls = foldCatgSearchRepo.searchByCriteria(searchHplId, searchHplModelId, searchYear,
+				searchMth, searchDay, prodLn, prodLnExp, seqNo, seqNoExp);
+		return ls;
+	}
+
+	public List<HplModelDto> findHplModelSelectItems(Integer parentId) {
+		return hplModelServ.findAllByParentNative(parentId);
+	}
+
+	public List<RelPathDto> findRelPathListByParent(Integer parentId) {
+		return relPathServ.findAllByParent(parentId);
+	}
+
+	@Transactional
+	public Integer save(FoldCatgConfDto dto, String userId, List<RelPathDto> relList) {
+		boolean isCreate = false;
+		Date currentDate = new Date();
+		// save parent
+		if (Objects.isNull(dto.getPkCatgId()) || 0 == dto.getPkCatgId()) {
+			isCreate = true;
+			dto.setCreatorId(userId);
+			dto.setCreatedDatetime(currentDate);
+		} else {
+			FoldCatgConfDto existing = findDtoById(dto.getPkCatgId());
+			dto.setCreatorId(existing.getCreatorId());
+			dto.setCreatedDatetime(existing.getCreatedDatetime());
+			dto.setModifierId(userId);
+			dto.setModifiedDatetime(currentDate);
+		}
+
+		FoldCatgConf entity = foldCatgConv.dtoToEntity(dto);
+		foldCatgRepo.saveAndFlush(entity);
+
+		// save child
+		saveRelPath(relList, entity.getPkCatgId(), isCreate, currentDate, userId);
+
+		return entity.getPkCatgId();
+	}
+
+	@Transactional
+	public void delete(Integer id) {
+		foldCatgRepo.deleteById(id);
+	}
+
+	private void saveRelPath(List<RelPathDto> relList, Integer parentId, boolean isCreate, Date currentDate,
+			String userId) {
+		relPathServ.save(relList, parentId, isCreate, currentDate, userId);
+	}
+
+}

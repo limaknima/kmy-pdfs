@@ -1,0 +1,27 @@
+package com.fms.pfc.repository.main.api;
+
+import java.util.List;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+
+import com.fms.pfc.domain.model.main.FoldCatgConfSearch;
+
+public interface FoldCatgConfSearchRepository extends JpaRepository<FoldCatgConfSearch, Integer> {
+	
+	@Query(value = "select * from ( "
+			+ " select "
+			+ " HPL_NAME, HPL_MODEL_NAME, YEAR, MTH, DAY, PROD_LINE, SEQ "
+			+ " from FOLD_CATG_CONF fcc "
+			+ " where 1=1 "
+			+ " and (?1 = 0 or fcc.HPL_ID = ?1) "
+			+ " and (?2 = 0 or fcc.HPL_MODEL_ID = ?2) "
+			+ " and (?3 = '' or fcc.YEAR = ?3) "
+			+ " and (?4 = '' or fcc.MTH = ?4) "
+			+ " and (?5 = '' or fcc.DAY = ?5) "
+			+ ") "
+			, nativeQuery = true)
+	public List<FoldCatgConfSearch> searchByCriteria(Integer searchHplId, Integer searchHplModelId, String searchYear,
+			String searchMth, String searchDay, String prodLn, String prodLnExp, String seqNo, String seqNoExp);
+
+}

@@ -1,0 +1,10 @@
+package com.fms.pfc.repository.base.api;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+
+import com.fms.pfc.domain.model.MenuRoleFunction;
+import com.fms.pfc.domain.model.MenuRoleFunctionPK;
+
+public interface MenuRoleFunctionRepository extends JpaRepository<MenuRoleFunction, Integer> {
+
+}

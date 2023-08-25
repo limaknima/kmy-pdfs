@@ -1,0 +1,94 @@
+package com.fms.pfc.common;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
+
+import javax.annotation.PreDestroy;
+
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import net.samuelcampos.usbdrivedetector.USBDeviceDetectorManager;
+import net.samuelcampos.usbdrivedetector.USBStorageDevice;
+
+public class UsbDetectorUtil {
+	private static final Logger logger = LoggerFactory.getLogger(UsbDetectorUtil.class);
+			
+	private USBDeviceDetectorManager usbDetMan;
+	private List<USBStorageDevice> usbList = new ArrayList<USBStorageDevice>();
+
+	public UsbDetectorUtil() {
+		super();
+		// TODO Auto-generated constructor stub
+	}
+
+	/**
+	 * Initialize manager
+	 */
+	public void init() {
+		usbDetMan = new USBDeviceDetectorManager();
+	}
+
+	/**
+	 * Display all the USB storage devices currently connected
+	 * 
+	 * @return
+	 */
+	public List<USBStorageDevice> getUsbDevices() {
+		usbList = usbDetMan.getRemovableDevices();
+		return usbList;
+	}
+
+	/**
+	 * Add an event listener to be notified when an USB storage device is connected
+	 * or removed
+	 */
+	public void addListener() {
+		usbDetMan.addDriveListener(System.out::println);
+	}
+
+	/**
+	 * Get one device info
+	 * 
+	 * @return
+	 */
+	public USBStorageDevice getOneDeviceInfo() {
+		if (!usbList.isEmpty()) {
+			return usbList.get(0);
+		}
+
+		return null;
+	}
+
+	/**
+	 * Get list device info
+	 * 
+	 * @param name
+	 * @param serialNo
+	 * @return
+	 */
+	public List<USBStorageDevice> getDevicesInfo(String name, String serialNo) {
+		List<USBStorageDevice> filteredList = usbList;
+		if (!filteredList.isEmpty()) {
+			filteredList = filteredList.stream()
+					.filter(arg0 -> (StringUtils.equalsIgnoreCase(arg0.getDeviceName(), name))
+							&& (StringUtils.equalsIgnoreCase(arg0.getUuid(), serialNo)))
+					.collect(Collectors.toList());
+		}
+		return filteredList;
+	}
+
+	@PreDestroy
+	public void destroy() throws IOException {
+		/*
+		 * Once you invoke addDriveListener, your application keep running because it
+		 * will internally create an ScheduledExecutorService. To finish your
+		 * application, just invoke the close method;
+		 */
+		// Shutdown an initialized USBDeviceDetectorManager
+		usbDetMan.close();
+	}
+}

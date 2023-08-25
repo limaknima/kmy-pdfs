@@ -1,0 +1,49 @@
+package com.fms.pfc.service.api.base;
+
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.List;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+
+import com.fms.pfc.domain.dto.LabelAndValueDto;
+
+@Service
+public class YearMonthDayItemsService {
+
+	private final Logger logger = LoggerFactory.getLogger(YearMonthDayItemsService.class);
+
+	public YearMonthDayItemsService() {
+
+	}
+
+	public List<LabelAndValueDto> yearDropdownItems() {
+		Calendar cal = Calendar.getInstance();
+		cal.setTime(new Date());
+		int currentYear = cal.get(Calendar.YEAR);
+		int yearCount = 10;
+
+		LabelAndValueDto dt = new LabelAndValueDto(String.valueOf(currentYear), String.valueOf(currentYear));
+		List<LabelAndValueDto> result = new ArrayList<LabelAndValueDto>();
+		result.add(dt);
+
+		for (int idx = 1; idx <= yearCount; idx++) {
+			LabelAndValueDto d = new LabelAndValueDto(String.valueOf(currentYear - idx),
+					String.valueOf(currentYear - idx));
+			result.add(d);
+		}
+
+		return result;
+	}
+
+	public List<LabelAndValueDto> monthDropdownItems() {
+		return null;
+	}
+
+	public List<LabelAndValueDto> dayDropdownItems() {
+		return null;
+	}
+}

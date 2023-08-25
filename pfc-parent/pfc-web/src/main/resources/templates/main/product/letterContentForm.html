@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+<title>PFC - Letter Content Form</title>
+<link rel="icon" type="image/ico" th:href="@{/static/favicon.ico}">
+<link rel="stylesheet" type="text/css" th:href="@{/css/styles.css}" />
+<link rel="stylesheet" type="text/css" th:href="@{/css/bootstrap-duallistbox.css}">
+<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/css/bootstrap-datepicker.css" />
+
+<script	src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/js/all.min.js"></script>
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+<script	src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/js/bootstrap-datepicker.min.js"></script>
+<script	src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.rawgit.com/google/code-prettify/master/loader/run_prettify.js"></script>
+<script type="text/javascript" src="../../js/jquery.bootstrap-duallistbox.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/1000hz-bootstrap-validator/0.11.9/validator.min.js"></script>
+
+</head>
+<body onload="init()" class="sb-nav-fixed">
+	<div th:replace="/header :: navBar"></div>
+	<div id="layoutSidenav">
+		<div th:replace="/header :: sideNavBar"></div>
+		<div id="layoutSidenav_content">
+			<main>
+				<div class="container-fluid">
+					<br />					
+					<ol class="breadcrumb mb-4">
+						<li class="breadcrumb-item active" ><a th:href="@{/}"><i class="fa fa-home"></i></a></li>
+						<li class="breadcrumb-item active" ><a th:href="@{/menu/letterMenu}"><span th:text="#{menuLetter}"></span></a></li>
+						<li class="breadcrumb-item active" >Letter Content</li>
+					</ol>
+					<div class="alert alert-danger alert-dismissible" th:if=${error}>
+						<a class="close" data-dismiss="alert" aria-label="close">&times;</a>
+						<a th:utext="${error}"></a>
+					</div>
+					<div class="alert alert-success alert-dismissible" th:if=${success}>
+						<a class="close" data-dismiss="alert" aria-label="close">&times;</a>
+						<a th:utext="${success}"></a>
+					</div>
+					<div class="card">
+						<div class="card-header" id="headingTwo" th:text="${header}"></div>
+						<a class="card-header" hidden="true" id="formMode"
+							th:text="${mode}"></a>
+						<div class="card-body">
+							<form action="#" id="mainForm"
+								th:action="@{/main/product/letterContentFormSave}"
+								th:object="${letterContItem}" method="POST"
+								data-toggle="validator" novalidate="true"
+								enctype="multipart/form-data">
+								<div id="letterTypeDiv" class="form-group row">
+									<label class="col-sm-2 col-form-label control-label">Letter Type <a name="asterisk" style="color: red;"
+										hidden="true">*</a>
+									</label>
+									<div class="row col-sm-5">
+										<label class="col-form-label">:</label>
+										<div class="col">
+											<select id="ltType" class="custom-select" name="ltType" th:field="*{ltId}" disabled required>
+												<option value="" selected hidden="true">Please Select</option>
+												<option th:each="letterTypeItem: ${letterTypeItems}"
+													th:value="${letterTypeItem.ltId}"
+													th:text="${letterTypeItem.ltName}"
+													th:selected="${letterTypeItem.ltId} == ${ltId}"/>
+											</select>
+										</div>
+									</div>
+								</div>
+								<div id="sec1DescDiv" class="form-group row">
+									<label class="col-sm-2 col-form-label control-label">Section 1
+										<a name="asterisk" style="color: red;" hidden="true">*</a>
+									</label>
+									<div class="row col-sm-5">
+										<label class="col-form-label">:</label>
+										<div class="col">
+											<textarea id="sec1Desc" class="form-control-plaintext"
+												rows="2" readonly th:field="*{sec1Desc}" maxlength=1000></textarea>
+										</div>
+									</div>
+								</div>
+								<div id="sec2DescDiv" class="form-group row">
+									<label class="col-sm-2 col-form-label control-label">Section 2
+										<a name="asterisk" style="color: red;" hidden="true">*</a>
+									</label>
+
+									<div class="row col-sm-5">
+										<label class="col-form-label">:</label>
+										<div class="col">
+											<textarea id="sec2Desc" class="form-control-plaintext"
+												rows="2" readonly th:field="*{sec2Desc}" maxlength=1000></textarea>
+										</div>
+									</div>
+								</div>
+								<div id="sec3DescDiv" class="form-group row">
+									<label class="col-sm-2 col-form-label control-label">Section 3
+										<a name="asterisk" style="color: red;" hidden="true">*</a>
+									</label>
+
+									<div class="row col-sm-5">
+										<label class="col-form-label">:</label>
+										<div class="col">
+											<textarea id="sec3Desc" class="form-control-plaintext"
+												rows="2" readonly th:field="*{sec3Desc}" maxlength=1000></textarea>
+										</div>
+									</div>
+								</div>
+								<div id="prLsitDiv" class="form-group row">
+									<label class="col-sm-2 col-form-label control-label">Product Name
+										<a name="asterisk" style="color: red;" hidden="true">*</a>
+									</label> 
+									<label class="col-form-label">:</label>
+									<div th:if="${letterContItem.letterTypeName =='Generic'}" id="generic-all-pr" class="col col-sm-5"><label class="col-form-label">ALL</label></div>
+									<div th:if="${letterContItem.letterTypeName!='Generic'}" id="prListSel" class="col col-sm-5">
+										<div >
+											<ul class="list-group" id="selPrView">
+												<li class="list-group-item" id="selPrView1"
+													th:each="item : ${selPrItems}"
+													th:value="${item.prId}" th:utext="${item.prName}">
+												</li>
+											</ul>
+										</div>
+										<div id="prChoice" hidden="true">
+											<select multiple="multiple" size="10" name="prChoice1" 
+												data-error="Product selection cannot be empty!" required="required"
+												class="dualList" >
+												<option th:each="item : ${prItems}"
+													th:value="${item.prId}" th:utext="${item.prName}">
+												</option>
+												<option id="selPrView1" th:each="item : ${selPrItems}"
+													th:value="${item.prId}" th:utext="${item.prName}"
+													selected></option>
+											</select>
+											<div class="help-block with-errors"></div>
+										</div>
+									</div>
+								</div>
+								<div id="countryDiv" class="form-group row">
+									<label class="col-sm-2 col-form-label control-label">Country
+										<a name="asterisk" style="color: red;" hidden="true">*</a>
+									</label>
+
+									<div class="row col-sm-5">
+										<label class="col-form-label">:</label>
+										<div th:if="${letterContItem.letterTypeName =='Generic'}" id="generic-all-country" class="col"><label class="col-form-label">ALL</label></div>
+										<div th:if="${letterContItem.letterTypeName != 'Generic'}" id="refCountrySel" class="col">
+											<select id="refCountry" class="custom-select" name="refCountry" th:field="*{countryId}" disabled required>
+												<option value="" selected hidden="true">Please Select</option>
+												<option th:each="refCountryItem: ${refCountryItems}"
+													th:value="${refCountryItem.countryId}"
+													th:text="${refCountryItem.countryName}"
+													th:selected="${refCountryItem.countryId} == ${countryId}"/>
+											</select>
+										</div>
+									</div>
+								</div>
+							</form>
+						</div>
+					</div>
+					<div class="form-group row" th:if="${createdInfo}" id="createdInfo">
+						<div class="row col-sm-12">
+							<div class="col">
+								<a style="float: left;" th:text="${createdInfo}"></a> <a
+									style="float: right; margin-right: -30px;"
+									th:text="${modifiedInfo}"></a>
+							</div>
+						</div>
+					</div>
+					<div id="break" hidden="true">
+						<br />
+					</div>
+					<div class="form-group row col-sm-3">
+						<button class="btn btn-primary"
+							style="width: 90px; margin-right: 5px;"
+							onclick="enableEditMode()" id="btnEdit">Edit</button>
+						<button class="btn btn-primary" form="mainForm" type="submit"
+							style="width: 90px; margin-right: 5px;" hidden="true"
+							id="btnSave">Save</button>
+						<a class="btn btn-primary" style="width: 90px;" type="button"
+							id="btnCancel" th:href="@{/main/product/letterContentList}">Cancel</a>
+						<button class="btn btn-primary" style="width: 90px;" type="button"
+							hidden="true" id="btnConfirmCancel" data-toggle="modal"
+							data-target="#confirmDialog">Cancel</button>
+
+						<!-- Confirmation message -->
+						<div class="modal fade" id="confirmDialog" tabindex="-1"
+							role="dialog" aria-hidden="true">
+							<div class="modal-dialog modal-dialog-centered" role="document">
+								<div class="modal-content">
+									<div class="modal-header">
+										<h5 class="modal-title" th:text="${confirmHeader}"></h5>
+										<button type="button" class="close" data-dismiss="modal"
+											aria-label="Close">
+											<span aria-hidden="true">&times;</span>
+										</button>
+									</div>
+									<div class="modal-body" th:text="${confirmMsg}"></div>
+									<div class="modal-footer">
+										<button type="submit" class="btn btn-primary"
+											onclick="onCancel()">Confirm</button>
+										<button type="button" class="btn btn-secondary"
+											data-dismiss="modal">Cancel</button>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</main>
+		</div>
+	</div>
+
+	<script type="text/javascript">
+		//When initialise page
+		function init() {
+
+			var mode = document.getElementById("formMode").text;
+
+			//Enable form for add
+			if (mode == "add") {				
+				enableEditMode();
+			} else if (mode == "edit") {
+				enableEditMode();
+			}
+		}
+
+		///* Enable form when edit or add */
+		function enableEditMode() {
+			
+			var type = "[(${letterContItem.letterTypeName})]";
+
+			var mode = document.getElementById("formMode").text;
+
+			if (mode == "view") {
+				document.getElementById("headingTwo").textContent = "Edit Letter Content";
+				document.getElementById("createdInfo").hidden = true;
+			}
+			
+			document.getElementById("break").hidden = false;
+			document.getElementById("ltType").disabled = false;
+			
+			if(type !== 'Generic'){
+				document.getElementById("refCountry").disabled = false;				
+			}
+
+			$("#letterTypeDiv").addClass("required");
+			$("#ltType").addClass("form-control");
+			$("#ltType").removeClass("form-control-plaintext");
+			document.getElementById("ltType").removeAttribute("readonly");
+			
+			$("#sec1DescDiv").addClass("required");
+			$("#sec1Desc").addClass("form-control");
+			$("#sec1Desc").removeClass("form-control-plaintext");
+			document.getElementById("sec1Desc").removeAttribute("readonly");
+			
+			$("#sec2DescDiv").addClass("required");
+			$("#sec2Desc").addClass("form-control");
+			$("#sec2Desc").removeClass("form-control-plaintext");
+			document.getElementById("sec2Desc").removeAttribute("readonly");
+			
+			$("#sec3DescDiv").addClass("required");
+			$("#sec3Desc").addClass("form-control");
+			$("#sec3Desc").removeClass("form-control-plaintext");
+			document.getElementById("sec3Desc").removeAttribute("readonly");
+			
+			/*$("#prLsitDiv").addClass("required");
+			$("#prChoice1").addClass("form-control");
+			$("#prChoice1").removeClass("form-control-plaintext");
+			document.getElementById("prChoice1").removeAttribute("readonly");*/
+			
+			$("#countryDiv").addClass("required");
+			$("#refCountry").addClass("form-control");
+			$("#refCountry").removeClass("form-control-plaintext");
+			
+			if(type !== 'Generic'){
+			document.getElementById("refCountry").removeAttribute("readonly");
+			}
+			
+			document.getElementsByName("asterisk").forEach(e => {e.hidden = false;});
+
+			document.getElementById("btnSave").hidden = false;
+			document.getElementById("btnEdit").hidden = true;
+			document.getElementById("btnCancel").hidden = true;
+			document.getElementById("btnConfirmCancel").hidden = false;
+			
+			$("#prLsitDiv").addClass("required");
+			$("#selPrView").hide()
+			document.getElementById("prChoice").hidden = false;
+		}
+		
+		var dualList = $('.dualList').bootstrapDualListbox({
+			preserveSelectionOnMove : 'moved',
+			moveOnSelect : false,
+		});
+		
+		//To enable before submit since disabled values won't pass to the server
+		$('#mainForm').on('submit', function() {
+		    $('#ltType').prop('disabled', false);
+		});
+		$('#mainForm').on('submit', function() {
+		    $('#refCountry').prop('disabled', false);
+		});
+
+		function onCancel() {
+
+			window.location = "[[@{/main/product/letterContentList}]]";
+		}
+	</script>
+
+	<script type="text/javascript" src="../../js/scripts.js"></script>
+
+</body>
+
+<style>
+#catDesc {
+	resize: none;
+}
+</style>
+</html>

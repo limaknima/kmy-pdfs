@@ -1,0 +1,25 @@
+package com.fms.pfc.service.api.base;
+
+import java.util.List;
+
+import org.springframework.stereotype.Service;
+
+@Service
+public class YearMonthDayItemsService {
+
+	public YearMonthDayItemsService() {
+
+	}
+
+	public List<String> yearDropdownItems() {
+		return null;
+	}
+
+	public List<String> monthDropdownItems() {
+		return null;
+	}
+
+	public List<String> dayDropdownItems() {
+		return null;
+	}
+}

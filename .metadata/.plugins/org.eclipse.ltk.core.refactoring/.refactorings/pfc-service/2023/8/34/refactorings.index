@@ -1,0 +1,11 @@
+1692081074263	Rename method 'createFolder'
+1692082823542	Rename local variable 'dir'
+1692082831679	Rename local variable 'oldDir'
+1692085479689	Rename local variable 'dirId'
+1692085488763	Rename local variable 'oldDirId'
+1692167473034	Move compilation unit
+1692170100707	Move compilation unit
+1692324041938	Rename local variable 'forDisplay'
+1692325872571	Rename local variable 'objects'
+1692326598847	Extract local variable 'roleList'
+1692326621454	Extract method 'getRoleList'

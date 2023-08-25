@@ -1,0 +1,119 @@
+package com.fms.pfc.service.api.main;
+
+import java.util.Date;
+import java.util.List;
+import java.util.Objects;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
+
+import javax.transaction.Transactional;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import com.fms.pfc.domain.converter.main.FileTypeSzConverter;
+import com.fms.pfc.domain.dto.FileTypeDto;
+import com.fms.pfc.domain.dto.main.FileTypeSzDto;
+import com.fms.pfc.domain.model.main.FileTypeSz;
+import com.fms.pfc.domain.model.main.FlavorStatus;
+import com.fms.pfc.repository.main.api.FileTypeSzRepository;
+import com.fms.pfc.service.api.base.FileTypeService;
+
+@Service
+public class FileTypeSzService {
+
+	private final Logger logger = LoggerFactory.getLogger(FileTypeSzService.class);
+
+	private FileTypeSzRepository fileTypeSzRepo;
+	private FileTypeSzConverter fileTypeSzConv;
+	private FileTypeService ftServ;
+	private HplService hplServ;
+
+	@Autowired
+	public FileTypeSzService(FileTypeSzRepository fileTypeSzRepo, FileTypeSzConverter fileTypeSzConv,
+			FileTypeService ftServ, HplService hplServ) {
+		super();
+		this.fileTypeSzRepo = fileTypeSzRepo;
+		this.fileTypeSzConv = fileTypeSzConv;
+		this.ftServ = ftServ;
+		this.hplServ = hplServ;
+	}
+
+	public FileTypeSz findById(Integer id) {
+		return fileTypeSzRepo.findById(id).orElse(null);
+	}
+
+	public FileTypeSzDto findDtoById(Integer id) {
+		FileTypeSz rel = findById(id);
+		return fileTypeSzConv.entityToDto(rel);
+	}
+
+	public List<FileTypeSzDto> findAllDto() {
+		List<FileTypeSz> models = fileTypeSzRepo.findAll();
+		List<FileTypeSzDto> dtos = fileTypeSzConv.entityToDtoList(models);
+		dtos.forEach(arg0 -> {
+			arg0.setFkHplName(hplServ.findDtoById(arg0.getFkHplId()).getHplName());
+			arg0.setIndicator("exists");
+		});
+		int idx = 0;
+		for (FileTypeSzDto dt : dtos) {
+			dt.setRowNo(idx);
+			idx ++;
+		}
+		
+		
+		return dtos;
+	}
+	
+	public List<FileTypeSzDto> searchByCriteria(Integer hplId) {
+		List<FileTypeSz> models = fileTypeSzRepo.findAll();
+		List<FileTypeSzDto> dtos = fileTypeSzConv.entityToDtoList(models);
+		dtos.forEach(arg0 -> {
+			arg0.setFkHplName(hplServ.findDtoById(arg0.getFkHplId()).getHplName());
+			arg0.setIndicator("exists");
+		});
+		int idx = 0;
+		for (FileTypeSzDto dt : dtos) {
+			dt.setRowNo(idx);
+			idx++;
+		}
+
+		Predicate<FileTypeSzDto> hplFilter = arg0 -> (hplId != 0) ? (arg0.getFkHplId() == hplId) : (1 > 0);
+		dtos = dtos.stream().filter(hplFilter).collect(Collectors.toList());
+
+		return dtos;
+	}
+
+	public List<FileTypeDto> findFileTypeItems() {
+		return ftServ.findAllDto();
+	}
+
+	@Transactional
+	public Integer save(FileTypeSzDto dto, String userId) {
+		Date currentDate = new Date();
+		// save parent
+		if (Objects.isNull(dto.getPkFtypeId()) || 0 == dto.getPkFtypeId()) {
+			dto.setCreatorId(userId);
+			dto.setCreatedDatetime(currentDate);
+		} else {
+			FileTypeSzDto existing = findDtoById(dto.getPkFtypeId());
+			dto.setCreatorId(existing.getCreatorId());
+			dto.setCreatedDatetime(existing.getCreatedDatetime());
+			dto.setModifierId(userId);
+			dto.setModifiedDatetime(currentDate);
+		}
+
+		FileTypeSz entity = fileTypeSzConv.dtoToEntity(dto);
+		fileTypeSzRepo.saveAndFlush(entity);
+		
+		return entity.getPkFTypeId();
+	}
+
+	@Transactional
+	public void delete(Integer id) {
+		fileTypeSzRepo.deleteById(id);
+	}
+
+}

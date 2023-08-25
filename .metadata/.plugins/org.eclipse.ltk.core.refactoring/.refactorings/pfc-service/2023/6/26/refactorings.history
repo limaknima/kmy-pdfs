@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<session version="1.0">
+<refactoring comment="Rename local variable &apos;model&apos; in &apos;com.fms.pfc.service.api.main.HplService.setHplModelList(...)&apos; to &apos;modelList&apos;&#x0D;&#x0A;- Original project: &apos;pfc-service&apos;&#x0D;&#x0A;- Original element: &apos;com.fms.pfc.service.api.main.HplService.setHplModelList(HplDto).model&apos;&#x0D;&#x0A;- Renamed element: &apos;model&apos;&#x0D;&#x0A;- Update references to refactored element" description="Rename local variable &apos;model&apos;" id="org.eclipse.jdt.ui.rename.local.variable" input="/src\/main\/java=/optional=/true=/=/maven.pomderived=/true=/&lt;com.fms.pfc.service.api.main{HplService.java[HplService~setHplModelList~QHplDto;@model!3471!3525!3489!3493!QList\&lt;QHplModelDto;&gt;;!0!false" name="modelList" references="true" stamp="1687167887437" version="1.0"/>
+</session>

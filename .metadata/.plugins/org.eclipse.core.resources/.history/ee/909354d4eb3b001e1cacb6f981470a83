@@ -1,0 +1,60 @@
+package com.fms.pfc.repository.main.api;
+
+import java.util.List;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.stereotype.Repository;
+
+import com.fms.pfc.domain.model.main.OnDemandSearch;
+
+@Repository
+public interface OnDemandSearchRepository extends JpaRepository<OnDemandSearch, String> {
+	@Query(value = "select * from ( "
+			+ " select "
+			+ "	t1.HPL, t1.LOT,"
+			+ "	t2.FILE_NAME, t2.FILE_SIZE,"
+			+ "	(select t3.FILE_PATH from REL_PATH t3 where t3.REL_ID = t2.FILE_PATH) as FILE_PATH, "
+			+ "	case"
+			+ "		when (t2.FILE_NAME = '' OR t2.FILE_NAME is NULL) then 'File name not found'"
+			+ "		when (t2.FILE_SIZE < 0 OR t2.FILE_SIZE is NULL) then 'File size is zero'"
+			+ "		else 'OK'"
+			+ "	end AS ALERT, "
+			+ "	t1.YEAR, t1.MTH, (case when t1.DDAY = '' then '01' else t1.DDAY end) as DDAY "
+			+ "from CV22PDF t1 "
+			+ "left outer join PROD_FILE t2 on t2.G2_LOT_NO = t1.LOT "
+			+ "where 1=1 "
+			+ "and (?1 = '' or t1.HPL = ?1) "
+			+ "and (?2 = '' OR ( "
+			+ "	 t1.LOT like case when ?3 = '1' then concat('%', ?2, '%') "
+			+ "	 when ?3 = '2' then concat('%', ?2) "
+			+ "	 when ?3 = '3' then ?2 "
+			+ "	 when ?3 = '4' then concat(?2, '%') end "
+			+ "	 ) "
+			+ " ) "
+			+ "and (?4 = '' OR ( "
+			+ "	 t2.FILE_NAME like case when ?5 = '1' then concat('%', ?4, '%') "
+			+ "	 when ?5 = '2' then concat('%', ?4) "
+			+ "	 when ?5 = '3' then ?4 "
+			+ "	 when ?5 = '4' then concat(?4, '%') end "
+			+ "	 ) "
+			+ " ) "
+			+ "and (?6 = '' OR ( "
+			+ "	 FILE_PATH like case when ?7 = '1' then concat('%', ?6, '%') "
+			+ "	 when ?7 = '2' then concat('%', ?6) "
+			+ "	 when ?7 = '3' then ?6 "
+			+ "	 when ?7 = '4' then concat(?6, '%') end "
+			+ "	 ) "
+			+ " ) "
+			+ "and t1.MTH < 13 "
+			+ "and t1.DDAY < 32 "
+			+ "and DDAY !='' "
+			+ "and ('' = ?8 or CONVERT(datetime, DDAY+'/'+t1.MTH+'/'+t1.YEAR,103) >= CONVERT(datetime, ?8, 103)) "
+			+ "and ('' = ?9 or CONVERT(datetime, DDAY+'/'+t1.MTH+'/'+t1.YEAR,103) <= CONVERT(datetime, ?9, 103)) "
+			+ ") tbl "
+			, nativeQuery = true)
+	List<OnDemandSearch> searchByCriteria(String hpl, String g2LotNo, String g2LotNoExp, String fileName,
+			String fileNameExp, String path, String pathExp, String fromDate, String toDate);
+	
+	
+}

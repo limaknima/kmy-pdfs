@@ -1,0 +1,46 @@
+package com.fms.pfc.repository.main.api;
+
+import java.util.List;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+
+import com.fms.pfc.domain.model.main.ProdFileSearch;
+
+public interface ProdFileSearchRepository extends JpaRepository<ProdFileSearch, Integer> {
+
+	@Query(value = "select * from ( "
+			+ " select "
+			+ " pf.PFILE_ID, "
+			+ " (select hpl.NAME from HPL hpl where hpl.HPL_ID = pf.HPL_ID) as HPL_NAME, "
+			+ " (select hpl.NAME from HPL_MODEL hpl where hpl.HMODEL_ID = pf.HMODEL_ID) as HPL_MODEL_NAME, "
+			+ " pf.YEAR, pf.MTH, pf.G2_LOT_NO, pf.FILE_NAME, pf.FILE_PATH, "
+			+ " pf.FILE_TYPE, pf.FILE_SIZE, pf.CRC_VALUE, "
+			+ " pf.CREATOR_ID, pf.CREATED_DATETIME, pf.MODIFIER_ID, pf.MODIFIED_DATETIME, "
+			+ " pf.HPL_ID, pf.HMODEL_ID "
+			+ " from FOLD_CATG_CONF pf "
+			+ " where 1=1 "
+			+ " and (?1 = 0 or pf.HPL_ID = ?1) "
+			+ " and (?2 = 0 or pf.HMODEL_ID = ?2) "
+			+ " and (?3 = '' or pf.YEAR = ?3) "
+			+ " and (?4 = '' or pf.MTH = ?4) "
+			//+ " and (?5 = '' or pf.DAY = ?5) "
+			+ "	and (?5 = '' OR ( "
+			+ "		pf.G2_LOT_NO like case when ?6 = '1' then concat('%', ?5, '%') "
+			+ "		when ?6 = '2' then concat('%', ?5) "
+			+ "		when ?6 = '3' then ?5 "
+			+ "		when ?6 = '4' then concat(?5, '%') end "
+			+ "	 ) "
+			+ " ) "
+			+ "	and (?7 = '' OR ( "
+			+ "		pf.FILE_PATH like case when ?8 = '1' then concat('%', ?7, '%') "
+			+ "		when ?8 = '2' then concat('%', ?7) "
+			+ "		when ?8 = '3' then ?7 "
+			+ "		when ?8 = '4' then concat(?7, '%') end "
+			+ "	 ) "
+			+ " ) "
+			+ ") tbl "
+			, nativeQuery = true)
+	public List<ProdFileSearch> searchByCriteria(Integer searchHplId, Integer searchHplModelId, String searchYear,
+			String searchMth, String g2LotNo, String g2LotNoExp, String path, String pathExp);
+}

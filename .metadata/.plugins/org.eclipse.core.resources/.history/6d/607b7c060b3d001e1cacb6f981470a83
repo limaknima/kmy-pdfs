@@ -1,0 +1,5 @@
+package com.fms.pfc.domain.model;
+
+public class MenuRoleFunctionPK {
+
+}

@@ -1,0 +1,151 @@
+package com.fms.pfc.service.api.main;
+
+import java.util.List;
+import java.util.Objects;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import com.fms.pfc.domain.converter.main.G2LotViewConverter;
+import com.fms.pfc.domain.dto.main.G2LotViewDto;
+import com.fms.pfc.domain.model.main.G2LotView;
+import com.fms.pfc.repository.main.api.G2LotViewRepository;
+
+@Service
+public class G2LotViewService {
+	private final Logger logger = LoggerFactory.getLogger(G2LotViewService.class);
+
+	private G2LotViewRepository g2Repo;
+	private G2LotViewConverter g2Conv;
+
+	@Autowired
+	public G2LotViewService(G2LotViewRepository g2Repo, G2LotViewConverter g2Conv) {
+		super();
+		this.g2Repo = g2Repo;
+		this.g2Conv = g2Conv;
+	}
+
+	/**
+	 * Find Entity by id
+	 * 
+	 * @param id
+	 * @return G2LotView
+	 */
+	public G2LotView findById(String id) {
+		return g2Repo.findById(id).orElse(null);
+	}
+
+	/**
+	 * Find DTO by id
+	 * 
+	 * @param id
+	 * @return G2LotViewDto
+	 */
+	public G2LotViewDto findDtoById(String id) {
+		G2LotView rel = findById(id);
+		return g2Conv.entityToDto(rel);
+	}
+
+	/**
+	 * Find list of DTO
+	 * 
+	 * @return G2LotViewDto list
+	 */
+	public List<G2LotViewDto> findAllDto() {
+		List<G2LotView> models = g2Repo.findAll();
+		return g2Conv.entityToDtoList(models);
+	}
+
+	/**
+	 * 
+	 * @param lot
+	 * @param hpl
+	 * @param model
+	 * @param year
+	 * @param mth
+	 * @param day
+	 * @param prodLn
+	 * @param seq
+	 * @return G2LotViewDto list
+	 */
+	public List<G2LotViewDto> searchByCriteria(String lot, String hpl, String model, String year, String mth,
+			String day, String prodLn, String seq) {
+		List<G2LotView> models = g2Repo.searchByCriteria(
+				Objects.isNull(lot) ? "" : lot, Objects.isNull(hpl) ? "" : hpl, Objects.isNull(model) ? "" : model,
+				Objects.isNull(year) ? "" : year, Objects.isNull(mth) ? "" : mth, Objects.isNull(day) ? "" : day,
+				Objects.isNull(prodLn) ? "" : prodLn, Objects.isNull(seq) ? "" : seq);
+		return g2Conv.entityToDtoList(models);
+	}
+	
+	/**
+	 * List of HPL
+	 * @return
+	 */
+	public List<String> hplList(){
+		return g2Repo.hplList();
+	}
+	
+	/**
+	 * LIst of HPL Model
+	 * @param hpl
+	 * @return
+	 */
+	public List<String> hplModelList (String hpl){
+		return g2Repo.hplModelList(hpl);
+	}
+	
+	/**
+	 * 
+	 * @param hpl
+	 * @param model
+	 * @return
+	 */
+	public List<String> yearList(String hpl, String model) {
+		return null;
+	}
+
+	public List<String> monthList(String hpl, String model, String year) {
+		return null;
+	}
+
+	/**
+	 * 
+	 * @param hpl
+	 * @param model
+	 * @param year
+	 * @param mth
+	 * @return
+	 */
+	public List<String> dayList(String hpl, String model, String year, String mth) {
+		return null;
+	}
+
+	/**
+	 * 
+	 * @param hpl
+	 * @param model
+	 * @param year
+	 * @param mth
+	 * @param day
+	 * @return
+	 */
+	public List<String> prodLnList(String hpl, String model, String year, String mth, String day) {
+		return null;
+	}
+
+	/**
+	 * 
+	 * @param hpl
+	 * @param model
+	 * @param year
+	 * @param mth
+	 * @param day
+	 * @param prodLn
+	 * @return
+	 */
+	public List<String> seqList(String hpl, String model, String year, String mth, String day, String prodLn) {
+		return null;
+	}
+}

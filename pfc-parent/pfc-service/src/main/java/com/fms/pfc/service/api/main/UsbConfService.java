@@ -1,0 +1,166 @@
+package com.fms.pfc.service.api.main;
+
+import java.util.Date;
+import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
+
+import javax.transaction.Transactional;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import com.fms.pfc.domain.converter.main.UsbConfConverter;
+import com.fms.pfc.domain.dto.main.UsbConfDto;
+import com.fms.pfc.domain.dto.main.UsbUsrDto;
+import com.fms.pfc.domain.model.Usr;
+import com.fms.pfc.domain.model.main.UsbConf;
+import com.fms.pfc.domain.model.main.UsbConfSearch;
+import com.fms.pfc.repository.main.api.UsbConfRepository;
+import com.fms.pfc.repository.main.api.UsbConfSearchRepository;
+import com.fms.pfc.repository.main.api.UsbUsrRepository;
+import com.fms.pfc.service.api.base.LoginService;
+
+@Service
+public class UsbConfService {
+
+	private final Logger logger = LoggerFactory.getLogger(UsbConfService.class);
+
+	private UsbConfRepository usbConfRepo;
+	private UsbConfConverter usbConfConv;
+	private UsbUsrRepository usbUsrRepo;
+	private UsbUsrService usbUsrServ;
+	private UsbConfSearchRepository usbConfSearchRepo;
+	private LoginService loginServ;
+
+	@Autowired
+	public UsbConfService(UsbConfRepository usbConfRepo, UsbUsrRepository usbUsrRepo, UsbUsrService usbUsrServ,
+			UsbConfConverter usbConfConv, UsbConfSearchRepository usbConfSearchRepo, LoginService loginServ) {
+		super();
+		this.usbConfRepo = usbConfRepo;
+		this.usbUsrRepo = usbUsrRepo;
+		this.usbUsrServ = usbUsrServ;
+		this.usbConfConv = usbConfConv;
+		this.usbConfSearchRepo = usbConfSearchRepo;
+		this.loginServ = loginServ;
+	}
+
+	public UsbConf findById(int id) {
+		return usbConfRepo.findById(id).orElse(null);
+	}
+
+	public UsbConfDto findDtoById(int id) {
+		UsbConf obj = findById(id);
+		return usbConfConv.entityToDto(obj);
+
+	}
+
+	public List<UsbConfDto> findAllByName(String name) {
+		List<UsbConf> ls = usbConfRepo.findAllByName(name);
+		List<UsbConfDto> lsDto = usbConfConv.entityToDtoList(ls);
+		return lsDto;
+	}
+
+	public List<UsbConfDto> findAllBySerialNo(String serialNo) {
+		List<UsbConf> ls = usbConfRepo.findAllBySerialNo(serialNo);
+		List<UsbConfDto> lsDto = usbConfConv.entityToDtoList(ls);
+		return lsDto;
+	}
+
+	public List<UsbConfDto> findAllDto() {
+		List<UsbConf> ls = usbConfRepo.findAll();
+		List<UsbConfDto> lsDto = usbConfConv.entityToDtoList(ls);
+		return lsDto;
+	}
+
+	public List<UsbConfSearch> searchByCriteria(String serialNo, String serialNoExp, String usbName, String usbNameExp,
+			String group, String assignTo, String assignToExp) {
+		List<UsbConfSearch> ls = usbConfSearchRepo.searchByCriteria(serialNo, serialNoExp, usbName, usbNameExp, group,
+				assignTo, assignToExp);
+		// List<UsbConfDto> lsDto = usbConfConv.entityToDtoList(ls);
+		return ls;
+	}
+
+	public List<Usr> getUsrSelectedList(Integer pkUconfId) {
+		List<UsbUsrDto> usrDtoList = usbUsrServ.findAllByParent(pkUconfId);
+		
+		logger.debug("getUsrSelectedList id "+pkUconfId+" usrDtoList size = " + usrDtoList.size());
+		
+		List<String> ids = usrDtoList.stream().map(UsbUsrDto::getFkUsrId).collect(Collectors.toList());
+		List<Usr> usrList = getAllActiveUsr();
+		usrList = usrList.stream().filter(arg0 -> ids.contains(arg0.getUserId())).collect(Collectors.toList());
+		return usrList;
+	}
+
+	public List<Usr> getAllActiveUsr() {
+		return loginServ.searchAllActiveUser();
+	}
+
+	@Transactional
+	public void save(UsbConfDto dto, String userId, List<UsbUsrDto> usrList) {
+		boolean isCreate = false;
+		Date currentDate = new Date();
+		// save parent
+		if (Objects.isNull(dto.getPkUconfId()) || 0 == dto.getPkUconfId()) {
+			isCreate = true;
+			dto.setCreatorId(userId);
+			dto.setCreatedDatetime(currentDate);
+		} else {
+			UsbConfDto existing = findDtoById(dto.getPkUconfId());
+			dto.setCreatorId(existing.getCreatorId());
+			dto.setCreatedDatetime(existing.getCreatedDatetime());
+			dto.setModifierId(userId);
+			dto.setModifiedDatetime(currentDate);
+		}
+
+		UsbConf entity = usbConfConv.dtoToEntity(dto);
+		usbConfRepo.saveAndFlush(entity);
+
+		// save child
+		saveUsbUsr(usrList, entity.getPkUconfId(), isCreate, currentDate, userId);
+	}
+
+	@Transactional
+	public Integer save2(UsbConfDto dto, String userId, List<String> usrList) {
+		
+		logger.debug("save2() ... dto.getPkUconfId() = {}", dto.getPkUconfId());
+		
+		Date currentDate = new Date();
+		// save parent
+		if (Objects.isNull(dto.getPkUconfId()) || 0 == dto.getPkUconfId()) {
+			dto.setCreatorId(userId);
+			dto.setCreatedDatetime(currentDate);
+		} else {
+			UsbConfDto existing = findDtoById(dto.getPkUconfId());
+			dto.setCreatorId(existing.getCreatorId());
+			dto.setCreatedDatetime(existing.getCreatedDatetime());
+			dto.setModifierId(userId);
+			dto.setModifiedDatetime(currentDate);
+		}
+
+		UsbConf entity = usbConfConv.dtoToEntity(dto);
+		usbConfRepo.saveAndFlush(entity);
+
+		// save child
+		saveUsbUsr2(usrList, entity.getPkUconfId(), currentDate, userId);
+		
+		return entity.getPkUconfId();
+	}
+
+	@Transactional
+	public void delete(Integer id) {
+		usbConfRepo.deleteById(id);
+	}
+
+	private void saveUsbUsr(List<UsbUsrDto> usrList, Integer parentId, boolean isCreate, Date currentDate,
+			String userId) {
+		usbUsrServ.save(usrList, parentId, isCreate, currentDate, userId);
+	}
+
+	private void saveUsbUsr2(List<String> usrList, Integer parentId, Date currentDate, String userId) {
+		usbUsrServ.save(usrList, parentId, currentDate, userId);
+	}
+
+}

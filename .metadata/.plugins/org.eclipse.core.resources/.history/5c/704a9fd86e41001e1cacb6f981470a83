@@ -1,0 +1,134 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  
+  <parent>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-parent</artifactId>
+    <version>2.3.4.RELEASE</version>
+  </parent>
+  
+  <groupId>com.fms</groupId>
+  <artifactId>pfc-parent</artifactId>
+  <version>0.0.1-SNAPSHOT</version>
+  <packaging>pom</packaging>
+  <name>pfc</name>
+  <description>KAYAKU PFC Project</description>
+  
+  <properties>
+  	<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+	<java.version>1.8</java.version>
+  </properties>
+  
+  <modules>
+  	<module>pfc-app</module>
+  	<module>pfc-domain</module>
+  	<module>pfc-controller</module>
+  	<module>pfc-repository</module>
+  	<module>pfc-service</module>
+  	<module>pfc-validation</module>
+  	<module>pfc-exception</module>
+  	<module>pfc-actuator</module>
+  	<module>pfc-repository-impl</module>
+  	<module>pfc-service-impl</module>
+  	<module>pfc-web</module>
+  	<module>pfc-common</module>
+  </modules>
+  
+  <dependencies>
+      <dependency>
+         <groupId>org.springframework.boot</groupId>
+         <artifactId>spring-boot-starter-test</artifactId>
+         <scope>test</scope>
+         <exclusions>
+			<exclusion>
+				<groupId>org.junit.vintage</groupId>
+				<artifactId>junit-vintage-engine</artifactId>
+			</exclusion>
+		</exclusions>
+      </dependency>
+      <dependency>
+         <groupId>org.springframework.boot</groupId>
+         <artifactId>spring-boot-starter</artifactId>
+      </dependency>
+   	  <dependency>
+         <groupId>org.springframework.boot</groupId>
+    	 <artifactId>spring-boot-starter-security</artifactId>
+      </dependency>
+      <dependency>
+         <groupId>org.springframework.boot</groupId>
+         <artifactId>spring-boot-starter-mail</artifactId>
+      </dependency>
+      <dependency>
+         <groupId>org.springframework.boot</groupId>
+         <artifactId>spring-boot-starter-data-jpa</artifactId>
+      </dependency>
+      <dependency>
+         <groupId>org.springframework.boot</groupId>
+         <artifactId>spring-boot-starter-jdbc</artifactId>
+      </dependency>
+      <dependency>
+         <groupId>com.microsoft.sqlserver</groupId>
+         <artifactId>mssql-jdbc</artifactId>
+      </dependency>
+      <dependency>
+    	 <groupId>org.apache.poi</groupId>
+    	 <artifactId>poi-ooxml</artifactId>
+         <version>4.1.0</version>
+	  </dependency>
+      <dependency>
+    	 <groupId>net.sf.jmimemagic</groupId>
+    	 <artifactId>jmimemagic</artifactId>
+         <version>0.1.4</version>
+	  </dependency>
+	  <dependency>
+	  	<groupId>org.springframework</groupId>
+	  	<artifactId>spring-context-support</artifactId>
+	  </dependency>
+	  <dependency>
+		<groupId>org.quartz-scheduler</groupId>
+		<artifactId>quartz</artifactId>
+	  </dependency>
+	  <dependency>
+    	<groupId>com.cronutils</groupId>
+    	<artifactId>cron-utils</artifactId>
+    	<version>9.1.3</version>
+	  </dependency>
+	  <dependency>
+	    <groupId>net.sf.jasperreports</groupId>
+	    <artifactId>jasperreports</artifactId>
+	    <version>6.4.0</version>
+	  </dependency>
+	  <dependency>
+	    <groupId>xerces</groupId>
+	    <artifactId>xercesImpl</artifactId>
+	    <version>2.6.0</version>
+	</dependency>
+	<!-- New dependency -->
+    <dependency>
+        <groupId>net.samuelcampos</groupId>
+        <artifactId>usbdrivedetector</artifactId>
+        <version>2.2.1</version>
+    </dependency>
+    <!-- https://mvnrepository.com/artifact/commons-fileupload/commons-fileupload -->
+	<dependency>
+	    <groupId>commons-fileupload</groupId>
+	    <artifactId>commons-fileupload</artifactId>
+	    <version>1.4</version>
+	</dependency>
+    
+   </dependencies>
+   
+   <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <source>1.8</source>
+                    <target>1.8</target>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+  
+</project>

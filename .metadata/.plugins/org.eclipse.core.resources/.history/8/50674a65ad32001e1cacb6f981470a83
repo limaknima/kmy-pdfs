@@ -1,0 +1,16 @@
+package com.fms.pfc.repository.main.api;
+
+import java.util.List;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+
+import com.fms.pfc.domain.dto.main.G2LotViewDto;
+import com.fms.pfc.domain.model.main.G2LotView;
+
+public interface G2LotViewRepository extends JpaRepository<G2LotView, String> {
+
+	@Query(value = "select * from HPL_MODEL where 1=1 and 0 = ?1 or HPL_ID = ?1", nativeQuery = true)
+	List<G2LotViewDto> searchByCriteria(String lot, String hpl, String model, String year, String mth,
+				String day, String prodLn, String seq);
+}

@@ -1,0 +1,85 @@
+package com.fms.pfc.domain.model.main;
+
+import java.io.Serializable;
+import java.util.Date;
+
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.Id;
+import javax.persistence.Table;
+
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+import lombok.ToString;
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@ToString
+@EqualsAndHashCode
+@Entity
+@Table(name = "ON_DEMAND_SEARCH")
+public class OnDemandSearch implements Serializable {
+
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -1167508760128675601L;
+
+	@Id
+	@Column(name = "PFILE_ID")
+	private String fileId;
+	
+	@Column(name = "G2_LOT_NO")
+	private String g2Lot;
+
+	@Column(name = "HPL_ID")
+	private Integer hplId;
+
+	@Column(name = "FILE_NAME")
+	private String fileName;
+
+	@Column(name = "FILE_PATH")
+	private String filePath;
+
+	@Column(name = "FILE_SIZE")
+	private Integer fileSize;
+
+	@Column(name = "ALERT_TYPE")
+	private Integer alertType;
+	
+	@Column(name = "CREATOR_ID")
+	private String creatorId;
+
+	@Column(name = "CREATED_DATETIME")
+	private Date createdDatetime;
+
+	@Column(name = "MODIFIER_ID")
+	private String modifierId;
+
+	@Column(name = "MODIFIED_DATETIME")
+	private Date modifiedDatetime;
+	
+	/////////////////
+	
+	@Column(name = "YEAR")
+	private String year;
+
+	@Column(name = "MTH")
+	private String mth;
+	
+	@Column(name = "FILE_TYPE")
+	private String fileType;
+
+	@Column(name = "CRC_VALUE")
+	private Integer crcValue;
+	
+	@Column(name = "HPL_NAME")
+	private String hplName;
+	
+	@Column(name = "HPL_MODEL_NAME")
+	private String hplModelName;
+	
+}

@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+<title>PFC - Product Recipe Report</title>
+<link rel="icon" type="image/ico" th:href="@{/static/favicon.ico}">
+<link rel="stylesheet" type="text/css" th:href="@{/css/styles.css}" />
+<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/css/bootstrap-datepicker.css"/>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/js/all.min.js"></script>
+<script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/js/bootstrap-datepicker.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/js/bootstrap.bundle.min.js"></script>
+
+<style>
+.form-group.required .control-label:after {
+	content: " *";
+	color: red;
+}
+</style>
+
+</head>
+<body onload="init()" class="sb-nav-fixed">
+	<div th:replace="/header :: navBar"></div>
+	<div id="layoutSidenav">
+		<div th:replace="/header :: sideNavBar"></div>
+		<div id="layoutSidenav_content">
+			<main>
+				<div class="container-fluid">
+					<br />
+					<ol class="breadcrumb mb-4">
+						<li class="breadcrumb-item active" ><a th:href="@{/}"><i class="fa fa-home"></i></a></li>
+						<li class="breadcrumb-item active" ><a th:href="@{/menu/reportMenu}"><span th:text="#{menuReport}"></span></a></li>
+						<li class="breadcrumb-item active" >Product Recipe Report</li>
+					</ol>
+					<div class="alert alert-danger alert-dismissible" th:if=${error}>
+						<a class="close" data-dismiss="alert" aria-label="close">&times;</a>
+						<a th:utext="${error}" id="error"></a>
+					</div>
+					<div class="alert alert-success alert-dismissible" th:if=${success}>
+						<a class="close" data-dismiss="alert" aria-label="close">&times;</a>
+						<a th:utext="${success}" id="success"></a>
+					</div>
+					<div class="card">
+						<div class="card-header" id="headingOne">Product Recipe
+							Report</div>
+						<a class="card-header" hidden="true" id="formMode"
+							th:text="${mode}"></a>
+						<div class="card-body">
+							<form id="mainForm" th:action="@{/main/report/productReport}"
+								method="POST" enctype="multipart/form-data">
+								<div class="form-group row">
+									<label class="col-sm-2 col-form-label control-label">Product Recipe TS No</label>
+									<div class="row col-sm-5">
+										<label class="col-form-label">:</label>
+										<div class="col">
+											<select class="custom-select" id="prCode" name="prCode">
+												<option selected value="" >Please Select</option>
+												<option th:each="code : ${prCodeItem}"
+													th:value="${code.prCode}" th:utext="${code.prCode}"
+													th:selected="${code.prCode == prCode}">>
+												</option>
+											</select>
+										</div>
+									</div>
+								</div>
+								<div class="form-group row">
+									<label class="col-sm-2 col-form-label control-label">Product
+										Recipe Name</label>
+									<div class="row col-sm-5">
+										<label class="col-form-label">:</label>
+										<div class="col">
+											<select class="custom-select" id="prName" name="prName">
+												<option selected value="" >Please Select</option>
+												<option th:each="name : ${prNameItem}"
+													th:value="${name.prName}" th:utext="${name.prName}"
+													th:selected="${name.prName == prName}">
+												</option>
+											</select>
+										</div>
+									</div>
+								</div>
+								<div class="form-group row">
+									<label class="col-sm-2 col-form-label control-label">Other Name</label>
+									<div class="row col-sm-5">
+										<label class="col-form-label">:</label>
+										<div class="col">
+											<select class="custom-select" id="prOtherName" name="prOtherName">
+												<option selected value="" >Please Select</option>
+												<option th:each="name : ${prOtherNameItem}"
+													th:value="${name.prName}" th:utext="${name.prName}"
+													th:selected="${name.prName == prOtherName}">
+												</option>
+											</select>
+										</div>
+									</div>
+								</div>
+								<div class="form-group row">
+									<label class="col-sm-2 col-form-label control-label">Raw
+										Material Name</label>
+									<div class="row col-sm-5">
+										<label class="col-form-label">:</label>
+										<div class="col">
+											<select class="custom-select" id="rmName" name="rmName">
+												<option selected value="" >Please Select</option>
+												<option th:each="rItem : ${rmItem}"
+													th:value="${rItem.rawMatlName}" th:utext="${rItem.rawMatlName}"
+													th:selected="${rItem.rawMatlName == rmName}">
+												</option>
+											</select>
+										</div>
+									</div>
+								</div>
+								<div class="form-group row">
+									<label class="col-sm-2 col-form-label control-label">Intermediate
+										Product Name</label>
+									<div class="row col-sm-5">
+										<label class="col-form-label">:</label>
+										<div class="col">
+											<select class="custom-select" id="impName" name="impName">
+												<option selected value="" >Please Select</option>
+												<option th:each="iItem : ${imPrItem}"
+													th:value="${iItem.prName}" th:utext="${iItem.prName}"
+													th:selected="${iItem.prName == impName}">
+												</option>
+											</select>
+										</div>
+									</div>
+								</div>
+								<div class="form-group row">
+									<label class="col-sm-2 col-form-label control-label">Preview in</label>
+									<label class="col-form-label">:</label>
+									<div class="row col-sm-2 col-form-label">
+										<div class="col">
+											<input type="radio" value="1" name="previewType" id="prCodeRad"
+												th:checked="${previewType == 1}"> 
+											<label>PDF</label>
+										</div>
+									</div>
+									<div class="row col-sm-2 col-form-label">
+										<div class="col">
+											<input type="radio" value="2" name="previewType" id="prNameRad"
+												th:checked="${previewType == 2}" > 
+											<label>Excel</label>
+										</div>
+									</div>
+								</div>
+							</form>
+						</div>
+					</div>
+					<br />
+					<button class="btn btn-primary" style="width: 90px;" id="btnPrint"
+						data-toggle="modal" data-target="#confirmDialog">Preview</button>  <!-- FSGS) Azmeer 01/03/2021 - Change value from Print to Preview -->
+					<button class="btn btn-primary" style="width: 90px;" type="button"
+						id="btnCancel" onclick="onCancel()">Cancel</button>
+					<a class="btn btn-primary" style="width: 90px;" type="button"
+						id="btnReset" th:href="@{/main/report/productReport}">Reset</a>
+						<br /><br />
+					<div class="modal fade" id="confirmDialog" tabindex="-1"
+						role="dialog" aria-hidden="true">
+						<div class="modal-dialog modal-dialog-centered" role="document">
+							<div class="modal-content">
+								<div class="modal-header">
+									<h5 class="modal-title" th:text="${confirmHeader}"></h5>
+									<button type="button" class="close" data-dismiss="modal"
+										aria-label="Close">
+										<span aria-hidden="true">&times;</span>
+									</button>
+								</div>
+								<div class="modal-body" th:text="${confirmMsg}"></div>
+								<div class="modal-footer">
+									<button class="btn btn-primary" form="mainForm" type="submit"
+										value="true" name="print" id="confirmBtn">Confirm</button>
+									<button type="button" class="btn btn-secondary"
+										data-dismiss="modal">Cancel</button>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</main>
+		</div>
+	</div>
+
+	<script type="text/javascript">
+		function onCancel() {
+
+			window.location = "[[@{/menu/reportMenu}]]";
+		}
+		// Hide modal when download/save-as window pop-up
+	    $(function () {
+	        $("#confirmBtn").click(function () {
+	            $("#confirmDialog").modal("hide");
+	        });
+	    });
+	</script>
+
+	<script type="text/javascript" src="../../js/scripts.js"></script>
+
+</body>
+</html>

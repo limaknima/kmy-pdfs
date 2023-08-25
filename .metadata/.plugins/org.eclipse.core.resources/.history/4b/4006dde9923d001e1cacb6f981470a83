@@ -1,0 +1,372 @@
+package com.fms.pfc.controller.base;
+
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
+import javax.validation.Valid;
+
+import org.apache.tomcat.util.codec.binary.Base64;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.validation.BindingResult;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.context.annotation.SessionScope;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.ModelAndView;
+
+import com.fms.pfc.common.Authority;
+import com.fms.pfc.common.CommonConstants;
+import com.fms.pfc.domain.dto.MenuRoleFunctionDto;
+import com.fms.pfc.domain.dto.OrganizationDto;
+import com.fms.pfc.service.api.base.OrganizationService;
+import com.fms.pfc.service.api.base.StateService;
+import com.fms.pfc.service.api.base.TrxHisService;
+import com.fms.pfc.validation.common.CommonValidation;
+
+@Controller
+@SessionScope
+public class OrganizationController {
+	
+	private final Logger logger = LoggerFactory.getLogger( OrganizationController.class);
+	
+	private OrganizationService orgServ;	
+	private StateService stateServ;	
+	private Authority auth;	
+	private CommonValidation commonValServ;
+	private TrxHisService trxHistServ;
+
+	private final String ORG_ID_TXT = "Organization ID";
+	private final String ORG_NAME_TXT = "Organization Name";
+	private final String ORG_TYPE_TXT = "Organization Type";
+	private final String ADD_TXT = "Address";
+	private final String POSTCODE_TXT = "Postcode";
+	private final String CITY_TXT = "City";
+	private final String EMAIL_TXT = "Email";
+	private final String TEL_TXT = "Telephone";
+	private final String FAX_TXT = "Fax";
+	private final String URL_TXT = "URL";
+	private final String EFFECT_START_TXT = "Effective Start Date";
+	private final String EFFECT_END_TXT = "Effective End Date";
+	
+	private String screenMode = "";
+	private Map<String, Object> model = new HashMap<String, Object>();
+	private static final int MENU_ITEM_ID = 701;
+	private List<MenuRoleFunctionDto> mrf = new ArrayList<MenuRoleFunctionDto>();
+
+	@Autowired
+	public OrganizationController(OrganizationService orgServ, StateService stateServ, Authority auth,
+			CommonValidation commonValServ, TrxHisService trxHistServ) {
+		super();
+		this.orgServ = orgServ;
+		this.stateServ = stateServ;
+		this.auth = auth;
+		this.commonValServ = commonValServ;
+		this.trxHistServ = trxHistServ;
+	}
+
+	// Display initial screen
+	@GetMapping("/base/admin/organization/organizationList")
+	public ModelAndView getOrganizationList(HttpServletRequest request, HttpServletResponse response) {
+
+		model = auth.onPageLoad(model, request);
+		auth.isAuthUrl(request, response);
+		model.put("organizationItems", orgServ.findAll());
+		menuRoleFunction();
+
+		return new ModelAndView("/base/admin/organization/organizationList", model);
+	}
+
+	/**
+	 * 
+	 */
+	public void menuRoleFunction() {
+		this.mrf = (List<MenuRoleFunctionDto>) model.get("MRF" + MENU_ITEM_ID);
+	}
+
+	// View form
+	@RequestMapping("/base/admin/organization/organizationFormView")
+	public ModelAndView getOrganizationView(HttpServletRequest request, @RequestParam(name = "orgID") String orgID) {
+
+		model.remove("error");
+		model.remove("success");
+
+		OrganizationDto org = new OrganizationDto();
+
+		try {
+			org = orgServ.findOneById(orgID);
+		} catch (Exception e) {
+		}
+
+		trxHistServ.addTrxHistory(new Date(), "View Organization Form", request.getRemoteUser(),
+				CommonConstants.FUNCTION_TYPE_VIEW, org.getOrgaName(), CommonConstants.RECORD_TYPE_ID_ORGANISATION,
+				null);
+
+		screenMode = CommonConstants.SCREEN_MODE_VIEW;
+		model.put("mode", screenMode);
+		model.put("header", "View Organization");
+		model.put("confirmHeader", "Edit cancellation");
+		model.put("confirmMsg", "Do you want to cancel edit this record ?");
+		model.put("stateItem", stateServ.searchState(""));
+
+		DateFormat formatter = new SimpleDateFormat("dd/MM/yyy hh:mm:ss a");
+
+		try {
+			String createdInfo = "Created by " + org.getCreator() + " on " + formatter.format(org.getCreateTime());
+			model.put("createdInfo", createdInfo);
+		} catch (Exception e) {
+		}
+
+		String modifiedInfo = "";
+		try {
+			modifiedInfo = "Modified by " + org.getModifier() + " on " + formatter.format(org.getModifyTime());
+		} catch (Exception e) {
+			modifiedInfo = "Modified by --";
+		}
+		model.put("modifiedInfo", modifiedInfo);
+		model.put("organizationItem", org);
+
+		if (org.getLogo() != null) {
+			model.put("rawlogo", org.getLogo());
+			byte[] encodeBase64 = Base64.encodeBase64(org.getLogo());
+			try {
+				String base64Encoded = new String(encodeBase64, "UTF-8");
+				model.put("logo", base64Encoded);
+			} catch (UnsupportedEncodingException e) {
+				e.printStackTrace();
+			}
+		}
+
+		return new ModelAndView("/base/admin/organization/organizationForm", model);
+	}
+
+	// Load add form
+	@GetMapping("/base/admin/organization/organizationForm")
+	public ModelAndView addOrganization(HttpServletRequest request) {
+
+		screenMode = CommonConstants.SCREEN_MODE_ADD;
+		model.remove("success");
+		model.remove("error");
+		model.put("mode", screenMode);
+		model.put("stateItem", stateServ.searchState(""));
+		model.put("organizationItem", new OrganizationDto());
+		model.put("header", "Add Organization");
+		model.put("confirmHeader", "Cancel confirmation");
+		model.put("confirmMsg", "Do you want to cancel this record ?");
+
+		return new ModelAndView("/base/admin/organization/organizationForm", model);
+	}
+
+	// Save add form
+	@PostMapping("/base/admin/organization/organizationForm")
+	public ModelAndView saveOrganization(@Valid OrganizationDto org, @RequestParam("image") MultipartFile multipartFile,
+			BindingResult bindingResult, String[] check, HttpServletRequest request, HttpSession session)
+			throws IOException {
+
+		String mode = screenMode;
+
+		model.remove("error");
+		model.remove("success");
+		
+		String errorMsg = "";
+		errorMsg += commonValServ.validateMandatoryInput(org.getOrgaID(), ORG_ID_TXT);
+		errorMsg += commonValServ.validateMandatoryInput(org.getOrgaName(), ORG_NAME_TXT);
+		errorMsg += commonValServ.validateMandatoryInput(org.getOrgaType(), ORG_TYPE_TXT);
+		errorMsg += commonValServ.validateInputLength(org.getOrgaID(), 20, ORG_ID_TXT);
+		errorMsg += commonValServ.validateInputLength(org.getOrgaName(), 50, ORG_NAME_TXT);
+		errorMsg += commonValServ.validateInputLength(org.getAddress(), 250, ADD_TXT);
+		errorMsg += commonValServ.validateInputLength(org.getCity(), 100, CITY_TXT);
+		errorMsg += commonValServ.validateInputLength(org.getPostcode(), 10, POSTCODE_TXT);
+		errorMsg += commonValServ.validateInputLength(org.getEmail(), 50, EMAIL_TXT);
+		errorMsg += commonValServ.validateInputLength(org.getTel(), 50, TEL_TXT);
+		errorMsg += commonValServ.validateInputLength(org.getFax(), 50, FAX_TXT);
+		errorMsg += commonValServ.validateInputLength(org.getUrl(), 100, URL_TXT);
+		errorMsg += commonValServ.validateInputLength(org.getEffectStartStr(), 10, EFFECT_START_TXT);
+		errorMsg += commonValServ.validateInputLength(org.getEffectEndStr(), 10, EFFECT_END_TXT);
+		errorMsg += commonValServ.validateEmailFormat(org.getEmail(), EMAIL_TXT);
+		errorMsg += commonValServ.validateUrlFormat(org.getUrl(), URL_TXT);
+		errorMsg += commonValServ.validateDateFormat(org.getEffectStartStr(), EFFECT_START_TXT);
+		errorMsg += commonValServ.validateDateFormat(org.getEffectEndStr(), EFFECT_END_TXT);
+		errorMsg += commonValServ.validateDateRange(org.getEffectStartStr(), org.getEffectEndStr(), EFFECT_START_TXT, EFFECT_END_TXT);
+		
+		//20210818 - default country to MY
+		org.setCountry(CommonConstants.COUNTRY_ID_LOCAL);
+
+		if (mode.equals(CommonConstants.SCREEN_MODE_ADD)) {
+			errorMsg += commonValServ.validateUniqueOrgId(org.getOrgaID(), ORG_ID_TXT);
+
+			try {
+				if (errorMsg.length() == 0) {
+					orgServ.saveOrganization(org, multipartFile.getBytes(), request.getRemoteUser());
+
+					model.put("success", "Record added successfully.");
+
+					trxHistServ.addTrxHistory(new Date(), "Insert Organization", request.getRemoteUser(),
+							CommonConstants.FUNCTION_TYPE_INSERT, org.getOrgaName(),
+							CommonConstants.RECORD_TYPE_ID_ORGANISATION, null);
+				} else {
+					model.put("error", errorMsg);
+					model.put("organizationItem", org);
+					return new ModelAndView("/base/admin/organization/organizationForm", model);
+				}
+
+			} catch (Exception e) {
+				e.printStackTrace();
+				model.put("error", "Record failed to be added.");
+				model.put("organizationItem", org); // return back user input
+				return new ModelAndView("/base/admin/organization/organizationForm", model);
+			}
+
+		} else if (mode.equals(CommonConstants.SCREEN_MODE_VIEW)) {
+			//mode = CommonConstants.SCREEN_MODE_EDIT;
+			screenMode = CommonConstants.SCREEN_MODE_VIEW;
+			model.put("mode", screenMode);
+			model.put("header", "View Organization");
+			model.put("confirmHeader", "Edit cancellation");
+			model.put("confirmMsg", "Do you want to cancel edit this record ?");
+			model.put("stateItem", stateServ.searchState(""));
+
+			try {
+				if (errorMsg.length() == 0) {
+					
+					boolean empty = Arrays.equals(multipartFile.getBytes(),
+							new byte[(multipartFile.getBytes()).length]);
+					byte[] logo = multipartFile.getBytes();
+					if (empty)
+						logo = (byte[]) model.get("rawlogo");
+					
+					orgServ.saveOrganization(org, logo, request.getRemoteUser());
+
+					model.put("success", "Record updateded successfully.");
+					
+					trxHistServ.addTrxHistory(new Date(), "Update Organization", request.getRemoteUser(),
+							CommonConstants.FUNCTION_TYPE_UPDATE, org.getOrgaName(),
+							CommonConstants.RECORD_TYPE_ID_ORGANISATION, null);
+
+				} else {
+					model.put("updateMode", "updateForm");
+					model.put("error", errorMsg);
+					model.put("organizationItem", org);
+					return new ModelAndView("/base/admin/organization/organizationForm", model);
+				}
+
+			} catch (Exception e) {
+				e.printStackTrace();
+				model.put("error", "Record failed to be added.");
+				model.put("organizationItem", org); // return back user input
+				return new ModelAndView("/base/admin/organization/organizationForm", model);
+			}
+		}
+
+		model.put("organizationItems", orgServ.findAll());
+
+		return new ModelAndView("/base/admin/organization/organizationList", model);
+	}
+
+	// Display search results
+	@PostMapping("/base/admin/organization/organizationFormSearch")
+	public ModelAndView getSearchResult(HttpServletRequest request, @RequestParam(name = "orgID") String orgID,
+			@RequestParam(name = "orgName") String orgName, @RequestParam(name = "orgType") String orgType,
+			@RequestParam(name = "exp1") String exp1, @RequestParam(name = "exp2") String exp2, OrganizationDto org,
+			HttpSession session) {
+
+		model.remove("error");
+		model.remove("success");
+		
+		String errorMsg = "";
+		try {
+			errorMsg += commonValServ.validateInputLength(orgID, 20, ORG_ID_TXT);
+			errorMsg += commonValServ.validateInputLength(orgName, 200, ORG_NAME_TXT);
+			errorMsg += commonValServ.validateInputLength(orgType, 50, ORG_TYPE_TXT);
+
+			if (errorMsg.length() == 0) {
+				model.put("organizationItems",
+						orgServ.findByCriteria(orgID.trim(), orgName.trim(), orgType, exp1, exp2));
+				StringBuffer sb = new StringBuffer();
+				sb.append("Search Criteria: ");
+				sb.append("Organization ID=").append(orgID.isEmpty() ? "<ALL>" : orgID).append(", ");
+				sb.append("Organization Name=").append(orgName.isEmpty() ? "<ALL>" : orgName).append(", ");
+				sb.append("Organization Type=").append(orgType.isEmpty() ? "<ALL>" : orgType);
+
+				trxHistServ.addTrxHistory(new Date(), "Search Organization", request.getRemoteUser(),
+						CommonConstants.FUNCTION_TYPE_SEARCH, "Search Organization",
+						CommonConstants.RECORD_TYPE_ID_ORGANISATION, sb.toString());
+			} else {
+				model.put("error", "Failed to get record.");
+				model.put("organizationItems", orgServ.findAll());
+			}
+
+		} catch (Exception e) {
+			e.printStackTrace();
+			model.put("error", "Failed to get record.");
+			model.put("organizationItems", orgServ.findAll());
+		}
+
+		model.put("orgID", orgID);
+		model.put("orgName", orgName);
+		model.put("orgType", orgType);
+		model.put("exp1", exp1);
+		model.put("exp2", exp2);
+
+		return new ModelAndView("base/admin/organization/organizationList", model);
+	}
+
+	@RequestMapping("/base/admin/organization/organizationFormDel")
+	public ModelAndView deleteOrganizationBatch(HttpServletRequest request,
+			@RequestParam(value = "tableRow") String[] check, HttpSession session) {
+
+		model.remove("error");
+		model.remove("success");
+		try {
+			// Delete form
+			for (int i = 0; i < check.length; i++) {
+				if (checkOrgCodeUsage(check[i])) {
+					orgServ.deleteOrganization(check[i]);
+					trxHistServ.addTrxHistory(new Date(), "Delete Organization", request.getRemoteUser(),
+							CommonConstants.FUNCTION_TYPE_DELETE, check[i], CommonConstants.RECORD_TYPE_ID_ORGANISATION,
+							null);
+					model.put("success", "Record deleted successfully.");
+				} else
+					model.put("error", "Organization code is in used and it is not allow to delete from the system.");
+			}
+
+		} catch (Exception e) {
+			model.put("error", "Record failed to delete.");
+		}
+
+		model.put("organizationItems", orgServ.findAll());
+
+		return new ModelAndView(("/base/admin/organization/organizationList"), model);
+
+	}
+
+	// FSGS) Hani 2/3/2021 Add Check OrgCode Usage START
+	private Boolean checkOrgCodeUsage(String orgaID) {
+
+		String result = "";
+		result = orgServ.checkOrgCodeUsage(orgaID);
+
+		if (result != null && !result.isEmpty()) {
+			if ("0".equals(result))
+				return true;
+		}
+
+		return false;
+	}
+	// FSGS) Hani 2/3/2021 Add Check OrgCode Usage END
+}

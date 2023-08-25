@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+<title>Production File Comparison System</title>
+<link rel="icon" type="image/ico" th:href="@{/static/favicon.ico}">
+<link rel="stylesheet" type="text/css" th:href="@{/css/styles.css}" />
+<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css">
+
+<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js"></script>
+<script src='https://kit.fontawesome.com/a076d05399.js'></script>
+</head>
+<body class="bg-light background">
+	<div id="layoutAuthentication">
+		<div id="layoutAuthentication_content">
+			<main>
+				<div class="container-fluid">
+					<div class="row justify-content-center">
+						<div class="col-12 col-sm-6 col-md-3">
+							<br /> <br />
+							<div class="card-login mb-10">
+								<div class="card-header">
+									<h4 class="text-left font-weight-bolder my-1"
+										th:text="#{navLogin}"></h4>
+								</div>
+								<div class="card-body">									
+									<div id="loginBody" class="container">
+										<form action=# method="post" th:action="@{/login}">
+											<div class="form-group">
+												<label th:text="#{lblUserId}"></label> <input maxlength="20"
+													name="user_id" required placeholder="Type your user id"
+													class="form-control placeholder" type="text"
+													style="border-radius: 50px;" /> <i
+													class="fas fa-user-circle userIcon"></i>
+											</div>
+											<div class="form-group">
+												<label th:text="#{lblPwd}"></label> <input type="password"
+													required placeholder="Type your password" maxlength="10"
+													class="form-control placeholder left-addon input"
+													style="border-radius: 50px" name="password" /> <i
+													class="fas fa-lock pwIcon"></i>
+											</div>
+											<div class="form-row">
+												<div class="form-group">
+													<a th:href="@{/forgetPass}" style="margin-left: 5px;"
+														th:text="#{navForgetPwd}"></a>
+												</div>
+											</div>
+
+											<div class="form-row">
+												<button type="submit" class="btn btn-block btn-primary"
+													th:text="#{btnLogin}"></button>
+											</div>
+											<br />
+											<div th:if="${param.error}"
+												class="alert alert-danger alert-dismissible">
+												<a class="close" data-dismiss="alert" aria-label="close">&times;</a>[[${session.SPRING_SECURITY_LAST_EXCEPTION.message}]]
+											</div>
+											<div th:if="${param.logout}"
+												class="alert alert-success alert-dismissible">
+												<a class="close" data-dismiss="alert" aria-label="close">&times;</a>
+												<span th:text="#{msgLoggedOut}"></span>
+											</div>
+										</form>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</main>
+		</div>
+	</div>
+</body>
+</html>

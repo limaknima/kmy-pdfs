@@ -1,0 +1,839 @@
+package com.fms.pfc.controller.main;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Objects;
+import java.util.stream.Collectors;
+
+import javax.annotation.PreDestroy;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
+import javax.validation.Valid;
+
+import org.apache.commons.fileupload.FileItem;
+import org.apache.commons.fileupload.disk.DiskFileItem;
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.MessageSource;
+import org.springframework.stereotype.Controller;
+import org.springframework.validation.BindingResult;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestPart;
+import org.springframework.web.context.annotation.SessionScope;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.multipart.commons.CommonsMultipartFile;
+import org.springframework.web.servlet.ModelAndView;
+
+import com.fms.pfc.common.Authority;
+import com.fms.pfc.common.CommonConstants;
+import com.fms.pfc.common.CommonUtil;
+import com.fms.pfc.domain.dto.main.FileTypeSzDto;
+import com.fms.pfc.domain.dto.main.ProdFileDto;
+import com.fms.pfc.domain.dto.main.UsbConfDto;
+import com.fms.pfc.domain.model.Usr;
+import com.fms.pfc.domain.model.main.ProdFileSearch;
+import com.fms.pfc.service.api.base.TrxHisService;
+import com.fms.pfc.service.api.main.HplService;
+import com.fms.pfc.service.api.main.ProdFileService;
+import com.fms.pfc.service.api.main.UsbConfService;
+import com.fms.pfc.validation.common.CommonValidation;
+
+import lombok.Data;
+import net.samuelcampos.usbdrivedetector.USBDeviceDetectorManager;
+import net.samuelcampos.usbdrivedetector.USBStorageDevice;
+
+@Controller
+@SessionScope
+public class ProdFileController {
+	private static final Logger logger = LoggerFactory.getLogger(ProdFileController.class);
+
+	private Authority auth;
+	private CommonValidation commonValServ;
+	private MessageSource msgSource;
+	private ProdFileService prodFileServ;
+	private TrxHisService trxHistServ;
+	private HplService hplServ;
+	private UsbConfService usbConfServ;
+	private UsbDetector det;
+
+	private Map<String, Object> model = new HashMap<String, Object>();
+	private String screenMode = "";
+
+	private static String HPL_LBL = "";
+	private static String MODEL_LBL = "";
+	private static String YEAR_LBL = "";
+	private static String MONTH_LBL = "";
+	private static String DAY_LBL = "";
+	private static String PROD_LN_LBL = "";
+	private static String FILE_NAME_LBL = "";
+	private static String FILE_PATH_LBL = "";
+	private static String G2_LOT_LBL = "";
+	private static String MODULE_NAME = "";
+	private static int YEAR_COUNT = 20;
+
+	@Autowired
+	public ProdFileController(Authority auth, CommonValidation commonValServ, MessageSource msgSource,
+			ProdFileService prodFileServ, TrxHisService trxHistServ, HplService hplServ, UsbConfService usbConfServ) {
+		super();
+		this.auth = auth;
+		this.commonValServ = commonValServ;
+		this.msgSource = msgSource;
+		this.prodFileServ = prodFileServ;
+		this.trxHistServ = trxHistServ;
+		this.hplServ = hplServ;
+		this.usbConfServ = usbConfServ;
+
+		getAllLabels();
+		det = new UsbDetector();
+	}
+
+	/**
+	 * Display initial screen
+	 * 
+	 * @param request
+	 * @param response
+	 * @return
+	 */
+	@GetMapping("/main/pfc/prodFileList")
+	public ModelAndView initListing(HttpServletRequest request, HttpServletResponse response) {
+
+		removeAlert(model);
+		model = auth.onPageLoad(model, request);
+		auth.isAuthUrl(request, response);
+		model.put("prodFileAllItems", prodFileServ.searchByCriteria(0, 0, "", "", "", "", "", ""));
+		model.put("searchHplItems", hplServ.searchByCriteria("", "", "", ""));
+		model.put("searchHplModelItems", prodFileServ.findHplModelSelectItems(0));
+		model.put("searchYearItems", CommonUtil.yearDropdownItems(YEAR_COUNT));
+		model.put("searchMonthItems", CommonUtil.monthDropdownItems());
+		model.put("searchDayItems", CommonUtil.dayDropdownItems());
+		model.put("pathItems", CommonUtil.dayDropdownItems());
+		model.put("btnEdit", true);
+		model.put("btnSaveSts", false);
+		model.put("btnAction", false);
+		model.put("btnSave", "Save");
+
+		return new ModelAndView("/main/pfc/prodFileList", model);
+	}
+
+	/**
+	 * View form
+	 * 
+	 * @param request
+	 * @param ltContId
+	 * @return
+	 */
+	@RequestMapping("/main/pfc/prodFileFormView")
+	public ModelAndView viewForm(HttpServletRequest request, @RequestParam(name = "pkPfileId") Integer pkPfileId) {
+
+		removeAlert(model);
+
+		ProdFileDto dto = prodFileServ.findDtoById(pkPfileId);
+		trxHistServ.addTrxHistory(new Date(), "View " + MODULE_NAME, request.getRemoteUser(),
+				CommonConstants.FUNCTION_TYPE_VIEW, dto.getPkPfileId().toString(),
+				CommonConstants.RECORD_TYPE_ID_PROD_FILE, null);
+
+		// Set mode
+		screenMode = CommonConstants.SCREEN_MODE_VIEW;
+		model.put("mode", screenMode);
+		model.put("btnSaveSts", true);
+		model.put("btnEdit", false);
+		model.put("editDiv", false);
+
+		// Set form header
+		model.put("header", "View " + MODULE_NAME);
+
+		// Set confirmation message
+		model.put("confirmHeader", "Edit cancellation");
+		model.put("confirmMsg", "Do you want to cancel Edit this record ?");
+
+		// Put model to HTML
+		if (dto != null) {
+
+			model.put("pkPfileId", dto.getPkPfileId());
+			model.put("prodFileItem", dto);
+			model.put("prodFileItemCurrItem", dto);
+			model.put("hplModelId2Temp", dto.getFkHplModelId());
+
+			model.put("hplItems", hplServ.searchByCriteria("", "", "", ""));
+			model.put("hplModelItems", prodFileServ.findHplModelSelectItems(0));
+			model.put("yearItems", CommonUtil.yearDropdownItems(YEAR_COUNT));
+			model.put("monthItems", CommonUtil.monthDropdownItems());
+
+			model.put("createdUser", dto.getCreatorId());
+			model.put("modifiedUser", dto.getModifierId());
+
+			SimpleDateFormat formatter = new SimpleDateFormat("dd/MM/yyy hh:mm:ss a");
+			try {
+				String createdInfo = "Created by " + dto.getCreatorId() + " on "
+						+ formatter.format(dto.getCreatedDatetime());
+				model.put("createdInfo", createdInfo);
+			} catch (Exception e) {
+			}
+
+			String modifiedInfo = "";
+			try {
+				modifiedInfo = "Modified by " + dto.getModifierId() + " on "
+						+ formatter.format(dto.getModifiedDatetime());
+			} catch (Exception e) {
+				modifiedInfo = "Modified by --";
+			}
+			model.put("modifiedInfo", modifiedInfo);
+		}
+
+		return new ModelAndView("/main/pfc/prodFileForm", model);
+	}
+
+	/**
+	 * Load add form
+	 * 
+	 * @param request
+	 * @return
+	 * @throws IOException
+	 */
+	@GetMapping("/main/pfc/prodFileForm")
+	public ModelAndView loadNewForm(HttpServletRequest request) throws IOException {
+		// Get USB info if any
+		getUSBInfo();
+
+		removeAlert(model);
+
+		// Set mode
+		screenMode = CommonConstants.SCREEN_MODE_ADD;
+		model.put("mode", screenMode);
+
+		// Set fields
+		model.put("prodFileItem", new ProdFileDto());
+		model.put("hplItems", hplServ.searchByCriteria("", "", "", ""));
+		model.put("hplModelItems", prodFileServ.findHplModelSelectItems(0));
+		model.put("yearItems", CommonUtil.yearDropdownItems(YEAR_COUNT));
+		model.put("monthItems", CommonUtil.monthDropdownItems());
+
+		// Set form header
+		model.put("header", "Add " + MODULE_NAME);
+		// Set confirmation message
+		model.put("confirmHeader", "Cancel confirmation");
+		model.put("confirmMsg", "Do you want to cancel this record ?");
+
+		model.put("editDiv", true);
+
+		return new ModelAndView("/main/pfc/prodFileForm", model);
+	}
+
+	/**
+	 * Save form
+	 * 
+	 * @param dto
+	 * @param request
+	 * @param bindingResult
+	 * @param session
+	 * @return
+	 * @throws Exception
+	 */
+	@PostMapping(value = "/main/pfc/prodFileFormSave", params = "action=save")
+	public ModelAndView saveForm(@Valid ProdFileDto dto,
+			@RequestPart(name = "fileContent") MultipartFile addModeFileContent,
+			@RequestPart(name = "newFileContent") MultipartFile editModeFileContent,
+			@RequestParam(name = "hplModelId2", required = false) Integer hplModelId2, 
+			@RequestParam(name = "fileContentName", required = false) String fileContentName,
+			@RequestParam(name = "newFileContentName", required = false) String newFileContentName,
+			HttpServletRequest request,
+			BindingResult bindingResult, HttpSession session) throws Exception {
+
+		removeAlert(model);
+		String mode = screenMode;
+		MultipartFile finalFileContent = null;
+		boolean editFileUpdate = false;
+
+		model.put("prodFileItem", dto);
+
+		if (StringUtils.equals(mode, CommonConstants.SCREEN_MODE_ADD)) {
+			finalFileContent = addModeFileContent;
+			if (Objects.isNull(finalFileContent) || finalFileContent.getSize() == 0) {
+				finalFileContent = (MultipartFile) model.get("fileContentTemp");
+				logger.debug("saveForm() add mode, editFileUpdate={}", editFileUpdate);
+			}
+
+		} else if (StringUtils.equals(mode, CommonConstants.SCREEN_MODE_EDIT)) {
+			if (Objects.nonNull(editModeFileContent)) {
+				finalFileContent = editModeFileContent;
+				editFileUpdate = true;
+				logger.debug("saveForm() edit mode, editFileUpdate={}", editFileUpdate);
+			}
+		}
+		
+		// If finalFileContent still null, suspect come from usb drive
+		finalFileContent = setMultipartfileIfFromUSB(fileContentName, newFileContentName, mode, finalFileContent);
+
+		String errorMsg = validateForm(dto, finalFileContent, mode, request.getRemoteUser());
+
+		if (errorMsg.length() != 0) {
+			model.put("error", errorMsg);
+			model.put("prodFileItem", dto);
+			model.put("hplModelId2Temp", hplModelId2);
+
+			if (mode.equals(CommonConstants.SCREEN_MODE_EDIT)) {
+				screenMode = CommonConstants.SCREEN_MODE_EDIT;
+				// Set mode to HTML header
+				model.put("mode", screenMode);
+				model.put("header", "Edit " + MODULE_NAME);
+				// Set confirmation message
+				model.put("confirmHeader", "Edit cancellation");
+				model.put("confirmMsg", "Do you want to cancel edit this record ?");
+			}
+			return new ModelAndView("/main/pfc/prodFileForm", model);
+		}
+
+		// set file details
+		if (Objects.nonNull(finalFileContent)) {
+			logger.debug("saveForm() set file details, editFileUpdate={}, mode={}", editFileUpdate, mode);
+			dto.setFileName(finalFileContent.getOriginalFilename());
+//			FileUtils.checksumCRC32(finalFileContent.transferTo(new File("")));long fileSize = fileContent.getSize();
+			dto.setFileType(finalFileContent.getContentType());
+			dto.setFileSize(finalFileContent.getSize());
+		}
+		dto.setFkHplModelId(hplModelId2);
+		// ----
+
+		if (mode.equals(CommonConstants.SCREEN_MODE_ADD)) {
+
+			try {
+				// If no error proceed to save add form
+				// Add form
+				Integer result = prodFileServ.save(dto, request.getRemoteUser(), editFileUpdate, finalFileContent);
+				
+				// Print add success
+				model.put("success", "Record added successfully.");
+				model.remove("error");
+				model.put("prodFileItem", new ProdFileDto());
+
+				trxHistServ.addTrxHistory(new Date(), "Insert " + MODULE_NAME, request.getRemoteUser(),
+						CommonConstants.FUNCTION_TYPE_INSERT, (null != result && result != 0) ? result.toString() : "",
+						CommonConstants.RECORD_TYPE_ID_PROD_FILE, null);
+
+			} catch (Exception e) {
+				// Print DB exception
+				e.printStackTrace();
+				model.put("error", "Record failed to be added.");
+				model.remove("success");
+			}
+
+		} else if (mode.equals(CommonConstants.SCREEN_MODE_EDIT)) {
+			// Set mode to HTML header
+			screenMode = CommonConstants.SCREEN_MODE_VIEW;
+			model.put("mode", screenMode);
+			model.put("header", MODULE_NAME);
+
+			try {
+				// Update form
+				Integer result = prodFileServ.save(dto, request.getRemoteUser(), editFileUpdate, finalFileContent);
+				
+				// Print update success
+				model.put("success", "Record updated successfully.");
+				model.remove("error");
+
+				trxHistServ.addTrxHistory(new Date(), "Update " + MODULE_NAME, request.getRemoteUser(),
+						CommonConstants.FUNCTION_TYPE_UPDATE, (null != result && result != 0) ? result.toString() : "",
+						CommonConstants.RECORD_TYPE_ID_PROD_FILE, null);
+
+			} catch (Exception e) {
+				// Print DB exception
+				e.printStackTrace();
+				model.put("error", "Record failed to update.");
+				model.remove("success");
+			}
+		}
+
+		model.put("btnEdit", false);
+		model.put("prodFileAllItems", prodFileServ.searchByCriteria(0, 0, "", "", "", "", "", ""));
+
+		return new ModelAndView("/main/pfc/prodFileList", model);
+	}
+	
+	@PostMapping(value = "/main/pfc/prodFileFormSave", params = "action=edit")
+	public ModelAndView editForm(HttpServletRequest request, HttpSession session) {
+		
+		getUSBInfo();
+
+		screenMode = CommonConstants.SCREEN_MODE_EDIT;
+		model.put("mode", screenMode);
+		model.put("btnEdit", true);
+		model.put("btnSaveSts", false);
+		model.put("btnSave", "Save");
+		model.put("header", "Edit " + MODULE_NAME);
+		model.remove("success");
+		model.remove("error");
+
+		return new ModelAndView("/main/pfc/prodFileForm", model);
+	}
+
+	/**
+	 * Delete item
+	 * 
+	 * @param request
+	 * @param check
+	 * @param session
+	 * @return
+	 */
+	@RequestMapping("/main/pfc/prodFileFormDel")
+	public ModelAndView deleteBatch(HttpServletRequest request, @RequestParam(value = "tableRow") String[] check,
+			HttpSession session) {
+
+		model.remove("error");
+		model.remove("success");
+		try {
+			// Delete form
+			for (int i = 0; i < check.length; i++) {
+
+//				if (1==1) {
+//					// Print delete failed
+//					model.put("error", "Letter Content is in used and it is not allow to delete from the system.");
+//				} else {
+				prodFileServ.delete(Integer.parseInt(check[i]));
+				// Print delete success`
+				model.put("success", msgSource.getMessage("msgSuccessDelete", new Object[] {}, Locale.getDefault()));
+
+				trxHistServ.addTrxHistory(new Date(), "Delete " + MODULE_NAME, request.getRemoteUser(),
+						CommonConstants.FUNCTION_TYPE_DELETE, check[i], CommonConstants.RECORD_TYPE_ID_PROD_FILE, null);
+//				}
+			}
+
+		} catch (Exception e) {
+			// Print DB exception
+			model.put("error", msgSource.getMessage("msgFailDelete", new Object[] {}, Locale.getDefault()));
+			e.printStackTrace();
+		}
+
+		model.put("prodFileAllItems", prodFileServ.searchByCriteria(0, 0, "", "", "", "", "", ""));
+
+		return new ModelAndView(("/main/pfc/prodFileList"), model);
+	}
+
+	/**
+	 * Do search
+	 * 
+	 * @param prName
+	 * @param ltType
+	 * @param prNameExp
+	 * @param session
+	 * @return
+	 */
+	@PostMapping("/main/pfc/prodFileSearch")
+	public ModelAndView search(HttpServletRequest request, @RequestParam(name = "searchHplId") Integer searchHplId,
+			@RequestParam(name = "searchHplModelId") Integer searchHplModelId,
+			@RequestParam(name = "searchYear") String searchYear, @RequestParam(name = "searchMth") String searchMth,
+			@RequestParam(name = "searchG2Lot") String searchG2Lot,
+			@RequestParam(name = "searchG2LotExp") String searchG2LotExp,
+			@RequestParam(name = "searchPath") String searchPath,
+			@RequestParam(name = "searchPathExp") String searchPathExp, HttpSession session) {
+
+		boolean hasError = false;
+
+		removeAlert(model);
+		String errorMsg = "";
+
+		model.put("searchHplId", searchHplId);
+		model.put("searchHplModelId", searchHplModelId);
+		model.put("searchYear", searchYear);
+		model.put("searchMth", searchMth);
+		model.put("searchG2Lot", searchG2Lot);
+		model.put("searchG2LotExp", searchG2LotExp);
+		model.put("searchPath", searchPath);
+		model.put("searchPathExp", searchPathExp);
+
+		try {
+			if (errorMsg.length() == 0) {
+
+				List<ProdFileSearch> items = prodFileServ.searchByCriteria(searchHplId, searchHplModelId, searchYear,
+						searchMth, searchG2Lot, searchG2LotExp, searchPath, searchPathExp);
+				model.put("prodFileAllItems", items);
+
+				StringBuffer sb = new StringBuffer();
+				sb.append("Search Criteria: ");
+				sb.append(HPL_LBL).append("=").append((searchHplId == null || searchHplId == 0) ? "<ALL>"
+						: hplServ.findDtoById(searchHplId).getHplName()).append(", ");
+				sb.append(YEAR_LBL).append("=").append(searchYear.isEmpty() ? "<ALL>" : searchYear).append(", ");
+				sb.append(MONTH_LBL).append("=").append(searchMth.isEmpty() ? "<ALL>" : searchMth).append(", ");
+				sb.append(G2_LOT_LBL).append("=").append(searchG2Lot.isEmpty() ? "<ALL>" : searchG2Lot).append(", ");
+				sb.append(FILE_PATH_LBL).append("=").append(searchPath.isEmpty() ? "<ALL>" : searchPath);
+
+				trxHistServ.addTrxHistory(new Date(), "Search " + MODULE_NAME, request.getRemoteUser(),
+						CommonConstants.FUNCTION_TYPE_SEARCH, "Search " + MODULE_NAME,
+						CommonConstants.RECORD_TYPE_ID_PROD_FILE, sb.toString());
+
+			} else {
+				hasError = true;
+			}
+
+		} catch (Exception e) {
+			e.printStackTrace();
+			hasError = true;
+			errorMsg += "Failed to get record.";
+			errorMsg += e.toString();
+
+		} finally {
+			if (hasError == true) {
+				model.put("error", errorMsg);
+				// return back user input
+				model.put("prodFileAllItems", prodFileServ.searchByCriteria(0, 0, "", "", "", "", "", ""));
+			}
+		}
+
+		return new ModelAndView("/main/pfc/prodFileList", model);
+	}
+
+	@PreDestroy
+	public void destroy() throws IOException {
+		if (Objects.nonNull(det.getUsbDetMan())) {
+			det.destroy();
+		}
+	}
+	
+	/**
+	 * Construct error message based on validation result
+	 * 
+	 * @param dto
+	 * @return
+	 */
+	private String validateForm(ProdFileDto dto, MultipartFile fileContent, String mode, String userId) {
+		String errorMsg = "";
+		if (StringUtils.equals(mode, CommonConstants.SCREEN_MODE_ADD)) {
+			if (Objects.isNull(fileContent) || fileContent.getOriginalFilename().equals("")) {
+				errorMsg += "Upload file is mandatory.<br />";
+			}
+		}
+
+		if (Objects.nonNull(fileContent)) {
+			errorMsg += commonValServ.validateFileSize(fileContent.getSize(), FILE_NAME_LBL);
+		}
+
+		errorMsg += commonValServ.validateMandatoryInput(dto.getFkHplId() == null ? "" : dto.getFkHplId().toString(),
+				HPL_LBL);
+		errorMsg += commonValServ.validateMandatoryInput(dto.getProdLn(), PROD_LN_LBL);
+		errorMsg += commonValServ.validateMandatoryInput(dto.getFilePath(), FILE_PATH_LBL);
+		errorMsg += commonValServ.validateMandatoryInput(dto.getYear(), YEAR_LBL);
+
+		/*
+		 * Rules: 
+		 * 1. File must be from the registered USB which has been assigned to a
+		 * particular user (Refer Program ID I004). 
+		 * >> If selected folder based on HPL,Year, Prod Ln not match to selected file in USB - system will warn user and
+		 * prevent from upload 
+		 * 2. File will be validated based on File Size/Type
+		 * configuration (Refer Program ID I003). 
+		 * >> File below minimum size - system
+		 * wont proceed upload 
+		 * >> File exceed maximum size - system will proceed upload
+		 * and warn the user 
+		 * 3. Path field dropdown will be based on HPL selection (path
+		 * registered - Refer to Program ID I001)
+		 */
+		if (StringUtils.isEmpty(errorMsg) && (Objects.nonNull(fileContent))) {
+			String fileName = fileContent.getOriginalFilename();
+			long fileSize = fileContent.getSize();
+			String fileType = fileContent.getContentType();
+			String fileExt = FilenameUtils.getExtension(fileName);
+			Path path = Paths.get(fileName);
+
+			logger.debug("validateForm() currentUser={}, fileName={}, fileSize={}, fullPath={}, fileExt={}",
+					userId, fileName, FileUtils.byteCountToDisplaySize(fileSize), path.toAbsolutePath(), fileExt);
+			
+			// 1
+			errorMsg += validateUsbUsrConf(dto, userId, errorMsg);
+			// 2
+			errorMsg += validateFileTypeAndSize(dto, userId, errorMsg, fileExt, fileSize);
+		}
+
+//
+//		if (screenMode == CommonConstants.SCREEN_MODE_ADD) {
+//			errorMsg += validateDuplicateFlavStatus(dto.getLtName());
+//		} else {
+//
+//			if (null != model.get("letterTypeCurrItem")) {
+//				LetterTypeDto currDto = (LetterTypeDto) model.get("letterTypeCurrItem");
+//
+//				logger.debug("validateForm cur name=" + currDto.getLtName() + "; new name=" + dto.getLtName());
+//				if (!StringUtils.equalsIgnoreCase(currDto.getLtName(), dto.getLtName())) {
+//					// check if current name value modified
+//					errorMsg += validateDuplicateFlavStatus(dto.getLtName());
+//
+//				}
+//			}
+//		}
+
+		return errorMsg;
+	}
+
+	/**
+	 * Validate file type and size
+	 * @param dto
+	 * @param userId
+	 * @param errorMsg
+	 * @return
+	 */
+	private String validateFileTypeAndSize(ProdFileDto dto, String userId, String errorMsg, String fileType, long fileSize) {
+		List<FileTypeSzDto> fstList = prodFileServ.findFileTypeSzList(dto.getFkHplId());
+		if(!fstList.isEmpty()) {
+			// TODO: need to loop as hpl can have multiple settings
+			FileTypeSzDto fstDto = fstList.get(0);
+			if(!StringUtils.equalsIgnoreCase(fileType, fstDto.getFileType())) {
+				errorMsg +="File type/extension="+fileType+" for the file is not same as configured="+fstDto.getFileType();
+			}
+		} else {
+			errorMsg +="No file type and size configuration found for this HPL="+dto.getFkHplId();
+		}
+		return errorMsg;
+	}
+
+	/**
+	 * Validate USB-USR configuration
+	 * @param dto
+	 * @param userId
+	 * @param errorMsg
+	 * @return
+	 */
+	private String validateUsbUsrConf(ProdFileDto dto, String userId, String errorMsg) {
+		if (!det.getUsbDevices().isEmpty()) {
+			USBStorageDevice dev = det.getOneDeviceInfo();
+			// check conf from db
+			List<UsbConfDto> usbConfList = dev != null
+					? prodFileServ.findUsbConf(dev.getDeviceName(), dev.getUuid())
+					: new ArrayList<UsbConfDto>();
+
+			if (!usbConfList.isEmpty()) {
+				// check if match hpl and prod ln
+				UsbConfDto usbConf = usbConfList.get(0);
+				if (usbConf.getFkHplId() != dto.getFkHplId()
+						|| !StringUtils.equalsIgnoreCase(usbConf.getProdLn(), dto.getProdLn())) {
+					errorMsg += "No configuration found for USB=" + usbConf.getName() + ", Serial No="
+							+ usbConf.getSerialNo() + ", HPL=" + usbConf.getFkHplId() + ",Prod Ln="
+							+ usbConf.getProdLn();
+				}
+				//check if current user is permitted
+				List<Usr> usrList = prodFileServ.findUsbUsrByParent(usbConf.getPkUconfId());
+				if(!usrList.isEmpty()) {
+					usrList = usrList.stream().filter(arg0 -> arg0.getUserId() == userId).collect(Collectors.toList());
+					if(usrList.isEmpty()) {
+						errorMsg += "Current user "+userId+" is not configured to be an uploader from this device.";							
+					}
+				} else {
+					// user list empty
+					errorMsg += "No user is configured to be an uploader from this device.";	
+				}
+			} else {
+				// no conf found
+				errorMsg += "No configuration found for USB=" + dev.getDeviceName() + ", Serial No="
+						+ dev.getUuid();
+			}
+
+		} else {
+			// if no usb devices detected
+		}
+		return errorMsg;
+	}
+	
+	/**
+	 * Convert file to multipartfile
+	 * @param fileName
+	 * @return
+	 * @throws IOException
+	 */
+	private MultipartFile convertFileToMultipartFile(String fileName) throws IOException {
+		logger.debug("convertFileToMultipartFile() fileName={}", fileName);
+		File file = new File(fileName);
+		FileItem fileItem = new DiskFileItem("mainFile", Files.probeContentType(file.toPath()), false, file.getName(),
+				(int) file.length(), file.getParentFile());
+
+		try {
+			InputStream input = new FileInputStream(file);
+			OutputStream os = fileItem.getOutputStream();
+			IOUtils.copy(input, os);
+			// Or faster..
+			// IOUtils.copy(new FileInputStream(file), fileItem.getOutputStream());
+		} catch (IOException ex) {
+			// do something.
+		}
+
+		MultipartFile multipartFile = new CommonsMultipartFile(fileItem);
+		return multipartFile;
+	}
+
+	private Map<String, Object> removeAlert(Map<String, Object> model) {
+		model.remove("error");
+		model.remove("success");
+
+		return model;
+	}
+
+	private void getAllLabels() {
+		HPL_LBL = msgSource.getMessage("lblHpl", null, Locale.getDefault());
+		MODEL_LBL = msgSource.getMessage("lblHplModel", null, Locale.getDefault());
+		YEAR_LBL = msgSource.getMessage("lblYear", null, Locale.getDefault());
+		MONTH_LBL = msgSource.getMessage("lblMonth", null, Locale.getDefault());
+		DAY_LBL = msgSource.getMessage("lblDay", null, Locale.getDefault());
+		PROD_LN_LBL = msgSource.getMessage("lblProdLn", null, Locale.getDefault());
+		FILE_NAME_LBL = msgSource.getMessage("lblFileName", null, Locale.getDefault());
+		FILE_PATH_LBL = msgSource.getMessage("lblFilePath", null, Locale.getDefault());
+		G2_LOT_LBL = msgSource.getMessage("lblG2LotNo", null, Locale.getDefault());
+		MODULE_NAME = msgSource.getMessage("menuProdFile", null, Locale.getDefault());
+	}
+	
+	/**
+	 * Get USB information
+	 */
+	private void getUSBInfo() {
+		if (Objects.isNull(det.getUsbDetMan()))
+			det.init();
+
+		// det.getUsbDevices().forEach(System.out::println);
+		if (det.getUsbDevices().isEmpty()) {
+			model.put("info", "No usb connected!");
+		} else {
+			String usbDetails = "USB connected. <br/>";
+			for (USBStorageDevice usb : det.getUsbDevices()) {
+				usbDetails = usbDetails + "Drive :" + usb.getDevice() + ", Serial No :" + usb.getUuid() + ", USB Name :"
+						+ usb.getDeviceName() + ".<br/>";
+
+				Path p = Paths.get(usb.getDevice());
+				if (Files.notExists(p))
+					logger.debug("path not exists {}", p.toAbsolutePath());
+				else
+					logger.debug("path exists {} ", p.toAbsolutePath());
+			}
+			model.put("info", usbDetails);			
+			
+		}
+	}
+	
+	/**
+	 * Generate MultipartFile from USB
+	 * @param fileContentName
+	 * @param newFileContentName
+	 * @param mode
+	 * @param finalFileContent
+	 * @return
+	 * @throws IOException
+	 */
+	private MultipartFile setMultipartfileIfFromUSB(String fileContentName, String newFileContentName, String mode,
+			MultipartFile finalFileContent) throws IOException {
+		// get device/USB path
+		String path = det.getOneDeviceInfo().getDevice();
+		logger.debug(
+				"setMultipartfileIfFromUSB() finalFileContent null, fileContentName={}, newFileContentName={}, mode={}, path={}",
+				fileContentName, newFileContentName, mode, path);
+		
+		if (Objects.isNull(finalFileContent) || StringUtils.isEmpty(finalFileContent.getOriginalFilename())) {
+
+			if (StringUtils.equals(mode, CommonConstants.SCREEN_MODE_ADD)) {
+				fileContentName = path + fileContentName;
+				finalFileContent = convertFileToMultipartFile(fileContentName);
+
+			} else if (StringUtils.equals(mode, CommonConstants.SCREEN_MODE_EDIT)) {
+				// in edit mode, user might not want to update the file object
+				if(StringUtils.isNotEmpty(newFileContentName)) {
+					newFileContentName = path + newFileContentName;
+					finalFileContent = convertFileToMultipartFile(newFileContentName);					
+				}
+
+			}
+		}
+		return finalFileContent;
+	}
+
+	@Data
+	public class UsbDetector {
+		private USBDeviceDetectorManager usbDetMan;
+		private List<USBStorageDevice> usbList = new ArrayList<USBStorageDevice>();
+
+		public UsbDetector() {
+
+		}
+
+		/**
+		 * Initialize manager
+		 */
+		public void init() {
+			usbDetMan = new USBDeviceDetectorManager();
+		}
+
+		/**
+		 * Display all the USB storage devices currently connected
+		 * 
+		 * @return
+		 */
+		public List<USBStorageDevice> getUsbDevices() {
+			usbList = usbDetMan.getRemovableDevices();
+			return usbList;
+		}
+
+		/**
+		 * Add an event listener to be notified when an USB storage device is connected
+		 * or removed
+		 */
+		public void addListener() {
+			usbDetMan.addDriveListener(System.out::println);
+		}
+
+		/**
+		 * Get one device info
+		 * @return
+		 */
+		public USBStorageDevice getOneDeviceInfo() {
+			if (!usbList.isEmpty()) {
+				return usbList.get(0);
+			}
+
+			return null;
+		}
+		
+		/**
+		 * Get list device info
+		 * @param name
+		 * @param serialNo
+		 * @return
+		 */
+		public List<USBStorageDevice> getDevicesInfo(String name, String serialNo) {
+			List<USBStorageDevice> filteredList = usbList;
+			if (!filteredList.isEmpty()) {
+				filteredList = filteredList.stream()
+						.filter(arg0 -> (StringUtils.equalsIgnoreCase(arg0.getDeviceName(), name))
+								&& (StringUtils.equalsIgnoreCase(arg0.getUuid(), serialNo)))
+						.collect(Collectors.toList());
+			}
+			return filteredList;
+		}
+
+		@PreDestroy
+		public void destroy() throws IOException {
+			/*
+			 * Once you invoke addDriveListener, your application keep running because it
+			 * will internally create an ScheduledExecutorService. To finish your
+			 * application, just invoke the close method;
+			 */
+			// Shutdown an initialized USBDeviceDetectorManager
+			usbDetMan.close();
+		}
+	}
+
+}

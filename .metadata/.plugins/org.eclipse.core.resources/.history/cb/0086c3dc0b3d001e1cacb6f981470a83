@@ -1,0 +1,15 @@
+package com.fms.pfc.domain.model;
+
+import java.io.Serializable;
+
+import javax.persistence.Embeddable;
+
+@Embeddable
+public class MenuRoleFunctionPK implements Serializable {
+
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 6510947046849201001L;
+
+}

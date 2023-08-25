@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+<title>PFC - View User Group</title>
+<link rel="icon" type="image/ico" th:href="@{/static/favicon.ico}">
+<link rel="stylesheet" type="text/css" th:href="@{/css/styles.css}" />
+<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css">
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/js/all.min.js"></script>
+<script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/js/bootstrap.bundle.min.js"></script>
+</head>
+
+<body class="sb-nav-fixed">
+	<div th:replace="/header :: navBar"></div>
+	<div id="layoutSidenav">
+		<div th:replace="/header :: sideNavBar"></div>
+		<div id="layoutSidenav_content">
+			<main>
+				<div class="container-fluid" id="content">
+					<br />
+					<ol class="breadcrumb mb-4">
+						<li class="breadcrumb-item active" ><a th:href="@{/}"><i class="fa fa-home"></i></a></li>
+						<li class="breadcrumb-item active" ><a th:href="@{/menu/adminMenu}"><span th:text="#{menuAdmin}"></span></a></li>
+						<li class="breadcrumb-item active" >User Group</li>
+					</ol>
+					<form>
+						<div class="card">
+							<div class="card-header">View User Group Form</div>
+							<div class="card-body">
+
+								<div class="form-group row">
+									<label class="col-sm-3 col-form-label">Organization</label> <label
+										class="col-form-label">:</label>
+									<div class="row col-sm-6">
+										<div class="col">
+											<p class="form-control-plaintext" id="orgName"
+												th:text="${orgName}"></p>
+										</div>
+									</div>
+								</div>
+
+								<div class="form-group row">
+									<label class="col-sm-3 col-form-label">Group ID</label> <label
+										class="col-form-label">:</label>
+									<div class="row col-sm-6">
+										<div class="col">
+											<p class="form-control-plaintext" id="groupId"
+												th:text="${groupId}"></p>
+										</div>
+									</div>
+								</div>
+
+								<div class="form-group row">
+									<label class="col-sm-3 col-form-label">Group Name</label> <label
+										class="col-form-label">:</label>
+									<div class="row col-sm-6">
+										<div class="col">
+											<p class="form-control-plaintext" id="groupName"
+												th:text="${groupName}"></p>
+										</div>
+									</div>
+								</div>
+
+								<div class="form-group row">
+									<label class="col-sm-3 col-form-label">Description</label> <label
+										class="col-form-label">:</label>
+									<div class="row col-sm-6">
+										<div class="col">
+											<p class="form-control-plaintext" id="description"
+												th:text="${description}"></p>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+
+						<div class="form-group row" th:if="${createdInfo}">
+							<div class="row col-sm-12">
+								<div class="col">
+									<a style="float: left;" th:text="${createdInfo}"></a> <a
+										style="float: right; margin-right: -30px;"
+										th:text="${modifiedInfo}"></a>
+								</div>
+							</div>
+						</div>
+
+						<div class="form-group row col-sm-3">
+							<a class="btn btn-primary"
+								style="margin-right: 5px; width: 90px;"
+								th:href="@{/base/admin/group/editGroup(orgId=${orgId}, groupId=${groupId})}">
+								Edit</a> <a type="button" class="btn btn-primary"
+								th:href="@{/base/admin/group/listGroup}" style="width: 90px;">
+								Cancel</a>
+						</div>
+					</form>
+				</div>
+			</main>
+		</div>
+	</div>
+
+	<script type="text/javascript" src="../../../js/scripts.js"></script>
+
+</body>
+</html>

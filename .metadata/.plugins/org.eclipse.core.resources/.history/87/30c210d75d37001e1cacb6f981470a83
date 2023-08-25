@@ -1,0 +1,171 @@
+package com.fms.pfc.service.api.main;
+
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.Objects;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
+
+import javax.transaction.Transactional;
+
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import com.fms.pfc.domain.converter.main.HplConverter;
+import com.fms.pfc.domain.dto.main.HplDto;
+import com.fms.pfc.domain.dto.main.HplModelDto;
+import com.fms.pfc.domain.model.main.Hpl;
+import com.fms.pfc.domain.model.main.HplSearch;
+import com.fms.pfc.repository.main.api.HplRepository;
+import com.fms.pfc.repository.main.api.HplSearchRepository;
+
+@Service
+public class HplService {
+
+	private final Logger logger = LoggerFactory.getLogger(HplService.class);
+
+	private HplRepository hplRepo;
+	private HplConverter hplConv;
+	private HplModelService hplModelServ;
+	private HplSearchRepository hplSearchRepo;
+
+	@Autowired
+	public HplService(HplRepository hplRepo, HplModelService hplModelServ, HplConverter hplConv, HplSearchRepository hplSearchRepo) {
+		super();
+		this.hplRepo = hplRepo;
+		this.hplModelServ = hplModelServ;
+		this.hplConv = hplConv;
+		this.hplSearchRepo = hplSearchRepo;
+	}
+
+	public Hpl findById(int id) {
+		return hplRepo.findById(id).orElse(null);
+	}
+
+	public HplDto findDtoById(int id) {
+		Hpl obj = findById(id);
+		HplDto dto = hplConv.entityToDto(obj);
+		setHplModelList(dto);
+		return dto;
+
+	}
+
+	public HplDto findByName(String ltName) {
+		List<HplDto> allFs = findAllDto();
+
+		Predicate<HplDto> nameFilter = arg0 -> (!StringUtils.isEmpty(ltName))
+				? (arg0.getHplName().equalsIgnoreCase(ltName))
+				: (1 > 0);
+
+		allFs = allFs.stream().filter(nameFilter).collect(Collectors.toList());
+
+		return (null != allFs && !allFs.isEmpty()) ? allFs.get(0) : null;
+	}
+
+	public List<HplDto> findAllDto() {
+		List<Hpl> ls = hplRepo.findAll();
+		List<HplDto> dtoList = hplConv.entityToDtoList(ls);
+
+		for (HplDto hplDto : dtoList) {
+			setModelNames(hplDto);
+		}
+
+		return dtoList;
+	}
+
+	public List<HplDto> searchByCriteria(String hplName, String hplNameExp, String hplModelName,
+			String hplModelNameExp) {
+		List<Hpl> ls = hplRepo.searchByCriteria(hplName, hplNameExp, hplModelName, hplModelNameExp);
+		return hplConv.entityToDtoList(ls);
+	}
+	
+	public List<HplSearch> searchByCriteria2(String hplName, String hplNameExp, String hplModelName,
+			String hplModelNameExp) {
+		List<HplSearch> ls = hplSearchRepo.searchByCriteria(hplName, hplNameExp, hplModelName, hplModelNameExp);
+		return ls;
+	}
+
+	public List<HplModelDto> findHplModelByParent(Integer pkHplId) {
+		return hplModelServ.findAllByParent(pkHplId);
+	}
+
+	@Transactional
+	public Integer save(HplDto dto, String userId, List<HplModelDto> modelList) {
+		boolean isCreate = false;
+		Date currentDate = new Date();
+		// save parent
+		if (Objects.isNull(dto.getPkHplId()) || 0 == dto.getPkHplId()) {
+			isCreate = true;
+			dto.setCreatorId(userId);
+			dto.setCreatedDatetime(currentDate);
+		} else {
+			HplDto existing = findDtoById(dto.getPkHplId());
+			dto.setCreatorId(existing.getCreatorId());
+			dto.setCreatedDatetime(existing.getCreatedDatetime());
+			dto.setModifierId(userId);
+			dto.setModifiedDatetime(currentDate);
+		}
+
+		Hpl entity = hplConv.dtoToEntity(dto);
+		hplRepo.saveAndFlush(entity);
+
+		// save child
+		saveHplModel(modelList, entity.getPkHplId(), isCreate, currentDate, userId);
+
+		return entity.getPkHplId();
+	}
+
+	@Transactional
+	public void delete(Integer id) {
+		hplRepo.deleteById(id);
+	}
+
+	private void saveHplModel(List<HplModelDto> modelList, Integer parentId, boolean isCreate, Date currentDate,
+			String userId) {
+		hplModelServ.save(modelList, parentId, isCreate, currentDate, userId);
+	}
+
+	private void setHplModelList(HplDto dto) {
+		List<HplModelDto> modelList = new ArrayList<HplModelDto>();
+		modelList = hplModelServ.findAllByParentNative(dto.getPkHplId());
+
+		int rowNo = 0;
+		for (HplModelDto hm : modelList) {
+			hm.setRowNo(rowNo);
+			rowNo++;
+			hm.setIndicator("exist");
+		}
+
+		dto.setHplModelList(modelList);
+	}
+
+	private void setModelNames(HplDto dto) {
+		StringBuffer names = new StringBuffer();
+		List<HplModelDto> modelList = hplModelServ.findAllByParentNative(dto.getPkHplId());
+
+		int count = 0;
+		for (HplModelDto hm : modelList) {
+			count++;
+			names.append(hm.getHplModelName());
+			names.append(", ");
+
+			if (count > 2) {
+				break;
+			}
+		}
+
+		String finalNames = names.toString();
+		finalNames = finalNames.substring(0, finalNames.lastIndexOf(","));
+
+		if (count > 2)
+			finalNames += " ..... more";
+
+		dto.setModelNames(finalNames);
+
+	}
+
+}

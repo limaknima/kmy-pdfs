@@ -1,0 +1,131 @@
+package com.fms.pfc.controller.main;
+
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.MessageSource;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.context.annotation.SessionScope;
+import org.springframework.web.servlet.ModelAndView;
+
+import com.fms.pfc.common.Authority;
+import com.fms.pfc.common.CommonConstants;
+import com.fms.pfc.domain.dto.main.G2LotViewDto;
+import com.fms.pfc.domain.model.main.HplSearch;
+import com.fms.pfc.service.api.base.TrxHisService;
+import com.fms.pfc.service.api.main.G2LotViewService;
+
+@Controller
+@SessionScope
+public class G2LotViewController {
+	private static final Logger logger = LoggerFactory.getLogger(G2LotViewController.class);
+	
+	private Authority auth;
+	private MessageSource msgSource;
+	private TrxHisService trxHistServ;
+	private G2LotViewService g2LotServ;
+
+	private Map<String, Object> model = new HashMap<String, Object>();
+	private String screenMode = "";
+	private static String MODULE_NAME = "";
+	
+	@Autowired
+	public G2LotViewController(Authority auth, MessageSource msgSource, TrxHisService trxHistServ, G2LotViewService g2LotServ) {
+		super();
+		this.auth = auth;
+		this.msgSource = msgSource;
+		this.g2LotServ = g2LotServ;
+		this.trxHistServ = trxHistServ;
+	}
+	
+	/**
+	 * Display initial screen
+	 * 
+	 * @param request
+	 * @param response
+	 * @return
+	 */
+	@GetMapping("/main/pfc/g2LotList")
+	public ModelAndView initListing(HttpServletRequest request, HttpServletResponse response) {
+
+		model = auth.onPageLoad(model, request);
+		auth.isAuthUrl(request, response);
+		model.put("g2LotItems", g2LotServ.findAllDto());
+
+		return new ModelAndView("/main/pfc/g2LotList", model);
+	}
+	
+	/**
+	 * Do search
+	 * 
+	 * @param prName
+	 * @param ltType
+	 * @param prNameExp
+	 * @param session
+	 * @return
+	 */
+	@PostMapping("/main/pfc/g2LotSearch")
+	public ModelAndView search(HttpServletRequest request, @RequestParam(name = "hplName") String hplName,
+			@RequestParam(name = "hplNameExp") String hplNameExp,
+			@RequestParam(name = "hplModelName") String hplModelName,
+			@RequestParam(name = "hplModelNameExp") String hplModelNameExp, HttpSession session) {
+
+		boolean hasError = false;
+		String errorMsg = "";
+
+		model.put("hplName", hplName);
+		model.put("hplNameExp", hplNameExp);
+		model.put("hplModelName", hplModelName);
+		model.put("hplModelNameExp", hplModelNameExp);
+
+		try {
+			if (errorMsg.length() == 0) {
+
+				List<G2LotViewDto> items = g2LotServ.searchByCriteria(lot, hpl, model, year, mth, day, prodLn, seq);
+				model.put("g2LotItems", items);
+
+				StringBuffer sb = new StringBuffer();
+				sb.append("Search Criteria: ");
+				sb.append("HPL Name=").append(hplName.isEmpty() ? "<ALL>" : hplName).append(", ");
+				sb.append("HPL Model Name=").append(hplModelName.isEmpty() ? "<ALL>" : hplName);
+
+				trxHistServ.addTrxHistory(new Date(), "Search " + MODULE_NAME, request.getRemoteUser(),
+						CommonConstants.FUNCTION_TYPE_SEARCH, "Search " + MODULE_NAME,
+						CommonConstants.RECORD_TYPE_ID_HPL, sb.toString());
+
+			} else {
+				hasError = true;
+			}
+
+		} catch (Exception e) {
+			e.printStackTrace();
+			hasError = true;
+			errorMsg += "Failed to get record.";
+			errorMsg += e.toString();
+
+		} finally {
+			if (hasError == true) {
+				model.put("error", errorMsg);
+				model.remove("success");
+				// return back user input
+				model.put("g2LotItems", g2LotServ.searchByCriteria("", "", "", "", "", "", "", ""));
+			}
+		}
+
+		return new ModelAndView("/main/pfc/g2LotList", model);
+	}
+
+
+}

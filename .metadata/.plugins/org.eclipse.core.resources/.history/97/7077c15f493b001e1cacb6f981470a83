@@ -1,0 +1,58 @@
+package com.fms.pfc.repository.main.api;
+
+import java.util.Date;
+import java.util.List;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.stereotype.Repository;
+
+import com.fms.pfc.domain.model.main.OnDemandSearch;
+
+@Repository
+public interface OnDemandSearchRepository extends JpaRepository<OnDemandSearch, String> {
+	@Query(value = "select * from ( "
+			+ " select "
+			+ " pf.PFILE_ID, "
+			+ " (select hpl.NAME from HPL hpl where hpl.HPL_ID = pf.HPL_ID) as HPL_NAME, "
+			+ " pf.G2_LOT_NO, "
+			+ " pf.FILE_NAME, "
+			+ " pf.FILE_PATH, "
+			+ " pf.FILE_TYPE, "
+			+ " pf.FILE_SIZE, "
+			+ " pf.CRC_VALUE, "
+			+ " pf.CREATOR_ID, "
+			+ " pf.CREATED_DATETIME, "
+			+ " pf.MODIFIER_ID, "
+			+ " pf.MODIFIED_DATETIME, "
+			+ " pf.HPL_ID, "
+			+ " '' as ALERT_TYPE "
+			+ " from PROD_FILE pf "
+			+ " where 1=1 "
+			+ " and (?1 = 0 or pf.HPL_ID = ?1) "
+			+ "	and (?2 = '' OR ( "
+			+ "		pf.G2_LOT_NO like case when ?3 = '1' then concat('%', ?2, '%') "
+			+ "		when ?3 = '2' then concat('%', ?2) "
+			+ "		when ?3 = '3' then ?2 "
+			+ "		when ?3 = '4' then concat(?2, '%') end "
+			+ "	 ) "
+			+ " ) "
+			+ "	and (?4 = '' OR ( "
+			+ "		pf.FILE_NAME like case when ?5 = '1' then concat('%', ?4, '%') "
+			+ "		when ?5 = '2' then concat('%', ?4) "
+			+ "		when ?5 = '3' then ?4 "
+			+ "		when ?5 = '4' then concat(?4, '%') end "
+			+ "	 ) "
+			+ " ) "
+			+ "	and (?6 = '' OR ( "
+			+ "		pf.FILE_PATH like case when ?7 = '1' then concat('%', ?6, '%') "
+			+ "		when ?7 = '2' then concat('%', ?6) "
+			+ "		when ?7 = '3' then ?6 "
+			+ "		when ?7 = '4' then concat(?6, '%') end "
+			+ "	 ) "
+			+ " ) "
+			+ ") tbl "
+			, nativeQuery = true)
+	List<OnDemandSearch> searchByCriteria(Integer hpl, String g2LotNo, String g2LotNoExp, String fileName,
+			String fileNameExp, String path, String pathExp, Date fromDate, Date toDate);
+}

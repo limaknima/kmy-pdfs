@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+<title>PFC - Add Alert Panel</title>
+<link rel="icon" type="image/ico" th:href="@{/static/favicon.ico}">
+<link rel="stylesheet" type="text/css" th:href="@{/css/styles.css}" />
+<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css">
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/js/all.min.js"></script>
+<script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/js/bootstrap.bundle.min.js"></script>
+<style>
+.required {
+	color: red;
+}
+</style>
+</head>
+<body class="sb-nav-fixed">
+	<div th:replace="/header :: navBar"></div>
+	<div id="layoutSidenav">
+		<div th:replace="/header :: sideNavBar"></div>
+		<div id="layoutSidenav_content">
+			<main>
+				<div class="container-fluid" id="content">
+					<br />
+					<ol class="breadcrumb mb-4">
+						<li class="breadcrumb-item active" ><a th:href="@{/}"><i class="fa fa-home"></i></a></li>
+						<li class="breadcrumb-item active" ><a th:href="@{/menu/maintenanceMenu}"><span th:text="#{menuMaint}"></span></a></li>
+						<li class="breadcrumb-item active" >Alert Message</li>
+					</ol>
+					<div class="alert alert-danger alert-dismissible" th:if="${error}">
+						<a class="close" data-dismiss="alert" aria-label="close">&times;</a>
+						<a th:utext="${error}"></a>
+					</div>
+					<div class="alert alert-success alert-dismissible"
+						th:if="${success}">
+						<a class="close" data-dismiss="alert" aria-label="close">&times;</a>
+						<a th:utext="${success}"></a>
+					</div>
+					<div>
+						<div class="card">
+							<div class="card-header" id="headingTwo">Add Alert Message</div>
+							<div class="card-body">
+								<form th:action="@{/base/maint/addAlertSrc}" id="add-form"
+									method="post">
+									<div class="form-group row">
+										<label class="col-sm-2 col-form-label">Alert Type <span
+											class="required">*</span></label> <label class="col-form-label">:</label>
+										<div class="row col-sm-7">
+											<div class="col">
+												<input type="text" class="form-control" id="alertType" maxlength="20" th:value="${alertType}" name="alertType"
+													required="required">
+											</div>
+										</div>
+									</div>
+									<div class="form-group row">
+										<label class="col-sm-2 col-form-label">Subject <span
+											class="required">*</span></label> <label class="col-form-label">:</label>
+										<div class="row col-sm-7">
+											<div class="col">
+												<input type="text" class="form-control" id="subject"
+													maxlength="200" th:value="${subject}" name="subject"
+													required="required">
+											</div>
+										</div>
+									</div>
+									<div class="form-group row">
+										<label class="col-sm-2 col-form-label">Alert
+											Description</label> <label class="col-form-label">:</label>
+										<div class="row col-sm-7">
+											<div class="col">
+												<textarea class="form-control" id="description"
+													maxlength="300" th:value="${description}"
+													name="description" rows="5"></textarea>
+											</div>
+										</div>
+									</div>
+									<!-- FSGS) Azmeer 01/03/2021 - Add a note to alert user START -->
+									<div class="form-group row">
+										<div class="row col-sm-12">
+											<div class="col">
+												Note:<br>The word started with [@word] is system parameter,
+												which is retrieve the value from database. PLEASE DO NOT REMOVE
+												IT.<br><br>
+												User is allow to amend the subject and description but take note on the system parameter.
+											</div>
+										</div>
+									</div>
+									<!-- FSGS) Azmeer 01/03/2021 - Add a note to alert user END -->
+								</form>
+							</div>
+						</div>
+					</div>
+					<br />
+					<div class="row">
+						<div class="col-sm-auto d-flex justify-content-left">
+							<button class="btn btn-primary" id="submit-add-form"
+								style="margin-right: 5px; width: 90px;">Save</button>
+							<form th:action="@{/base/maint/alertList}">
+								<button class="btn btn-primary" style="width: 90px;"
+									type="button" data-toggle="modal" data-target="#confirmDialog">
+									Cancel</button>
+
+								<div class="modal fade" id="confirmDialog" tabindex="-1"
+									role="dialog" aria-hidden="true">
+									<div class="modal-dialog modal-dialog-centered" role="document">
+										<div class="modal-content">
+											<div class="modal-header">
+												<h5 class="modal-title">Cancel Confirmation</h5>
+												<button type="button" class="close" data-dismiss="modal"
+													aria-label="Close">
+													<span aria-hidden="true">&times;</span>
+												</button>
+											</div>
+											<div class="modal-body">Are you confirm to return back
+												to main page?</div>
+											<div class="modal-footer">
+												<button type="submit" class="btn btn-primary">Confirm</button>
+												<button type="button" class="btn btn-secondary"
+													data-dismiss="modal">Cancel</button>
+											</div>
+										</div>
+									</div>
+								</div>
+							</form>
+						</div>
+					</div>
+				</div>
+			</main>
+		</div>
+	</div>
+	<script type="text/javascript">
+		$(document).ready(function() {
+			$('#submit-add-form').click(function() {
+				$('#add-form').submit();
+			});
+		});
+	</script>
+	<script type="text/javascript" src="../../js/scripts.js"></script>
+</body>
+</html>

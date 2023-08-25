@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+<title>PFC - Add Scheduler Panel</title>
+<link rel="icon" type="image/ico" th:href="@{/static/favicon.ico}">
+<link rel="stylesheet" type="text/css" th:href="@{/css/styles.css}" />
+<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/css/bootstrap-datepicker.css" />
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/js/all.min.js"></script>
+<script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/js/bootstrap-datepicker.min.js"></script>
+<script type="text/javascript"
+		src="http://tarruda.github.com/bootstrap-datetimepicker/assets/js/bootstrap-datetimepicker.min.js"></script>
+
+<style>
+.required {
+	color: red;
+}
+</style>
+</head>
+<body class="sb-nav-fixed">
+	<div th:replace="/header :: navBar"></div>
+	<div id="layoutSidenav">
+		<div th:replace="/header :: sideNavBar"></div>
+		<div id="layoutSidenav_content">
+			<main>
+				<div class="container-fluid" id="content">
+					<br />
+					<ol class="breadcrumb mb-4">
+						<li class="breadcrumb-item active" ><a th:href="@{/}"><i class="fa fa-home"></i></a></li>
+						<li class="breadcrumb-item active" ><a th:href="@{/menu/maintenanceMenu}"><span th:text="#{menuMaint}"></span></a></li>
+						<li class="breadcrumb-item active" >Job Scheduler</li>
+					</ol>
+					<div class="alert alert-danger alert-dismissible" th:if="${error}">
+						<a class="close" data-dismiss="alert" aria-label="close">&times;</a>
+						<a th:utext="${error}"></a>
+					</div>
+					<div class="alert alert-success alert-dismissible"
+						th:if="${success}">
+						<a class="close" data-dismiss="alert" aria-label="close">&times;</a>
+						<a th:utext="${success}"></a>
+					</div>
+					<div>
+						<div class="card">
+							<div class="card-header" id="headingTwo">Add Scheduler</div>
+							<div class="card-body">
+								<form th:action="@{/base/maint/addSchedulerSrc}" id="add-form"
+									enctype="multipart/form-data" method="post" role="form"
+									data-toggle="validator">
+									<div class="form-group row">
+										<label class="col-sm-3 col-form-label">Job Type <span
+											class="required">*</span></label> <label class="col-form-label">:</label>
+										<div class="row col-sm-5">
+											<div class="col">
+												<select class="custom-select" name="jobType" id="jobType">
+													<option selected value="" hidden="true">Please Select</option>
+													<option th:value="File Compare">File Compare</option>
+												</select>
+												<div class="help-block with-errors"></div>
+											</div>
+										</div>
+									</div>
+									<div class="form-group row">
+										<label class="col-sm-3 col-form-label">Job Name <span
+											class="required">*</span></label> <label class="col-form-label">:</label>
+										<div class="row col-sm-7">
+											<div class="col">
+												<input type="text" class="form-control" id="jobName"
+													maxlength="200" th:value="${jobName}" name="jobName"
+													>
+
+											</div>
+										</div>
+									</div>
+									<div class="form-group row">
+										<label class="col-sm-3 col-form-label">Job Description</label>
+										<label class="col-form-label">:</label>
+										<div class="row col-sm-7">
+											<div class="col">
+												<input type="text" class="form-control" id="jobDescription"
+													maxlength="300" th:value="${jobDescription}"
+													name="jobDescription">
+											</div>
+										</div>
+									</div>
+
+									<div class="form-group row">
+										<label class="col-sm-3 col-form-label">Status on Hold?</label>
+										<label class="col-form-label">:</label>
+										<div class="row col-sm-7">
+											<div class="col">
+												<div class="form-check form-control-plaintext">
+													<input class="form-check-input" type="checkbox"
+														th:value="1" id="${onHold}" name="onHold"> <label
+														class="form-check-label" for="onHold"></label>
+												</div>
+											</div>
+										</div>
+									</div>
+									<div class="form-group row">
+										<label class="col-sm-3 col-form-label">Start Date &
+											Time <span class="required">*</span>
+										</label> <label class="col-form-label">:</label>
+										<div class="row col-sm-7">
+											<label style="margin-top: 6px;  margin-left: 28px;"></label>
+											<div class="col">
+												<div class="input-group date">
+													<input type="text" class="form-control" id="datepicker"
+														placeholder="dd/mm/yyyy" name="startDate"
+														autocomplete="off" th:value="*{startDate}"
+														required="required" />
+													<div class="input-group-append">
+														<span class="input-group-text"><i
+															class="far fa-calendar-alt"></i></span>
+													</div>
+												</div>
+											</div>
+											<div class="col">
+												<div id="time-picker-start" class="input-append">
+													<input class="form-control" data-format="hh:mm:ss"
+														type="text" placeholder="hh:mm:ss" name="startTime"
+														autocomplete="off" th:value="*{startTime}" />
+												</div>
+											</div>
+										</div>
+									</div>
+									<div class="form-group row">
+										<label class="col-sm-3 col-form-label">End Date & Time
+											<span class="required">*</span>
+										</label> <label class="col-form-label">:</label>
+										<div class="row col-sm-7" >
+											<label style="margin-top: 6px;  margin-left: 15px;"> <input type="radio"
+												name="selectEndDate" th:value="1" th:checked="${radioEndDate == 1}"
+												required="required">
+											</label>
+											<div class="col">
+												<div class="input-group date">
+													<input id="first-end-date-selection" type="text"
+														class="form-control" placeholder="dd/mm/yyyy"
+														name="endDate" 
+														autocomplete="off" th:value="*{endDate}"
+														required="required">
+													<div class="input-group-append">
+														<span class="input-group-text"><i
+															class="far fa-calendar-alt"></i></span>
+													</div>
+												</div>
+											</div>
+											<div class="col">
+												<div id="time-picker-end" class="input-append">
+													<input class="form-control" data-format="hh:mm:ss"
+														type="text" placeholder="hh:mm:ss" name="endTime"
+														autocomplete="off" th:value="*{endTime}" />
+												</div>
+											</div>
+										</div>
+									</div>
+
+									<div class="form-group row">
+										<label class="col-sm-3 col-form-label"
+											style="margin-left: 4px;"></label>
+										<div class="row col-sm-7">
+											<div class="col">
+												<label> <input type="radio"
+													id="second-end-date-selection" checked th:value="2"
+													name="selectEndDate" required="required"> No End
+													Date
+												</label>
+											</div>
+										</div>
+									</div>
+
+									<div class="form-group row"
+										style="margin-top: -8px; margin-bottom: 2px;">
+										<label class="col-sm-3 col-form-label">Perform this
+											Task <span class="required">*</span>
+										</label> <label class="col-form-label">:</label>
+										<div class="row col-sm-7 col-form-label">
+											<div class="col">
+												<label> <input type="radio" id="performTask"
+													name="performTask" th:value="1" checked required="required"
+													data-error="The field cannot be empty!"> Every Day
+												</label> &nbsp;&nbsp; <label> <input type="radio"
+													id="performTask" th:value="2" name="performTask" style="margin-left: 22px"
+													required="required" data-error="The field cannot be empty!">
+													Every <input style="width: 80px; display: unset;"
+													type="number" class="form-control" id="secPerformTaskValue"
+													th:max="31" th:value="${secPerformTaskValue}" min="0"
+													name="secPerformTaskValue" required="required">
+													Day(s)
+												</label> <br /> 
+												<label> <input type="radio" id="performTask"
+													name="performTask" th:value="5" required="required"
+													data-error="The field cannot be empty!"> Every Hour
+												</label>  &nbsp;&nbsp; <label> <input type="radio"
+													id="performTask" th:value="6" name="performTask" style="margin-left: 14px"
+													required="required" data-error="The field cannot be empty!">
+													Every <input style="width: 80px; display: unset;"
+													type="number" class="form-control" id="secPerformTaskValue"
+													th:max="24" th:value="${secPerformTaskValue}" min="0"
+													name="secPerformTaskValue" required="required">
+													Hour(s)
+												</label> <br />
+												<label> <input type="radio" id="performTask"
+													name="performTask" th:value="7" required="required"
+													data-error="The field cannot be empty!"> Every Minute
+												</label>  &nbsp;&nbsp; <label> <input type="radio"
+													id="performTask" th:value="8" name="performTask"
+													required="required" data-error="The field cannot be empty!">
+													Every <input style="width: 80px; display: unset;"
+													type="number" class="form-control" id="secPerformTaskValue"
+													th:max="60" th:value="${secPerformTaskValue}" min="0"
+													name="secPerformTaskValue" required="required">
+													Minute(s)
+												</label> <br /> <label> <input type="radio"
+													id="performTask" th:value="3" name="performTask"
+													required="required" data-error="The field cannot be empty!">
+													Weekday(s) <br />
+													<div class="col-sm-12 col-form-label"
+														style="padding-left: 40px;">
+														<label> <input style="vertical-align: middle;"
+															class="form-check-input" type="checkbox" th:value="1"
+															name="checkbox-perform-task[]" id="checkbox-perform-task"
+															required="required"
+															data-error="The field cannot be empty!"> Monday
+														</label> <label style="margin-left: 60px;"> <input
+															style="vertical-align: middle;" class="form-check-input"
+															type="checkbox" th:value="2"
+															name="checkbox-perform-task[]" id="checkbox-perform-task">
+															Tuesday
+														</label> <label style="margin-left: 60px;"> <input
+															style="vertical-align: middle;" class="form-check-input"
+															type="checkbox" th:value="3"
+															name="checkbox-perform-task[]" id="checkbox-perform-task">
+															Wednesday
+														</label> <label style="margin-left: 60px;"> <input
+															style="vertical-align: middle;" class="form-check-input"
+															type="checkbox" th:value="4"
+															name="checkbox-perform-task[]" id="checkbox-perform-task">
+															Thursday
+														</label>
+													</div>
+													<div class="col-sm-12"
+														style="margin-top: -12px; padding-left: 40px;">
+														<label style="margin-left: 0.1px;"> <input
+															style="vertical-align: middle;" class="form-check-input"
+															type="checkbox" th:value="5"
+															name="checkbox-perform-task[]" id="checkbox-perform-task">
+															Friday
+														</label> <label style="margin-left: 75.5px;"> <input
+															style="vertical-align: middle;" class="form-check-input"
+															type="checkbox" th:value="6"
+															name="checkbox-perform-task[]" id="checkbox-perform-task">
+															Saturday
+														</label> <label style="margin-left: 55.6px;"> <input
+															style="vertical-align: middle;" class="form-check-input"
+															type="checkbox" th:value="7"
+															name="checkbox-perform-task[]" id="checkbox-perform-task">
+															Sunday
+														</label>
+													</div>
+												</label> <br /> <label> <input type="radio"
+													id="performTask" name="performTask" th:value="4"
+													required="required" data-error="The field cannot be empty!">
+													Monthly
+												</label> <br />
+												<div class="row col-sm-12"
+													style="margin-top: 3px; margin-left: -14px;">
+													<label style="margin-top: 5px;"> Starting Time : </label>
+													<div class="col">
+														<div id="time-duration-start" class="input-append">
+															<input class="form-control" data-format="hh:mm:ss"
+																type="text" placeholder="hh:mm:ss"
+																name="durationTimeStart" autocomplete="off"
+																th:value="*{durationTimeStart}" />
+														</div>
+													</div>
+													<label style="margin-top: 5px;"> Ending Time : </label>
+													<div class="col">
+														<div id="time-duration-end" class="input-append">
+															<input class="form-control" data-format="hh:mm:ss"
+																type="text" placeholder="hh:mm:ss"
+																name="durationTimeEnd" autocomplete="off"
+																th:value="*{durationTimeEnd}" />
+														</div>
+													</div>
+												</div>
+											</div>
+										</div>
+									</div>
+								</form>
+							</div>
+						</div>
+					</div>
+					<br />
+					<div class="form-group row">
+						<div class="col-sm-auto d-flex justify-content-left">
+							<button class="btn btn-primary" id="submit-add-form" href="#"
+								style="margin-right: 5px; width: 90px;">Save</button>
+							<form th:action="@{/base/maint/schedulerList}">
+								<button class="btn btn-primary" style="width: 90px;"
+									type="button" data-toggle="modal" data-target="#confirmDialog">
+									Cancel</button>
+
+								<div class="modal fade" id="confirmDialog" tabindex="-1"
+									role="dialog" aria-hidden="true">
+									<div class="modal-dialog modal-dialog-centered" role="document">
+										<div class="modal-content">
+											<div class="modal-header">
+												<h5 class="modal-title">Cancel Confirmation</h5>
+												<button type="button" class="close" data-dismiss="modal"
+													aria-label="Close">
+													<span aria-hidden="true">&times;</span>
+												</button>
+											</div>
+											<div class="modal-body">Are you confirm to return back
+												to main page?</div>
+											<div class="modal-footer">
+												<button type="submit" class="btn btn-primary">Confirm</button>
+												<button type="button" class="btn btn-secondary"
+													data-dismiss="modal">Cancel</button>
+											</div>
+										</div>
+									</div>
+								</div>
+							</form>
+						</div>
+					</div>
+				</div>
+			</main>
+		</div>
+	</div>
+	<script type="text/javascript">
+		function setInputFilter(textbox, inputFilter) {
+			[ "input", "keydown", "keyup", "mousedown", "mouseup", "select",
+					"contextmenu", "drop" ].forEach(function(event) {
+				textbox.addEventListener(event, function() {
+					if (inputFilter(this.value)) {
+						this.oldValue = this.value;
+						this.oldSelectionStart = this.selectionStart;
+						this.oldSelectionEnd = this.selectionEnd;
+					} else if (this.hasOwnProperty("oldValue")) {
+						this.value = this.oldValue;
+						this.setSelectionRange(this.oldSelectionStart,
+								this.oldSelectionEnd);
+					} else {
+						this.value = "";
+					}
+				});
+			});
+		}
+
+		
+		$(document).ready(function() { 
+		    $('#submit-add-form').click(function() {
+		    	if ($("input:radio[name='selectEndDate'][value='2']").is(":checked")) { 
+			    	$('#first-end-date-selection').removeAttr("required");
+			    	$('#first-end-date-selection').removeAttr("data-error");
+			    }
+		    	
+		    	if ($("input:radio[name='performTask'][value='1']").is(":checked")) {
+		    		$('#secPerformTaskValue').removeAttr("required");
+			    	$('#secPerformTaskValue').removeAttr("data-error");
+			    	$('#checkbox-perform-task').removeAttr("required");
+			    	$('#checkbox-perform-task').removeAttr("data-error");
+		    	}
+		    	
+		    	if ($("input:radio[name='performTask'][value='5']").is(":checked")) {
+		    		$('#secPerformTaskValue').removeAttr("required");
+			    	$('#secPerformTaskValue').removeAttr("data-error");
+			    	$('#checkbox-perform-task').removeAttr("required");
+			    	$('#checkbox-perform-task').removeAttr("data-error");
+		    	}
+		    	
+		    	if ($("input:radio[name='performTask'][value='7']").is(":checked")) {
+		    		$('#secPerformTaskValue').removeAttr("required");
+			    	$('#secPerformTaskValue').removeAttr("data-error");
+			    	$('#checkbox-perform-task').removeAttr("required");
+			    	$('#checkbox-perform-task').removeAttr("data-error");
+		    	}
+		    	
+		    	if ($("input:radio[name='performTask'][value='4']").is(":checked")) {
+		    		$('#secPerformTaskValue').removeAttr("required");
+			    	$('#secPerformTaskValue').removeAttr("data-error");
+			    	$('#checkbox-perform-task').removeAttr("required");
+			    	$('#checkbox-perform-task').removeAttr("data-error");
+		    	}
+		    	
+		    	if ($("input:radio[name='performTask'][value='3']").is(":checked")) {
+		    		$('#secPerformTaskValue').removeAttr("required");
+			    	$('#secPerformTaskValue').removeAttr("data-error");
+			    	if ($('input[name="checkbox-perform-task[]"]').is(':checked')) {
+			    		$('#checkbox-perform-task').removeAttr("required");
+				    	$('#checkbox-perform-task').removeAttr("data-error");
+			    	}
+		    	}
+		    	
+		    	if ($("input:radio[name='performTask'][value='2']").is(":checked")) {
+		    		$('#checkbox-perform-task').removeAttr("required");
+			    	$('#checkbox-perform-task').removeAttr("data-error");
+		    	}
+		    	
+		    	if ($("input:radio[name='performTask'][value='6']").is(":checked")) {
+		    		$('#checkbox-perform-task').removeAttr("required");
+			    	$('#checkbox-perform-task').removeAttr("data-error");
+		    	}
+		    	
+		    	if ($("input:radio[name='performTask'][value='8']").is(":checked")) {
+		    		$('#checkbox-perform-task').removeAttr("required");
+			    	$('#checkbox-perform-task').removeAttr("data-error");
+		    	}
+
+		    	$('#add-form').submit();
+		    });			    
+		    
+		    Date.prototype.ddmmyyyy = function () {
+	            var dd = this.getDate().toString();
+	            var mm = (this.getMonth() + 1).toString();
+	            var yyyy = this.getFullYear().toString();
+	            return (dd[1] ? dd : "0" + dd[0]) + "/" + (mm[1] ? mm : "0" + mm[0]) + "/" + yyyy;
+	        };
+		    
+		    $(".custom-file-input").on("change", function() {
+		    	  var fileName = $(this).val().split("\\").pop();
+		    	  $(this).siblings(".custom-file-label").addClass("selected").html(fileName);
+		    });
+		    
+		    $('#time-picker-start').datetimepicker({
+		        pickDate: false
+		    });
+		    
+		    $('#time-picker-end').datetimepicker({
+		        pickDate: false
+		    }); 
+		    
+		    $('#time-duration-start').datetimepicker({
+		    	pickDate: false
+		    });
+		    
+		    $('#time-duration-end').datetimepicker({
+		    	pickDate: false
+		    }); 
+		    
+		    setInputFilter(document.getElementById("secPerformTaskValue"), function(value) {
+		    	return /^\d*$/.test(value) && (parseInt(value) > 0);
+		    }); 
+		});
+	</script>
+	<script type="text/javascript" src="../../js/scripts.js"></script>
+
+</body>
+</html>

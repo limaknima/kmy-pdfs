@@ -1,0 +1,186 @@
+package com.fms.pfc.controller.main;
+
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.MessageSource;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.context.annotation.SessionScope;
+import org.springframework.web.servlet.ModelAndView;
+
+import com.fms.pfc.common.Authority;
+import com.fms.pfc.common.CommonConstants;
+import com.fms.pfc.common.CommonUtil;
+import com.fms.pfc.domain.dto.main.G2LotViewDto;
+import com.fms.pfc.domain.model.main.HplSearch;
+import com.fms.pfc.service.api.base.TrxHisService;
+import com.fms.pfc.service.api.main.G2LotViewService;
+
+@Controller
+@SessionScope
+public class G2LotViewController {
+	private static final Logger logger = LoggerFactory.getLogger(G2LotViewController.class);
+
+	private Authority auth;
+	private MessageSource msgSource;
+	private TrxHisService trxHistServ;
+	private G2LotViewService g2LotServ;
+
+	private Map<String, Object> model = new HashMap<String, Object>();
+	private String screenMode = "";
+
+	private static String LOT_LBL = "";
+	private static String HPL_LBL = "";
+	private static String MODEL_LBL = "";
+	private static String YEAR_LBL = "";
+	private static String MONTH_LBL = "";
+	private static String DAY_LBL = "";
+	private static String PRODLN_LBL = "";
+	private static String SEQ_LBL = "";
+	private static String MODULE_NAME = "";
+	
+	private static final int YEAR_COUNT = 20;
+
+	@Autowired
+	public G2LotViewController(Authority auth, MessageSource msgSource, TrxHisService trxHistServ,
+			G2LotViewService g2LotServ) {
+		super();
+		this.auth = auth;
+		this.msgSource = msgSource;
+		this.g2LotServ = g2LotServ;
+		this.trxHistServ = trxHistServ;
+		
+		getAllLabels();
+	}
+
+	/**
+	 * Display initial screen
+	 * 
+	 * @param request
+	 * @param response
+	 * @return
+	 */
+	@GetMapping("/main/pfc/g2LotList")
+	public ModelAndView initListing(HttpServletRequest request, HttpServletResponse response) {
+
+		model = auth.onPageLoad(model, request);
+		auth.isAuthUrl(request, response);
+		//model.put("g2LotItems", g2LotServ.findAllDto());
+		model.put("g2LotItems", g2LotServ.searchTopXByCriteria("", "", "", "", "", "", "", "", "200"));
+		model.put("searchHplItems", g2LotServ.hplList());
+		model.put("searchHplModelItems", g2LotServ.hplModelList(""));
+		model.put("searchYearItems", CommonUtil.yearDropdownItems(YEAR_COUNT));
+		model.put("searchMonthItems", CommonUtil.monthDropdownItems());
+		model.put("searchDayItems", CommonUtil.dayDropdownItems());
+
+		return new ModelAndView("/main/pfc/g2LotList", model);
+	}
+
+	/**
+	 * Do search
+	 * 
+	 * @param prName
+	 * @param ltType
+	 * @param prNameExp
+	 * @param session
+	 * @return
+	 */
+	@PostMapping("/main/pfc/g2LotSearch")
+	public ModelAndView search(HttpServletRequest request, 
+			@RequestParam(name = "lot") String lot,
+			@RequestParam(name = "hpl") String hpl,
+			@RequestParam(name = "hplModel") String hplModel,
+			@RequestParam(name = "year") String year, 
+			@RequestParam(name = "mth") String mth, 
+			@RequestParam(name = "day") String day, 
+			@RequestParam(name = "prodLn") String prodLn, 
+			@RequestParam(name = "seq") String seq, 
+			@RequestParam(name = "prodLnExp") String prodLnExp, 
+			@RequestParam(name = "seqExp") String seqExp,
+			@RequestParam(name = "lotExp") String lotExp, 
+			HttpSession session) {
+
+		boolean hasError = false;
+		String errorMsg = "";
+
+		model.put("lot", lot);
+		model.put("hpl", hpl);
+		model.put("hplModel", hplModel);
+		model.put("year", year);
+		model.put("mth", mth);
+		model.put("day", day);
+		model.put("prodLn", prodLn);
+		model.put("seq", seq);
+		model.put("prodLnExp", prodLnExp);
+		model.put("seqExp", seqExp);
+		model.put("lotExp", lotExp);
+
+		try {
+			if (errorMsg.length() == 0) {
+
+				List<G2LotViewDto> items = g2LotServ.searchByCriteria2(lot, hpl, hplModel, year, mth, day, prodLn,
+						seq, prodLnExp, seqExp, lotExp);
+				model.put("g2LotItems", items);
+
+				StringBuffer sb = new StringBuffer();
+				sb.append("Search Criteria: ");
+				sb.append(LOT_LBL).append("=").append(lot.isEmpty() ? "<ALL>" : lot).append(", ");
+				sb.append(HPL_LBL).append("=").append(hpl.isEmpty() ? "<ALL>" : hpl).append(", ");
+				sb.append(MODEL_LBL).append("=").append(hplModel.isEmpty() ? "<ALL>" : hplModel).append(", ");
+				sb.append(YEAR_LBL).append("=").append(year.isEmpty() ? "<ALL>" : year).append(", ");
+				sb.append(MONTH_LBL).append("=").append(mth.isEmpty() ? "<ALL>" : mth).append(", ");
+				sb.append(DAY_LBL).append("=").append(day.isEmpty() ? "<ALL>" : day).append(", ");
+				sb.append(PRODLN_LBL).append("=").append(prodLn.isEmpty() ? "<ALL>" : prodLn).append(", ");
+				sb.append(SEQ_LBL).append("=").append(seq.isEmpty() ? "<ALL>" : seq);
+
+				trxHistServ.addTrxHistory(new Date(), "Search " + MODULE_NAME, request.getRemoteUser(),
+						CommonConstants.FUNCTION_TYPE_SEARCH, "Search " + MODULE_NAME,
+						CommonConstants.RECORD_TYPE_ID_G2_LOT_LIST, sb.toString());
+
+			} else {
+				hasError = true;
+			}
+
+		} catch (Exception e) {
+			e.printStackTrace();
+			hasError = true;
+			errorMsg += "Failed to get record.";
+			errorMsg += e.toString();
+
+		} finally {
+			if (hasError == true) {
+				model.put("error", errorMsg);
+				model.remove("success");
+				// return back user input
+				model.put("g2LotItems", g2LotServ.searchByCriteria("", "", "", "", "", "", "", ""));
+			}
+		}
+
+		return new ModelAndView("/main/pfc/g2LotList", model);
+	}
+
+	private void getAllLabels() {
+		LOT_LBL = msgSource.getMessage("lblG2LotNo", null, Locale.getDefault());
+		HPL_LBL = msgSource.getMessage("lblHpl", null, Locale.getDefault());
+		MODEL_LBL = msgSource.getMessage("lblHplModel", null, Locale.getDefault());
+		YEAR_LBL = msgSource.getMessage("lblYear", null, Locale.getDefault());
+		MONTH_LBL = msgSource.getMessage("lblMonth", null, Locale.getDefault());
+		DAY_LBL = msgSource.getMessage("lblDay", null, Locale.getDefault());
+		PRODLN_LBL = msgSource.getMessage("lblProdLn", null, Locale.getDefault());
+		SEQ_LBL = msgSource.getMessage("lblSeq", null, Locale.getDefault());
+		MODULE_NAME = msgSource.getMessage("moduleG2LotList", null, Locale.getDefault());
+	}
+}

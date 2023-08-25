@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+<title>PFC - Organization Form</title>
+<link rel="icon" type="image/ico" th:href="@{/static/favicon.ico}">
+<link rel="stylesheet" type="text/css" th:href="@{/css/styles.css}" />
+<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/css/bootstrap-datepicker.css" />
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/js/all.min.js"></script>
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/js/bootstrap-datepicker.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/js/bootstrap.bundle.min.js"></script>
+
+<style>
+.form-group.required .control-label:after {
+	content: " *";
+	color: red;
+}
+</style>
+
+</head>
+<body onload="init()" class="sb-nav-fixed">
+	<div th:replace="/header :: navBar"></div>
+	<div id="layoutSidenav">
+		<div th:replace="/header :: sideNavBar"></div>
+		<div id="layoutSidenav_content">
+			<main>
+				<div class="container" id="ViewContainer">
+					<br />
+					<ol class="breadcrumb mb-4">
+						<li class="breadcrumb-item active" ><a th:href="@{/}"><i class="fa fa-home"></i></a></li>
+						<li class="breadcrumb-item active" ><a th:href="@{/menu/adminMenu}"><span th:text="#{menuAdmin}"></span></a></li>
+						<li class="breadcrumb-item active" >Organization</li>
+					</ol>
+					<div class="alert alert-danger alert-dismissible" th:if=${error}>
+						<a class="close" data-dismiss="alert" aria-label="close">&times;</a>
+						<a th:utext="${error}"></a>
+					</div>
+					<div class="alert alert-success alert-dismissible" th:if=${success}>
+						<a class="close" data-dismiss="alert" aria-label="close">&times;</a>
+						<a th:text="${success}"></a>
+					</div>
+					<div class="card">
+						<div class="card-header" id="headingTwo" th:text="${header}"></div>
+						<a class="card-header" id="updateMode" hidden="true"
+							th:text="${updateMode}"></a> <a class="card-header" hidden="true"
+							id="formMode" th:text="${mode}"></a>
+						<div class="card-body">
+							<form id="mainForm"
+								th:action="@{/base/admin/organization/organizationForm}"
+								th:object="${organizationItem}" method="POST"
+								enctype="multipart/form-data">
+								<div id="orgIdTitle" class="form-group row">
+									<label class="col-sm-3 col-form-label control-label">Organization
+										ID</label>
+									<div class="row col-sm-7">
+										<label class="col-form-label">:</label>
+										<div class="col">
+											<input type="text" id="orgaID" readonly
+												class="form-control-plaintext" maxlength="20" th:field="*{orgaID}" required>
+										</div>
+										<!-- FSGS) Hani Add 03/03/2021 - Add Maxlength -->
+									</div>
+								</div>
+								<div id="orgNameTitle" class="form-group row">
+									<label class="col-sm-3 col-form-label control-label">Organization
+										Name</label>
+									<div class="row col-sm-7">
+										<label class="col-form-label">:</label>
+										<div class="col">
+											<input type="text" id="orgaName" readonly
+												class="form-control-plaintext" maxlength="50" th:field="*{orgaName}"
+												required> 
+												<!-- FSGS) Hani Add 03/03/2021 - Add Maxlength -->
+										</div> 
+										
+									</div>
+								</div>
+								<div id="orgTypeTitle" class="form-group row">
+									<label class="col-sm-3 col-form-label control-label">Organization
+										Type</label>
+									<div class="row col-sm-7">
+										<label class="col-form-label">:</label>
+										<div class="col">
+											<select th:field="*{orgaType}" disabled
+												class="custom-select" id="orgaType" required>
+												<option value="" selected hidden="true">Please
+													Select</option>
+												<option value="HQ">HQ</option>
+												<option value="BRANCH">BRANCH</option>
+											</select>
+										</div>
+									</div>
+								</div>
+								<div class="form-group row">
+									<label class="col-sm-3 col-form-label">Address</label>
+									<div class="row col-sm-7">
+										<label class="col-form-label">:</label>
+										<div class="col">
+											<textarea readonly id="address"
+												class="form-control-plaintext" rows="3" maxlength = "250"
+												th:field="*{address}"></textarea>
+												<!-- FSGS) Hani Add 03/03/2021 - Add Maxlength -->
+										</div> 
+									</div>
+								</div>
+								<div class="form-group row">
+									<label class="col-sm-3 col-form-label control-label">Postcode</label>
+									<div class="row col-sm-7">
+										<label class="col-form-label">:</label>
+										<div class="col">
+											<input type="text" id="postcode" readonly
+												class="form-control-plaintext" maxlength="10" th:field="*{postcode}">
+												<!-- FSGS) Hani Add 03/03/2021 - Add Maxlength -->
+										</div>
+									</div>
+								</div>
+								<div class="form-group row">
+									<label class="col-sm-3 col-form-label control-label">City</label>
+									<div class="row col-sm-7">
+										<label class="col-form-label">:</label>
+										<div class="col">
+											<input type="text" id="city" readonly
+												class="form-control-plaintext" maxlength="100" th:field="*{city}">
+										</div>
+										<!-- FSGS) Hani Add 03/03/2021 - Add Maxlength -->
+									</div>
+								</div>
+								<div class="form-group row">
+									<label class="col-sm-3 col-form-label control-label">State</label>
+									<div class="row col-sm-7">
+										<label class="col-form-label">:</label>
+										<div class="col">
+											<select disabled class="custom-select" id="state"
+												th:field="*{state}">
+												<option value="0" selected hidden="true">Please
+													Select</option>
+												<option th:each="sItem : ${stateItem}"
+													th:value="${sItem.stateId}" th:utext="${sItem.stateName}">
+												</option>
+											</select>
+										</div>
+									</div>
+								</div>
+								<div class="form-group row">
+									<label class="col-sm-3 col-form-label control-label">Email
+										Address</label>
+									<div class="row col-sm-7">
+										<label class="col-form-label">:</label>
+										<div class="col">
+											<input type="text" id="email" readonly
+												class="form-control-plaintext" maxlength="50" th:field="*{email}">
+												<!-- FSGS) Hani Add 03/03/2021 - Add Maxlength -->
+										</div>
+									</div>
+								</div>
+								<div class="form-group row">
+									<label class="col-sm-3 col-form-label control-label">Telephone
+										No.</label>
+									<div class="row col-sm-7">
+										<label class="col-form-label">:</label>
+										<div class="col">
+											<input type="text" id="tel" readonly
+												class="form-control-plaintext" maxlength="50" th:field="*{tel}">
+												<!-- FSGS) Hani Add 03/03/2021 - Add Maxlength -->
+										</div>
+									</div>
+								</div>
+								<div class="form-group row">
+									<label class="col-sm-3 col-form-label control-label">Fax
+										No.</label>
+									<div class="row col-sm-7">
+										<label class="col-form-label">:</label>
+										<div class="col">
+											<input type="text" id="fax" readonly
+												class="form-control-plaintext" maxlength="50" th:field="*{fax}">
+												<!-- FSGS) Hani Add 03/03/2021 - Add Maxlength -->
+										</div>
+									</div>
+								</div>
+								<div class="form-group row">
+									<label class="col-sm-3 col-form-label control-label">URL</label>
+									<div class="row col-sm-7">
+										<label class="col-form-label">:</label>
+										<div class="col">
+											<input type="text" id="url" readonly
+												class="form-control-plaintext" maxlength="100" th:field="*{url}">
+												<!-- FSGS) Hani Add 03/03/2021 - Add Maxlength -->
+										</div>
+									</div>
+								</div>
+								<div class="form-group row">
+									<label class="col-sm-3 col-form-label control-label">Effective
+										Date</label>
+									<div class="row col-sm-3">
+										<label class="col-form-label">:</label>
+										<div class="col">
+											<div class="input-group date">
+												<input type="text" class="form-control" readonly
+													placeholder="dd/mm/yyyy" id="effectStart"
+													autocomplete="off" th:field="*{effectStartStr}" />
+												<div class="input-group-append">
+													<span class="input-group-text" type="button"><i
+														class="far fa-calendar-alt"></i></span>
+												</div>
+											</div>
+										</div>
+									</div>
+									<label class="col-sm-1 col-form-label"
+										style="margin-right: 2px;">To</label>
+									<div class="row col-sm-3">
+										<label class="col-form-label">:</label>
+										<div class="col">
+											<div class="input-group date">
+												<input type="text" class="form-control"
+													placeholder="dd/mm/yyyy" id="effectEnd" readonly
+													autocomplete="off" th:field="*{effectEndStr}" />
+												<div class="input-group-append">
+													<span class="input-group-text"><i
+														class="far fa-calendar-alt"></i></span>
+												</div>
+											</div>
+										</div>
+									</div>
+								</div>
+								<div class="form-group row">
+									<label class="col-sm-3 col-form-label control-label">Logo</label>
+									<div class="row col-sm-7">
+										<label class="col-form-label">:</label>
+										<div class="col">
+											<div class="custom-file" id="inputLogo" hidden="true">
+												<input type="file" class="custom-file-input" name="image"
+													accept="image/png, image/jpeg" id="logo"> <label
+													class="custom-file-label" for="customFileLang">Choose
+													file</label>
+											</div>
+										</div>
+									</div>
+									<div class="row col-sm-12" id="displayLogo">
+										<img th:if="${logo}"
+											th:src="@{'data:image/png;base64,' + ${logo}}"
+											class="img-fluid" alt="Responsive image"
+											style="width: 150px; height: 150px; display: block; margin-left: auto; margin-right: auto;" />
+									</div>
+								</div>
+							</form>
+						</div>
+					</div>
+					<div class="form-group row" th:if="${createdInfo}" id="createdInfo">
+						<div class="row col-sm-12">
+							<div class="col">
+								<a style="float: left;" th:text="${createdInfo}"></a> <a
+									style="float: right; margin-right: -30px;"
+									th:text="${modifiedInfo}"></a>
+							</div>
+						</div>
+					</div>
+					<div id="break" hidden="true">
+						<br />
+					</div>
+
+					<div class="form-group row">
+						<div class="row col-sm-7">
+							<div class="col">
+								<button class="btn btn-primary" style="width: 90px;"
+									onclick="enablebreak()" id="btnEdit">Edit</button>
+								<button class="btn btn-primary" form="mainForm" type="submit"
+									style="width: 90px;" hidden="true" id="btnSave">Save</button>
+								<a class="btn btn-primary" style="width: 90px;" type="button"
+									id="btnCancel"
+									th:href="@{/base/admin/organization/organizationList}">Cancel</a>
+								<button class="btn btn-primary" style="width: 90px;"
+									hidden="true" id="btnConfirmCancel" type="button"
+									data-toggle="modal" data-target="#confirmDialog">Cancel</button>
+							</div>
+							<!-- Confirmation message -->
+							<div class="modal fade" id="confirmDialog" tabindex="-1"
+								role="dialog" aria-hidden="true">
+								<div class="modal-dialog modal-dialog-centered" role="document">
+									<div class="modal-content">
+										<div class="modal-header">
+											<h5 class="modal-title" th:text="${confirmHeader}"></h5>
+											<button type="button" class="close" data-dismiss="modal"
+												aria-label="Close">
+												<span aria-hidden="true">&times;</span>
+											</button>
+										</div>
+										<div class="modal-body" th:text="${confirmMsg}"></div>
+										<div class="modal-footer">
+											<button type="submit" class="btn btn-primary"
+												onclick="onCancel()">Confirm</button>
+											<button type="button" class="btn btn-secondary"
+												data-dismiss="modal">Cancel</button>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</main>
+		</div>
+	</div>
+
+	<script type="text/javascript">
+		function init() {
+
+			var mode 	   = document.getElementById("formMode").text;
+			var updateMode = document.getElementById("updateMode").text;
+			//Enable form for add
+			if (mode == "add") {
+				enablebreak();
+
+				$("#orgIdTitle").addClass("required");
+				$("#orgaID").addClass("form-control");
+				$("#orgaID").removeClass("form-control-plaintext");
+				document.getElementById("orgaID").removeAttribute("readonly");
+			}
+			
+			if (updateMode == "updateForm"){				
+				enablebreak();
+			}
+		}
+
+		///* Enable form when edit or add */
+		function enablebreak() {
+			var mode = document.getElementById("formMode").text;
+
+			if (mode == "view") {
+				document.documentElement.scrollTop = 0;
+				document.getElementById("headingTwo").textContent = "Edit Organization";
+				document.getElementById("createdInfo").hidden = true;
+			}
+
+			document.getElementById("break").hidden = false;
+			
+			$("#orgNameTitle").addClass("required");
+			$("#orgaName").addClass("form-control");
+			$("#orgaName").removeClass("form-control-plaintext");
+			document.getElementById("orgaName").removeAttribute("readonly");
+
+			$("#orgTypeTitle").addClass("required");
+			$("#orgaType").addClass("form-control");
+			$("#orgaType").removeClass("form-control-plaintext");
+			document.getElementById("orgaType").removeAttribute("disabled");
+
+			$("#address").addClass("form-control");
+			$("#address").removeClass("form-control-plaintext");
+			document.getElementById("address").removeAttribute("readonly");
+
+			$("#postcode").addClass("form-control");
+			$("#postcode").removeClass("form-control-plaintext");
+			document.getElementById("postcode").removeAttribute("readonly");
+
+			$("#city").addClass("form-control");
+			$("#city").removeClass("form-control-plaintext");
+			document.getElementById("city").removeAttribute("readonly");
+
+			$("#state").addClass("form-control");
+			$("#state").removeClass("form-control-plaintext");
+			document.getElementById("state").removeAttribute("disabled");
+
+			$("#email").addClass("form-control");
+			$("#email").removeClass("form-control-plaintext");
+			document.getElementById("email").removeAttribute("readonly");
+
+			$("#tel").addClass("form-control");
+			$("#tel").removeClass("form-control-plaintext");
+			document.getElementById("tel").removeAttribute("readonly");
+
+			$("#fax").addClass("form-control");
+			$("#fax").removeClass("form-control-plaintext");
+			document.getElementById("fax").removeAttribute("readonly");
+
+			$("#url").addClass("form-control");
+			$("#url").removeClass("form-control-plaintext");
+			document.getElementById("url").removeAttribute("readonly");
+
+			$("#effectStart").addClass("form-control");
+			$("#effectStart").removeClass("form-control-plaintext");
+			document.getElementById("effectStart").removeAttribute("readonly");
+
+			$("#effectEnd").addClass("form-control");
+			$("#effectEnd").removeClass("form-control-plaintext");
+			document.getElementById("effectEnd").removeAttribute("readonly");
+
+			document.getElementById("inputLogo").hidden = false;
+			document.getElementById("btnSave").hidden = false;
+			document.getElementById("btnEdit").hidden = true;
+			document.getElementById("btnCancel").hidden = true;
+			document.getElementById("btnConfirmCancel").hidden = false;	
+
+			// Display file name on select
+			$(".custom-file-input").on(
+				"change",
+				function() {
+					var fileName = $(this).val().split("\\").pop();
+					$(this).siblings(".custom-file-label").addClass(
+							"selected").html(fileName);
+				});
+		}
+
+		function onCancel() {
+			window.location = "[[@{/base/admin/organization/organizationList}]]";
+		}
+	</script>
+	
+	<script type="text/javascript" src="../../../js/scripts.js"></script>
+
+</body>
+</html>

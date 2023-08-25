@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<section name="Workbench">
+	<section name="org.eclipse.ui.texteditor.FindReplaceDialog">
+		<item key="wrap" value="false"/>
+		<item key="casesensitive" value="true"/>
+		<item key="wholeword" value="false"/>
+		<item key="incremental" value="false"/>
+		<item key="isRegEx" value="false"/>
+		<item key="selection" value="MODULE_NAME"/>
+		<list key="findhistory">
+			<item value="MODULE_NAME"/>
+			<item value="final "/>
+			<item value="Folder"/>
+			<item value="DESC_TXT"/>
+			<item value="lblSearchResult"/>
+			<item value="customFileLang"/>
+			<item value="newFileContent"/>
+			<item value="files"/>
+			<item value="newFileContentLabel"/>
+			<item value="value"/>
+			<item value="multi"/>
+			<item value="swal"/>
+			<item value="hplModelId2Temp"/>
+			<item value="screenMode"/>
+			<item value="fProdFileItem"/>
+		</list>
+		<list key="replacehistory">
+			<item value=""/>
+			<item value="prodFileItem"/>
+			<item value="getFkHplId"/>
+			<item value="static"/>
+			<item value="Browse"/>
+			<item value="searchPath"/>
+			<item value="searchG2LotExp"/>
+			<item value="?8"/>
+			<item value="?7"/>
+			<item value="?6"/>
+			<item value="?5"/>
+			<item value="pf"/>
+			<item value="?9"/>
+			<item value="searchHplId"/>
+			<item value="searchHplModelId"/>
+		</list>
+	</section>
+	<section name="org.eclipse.ui.texteditor.FindReplaceDialog_dialogBounds">
+		<item key="DIALOG_X_ORIGIN" value="1487"/>
+		<item key="DIALOG_Y_ORIGIN" value="172"/>
+		<item key="DIALOG_WIDTH" value="344"/>
+		<item key="DIALOG_HEIGHT" value="523"/>
+		<item key="DIALOG_FONT_NAME" value="1|Segoe UI|9.0|0|WINDOWS|1|-18|0|0|0|400|0|0|0|1|0|0|0|0|Segoe UI"/>
+	</section>
+	<section name="org.eclipse.ui.texteditor.GotoLineAction$GotoLineDialog_dialogBounds">
+		<item key="DIALOG_X_ORIGIN" value="575"/>
+		<item key="DIALOG_Y_ORIGIN" value="325"/>
+	</section>
+</section>

@@ -1,0 +1,5 @@
+package com.fms.pfc.controller.main;
+
+public class CommonController {
+
+}
