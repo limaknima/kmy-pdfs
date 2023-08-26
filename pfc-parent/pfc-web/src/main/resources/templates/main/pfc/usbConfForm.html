@@ -201,8 +201,8 @@
 							id="btnAddCancel" data-toggle="modal" hidden="true"
 							data-target="#cancelConfirmDialog">Cancel</button>
 
-						<a class="btn btn-primary" style="width: 90px;" type="button"
-							id="btnViewCancel" th:href="@{/main/pfc/usbConfList}">Cancel</a>
+						<a class="btn btn-primary" style="width: 90px;" type="button" hidden="true"
+							id="btnViewCancel" th:href="@{/main/pfc/usbConfList}">Close</a>
 							
 						<button class="btn btn-primary" style="width: 90px;"
 							hidden="true" id="btnEditCancel" type="button"
@@ -341,8 +341,12 @@
 			//Enable form for add
 			if (mode == "add") {				
 				enableEditMode();
+				document.getElementById("btnAddCancel").hidden = false;
 			} else if (mode == "edit") {
 				enableEditMode();
+				document.getElementById("btnEditCancel").hidden = false;
+			} else {
+				document.getElementById("btnViewCancel").hidden = false;
 			}
 		}
 

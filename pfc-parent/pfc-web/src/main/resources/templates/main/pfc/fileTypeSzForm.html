@@ -165,7 +165,7 @@
 							data-target="#cancelConfirmDialog">Cancel</button>
 
 						<a class="btn btn-primary" style="width: 90px;" type="button"
-							id="btnViewCancel" th:href="@{/main/pfc/fileTypeSzList}">Cancel</a>
+							hidden="true" id="btnViewCancel" th:href="@{/main/pfc/fileTypeSzList}">Close</span></a>
 							
 						<button class="btn btn-primary" style="width: 90px;"
 							hidden="true" id="btnEditCancel" type="button"
@@ -304,8 +304,13 @@
 			//Enable form for add
 			if (mode == "add") {				
 				enableEditMode();
+				document.getElementById("btnAddCancel").hidden = false;
 			} else if (mode == "edit") {
+				document.getElementById("btnEditCancel").hidden = false;
 				enableEditMode();
+			} else {
+				// view mode
+				document.getElementById("btnViewCancel").hidden = false;
 			}
 		}
 
