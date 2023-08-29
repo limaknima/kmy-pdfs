@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -86,7 +87,10 @@ public class MenuRoleFunctionController {
 		model.put("mrfItems", mrfServ.findAllDto(true));
 		model.put("smenuItems", mrfServ.getMenuItemsList());
 		model.put("sfuncItems", mrfServ.getFunctionList());
-		model.put("sroleItems", mrfServ.getRoleList());
+		model.put("sroleItems",
+				mrfServ.getRoleList().stream()
+						.filter(arg0 -> arg0.getOrgId().equals((String) model.get("loggedUserOrg")))
+						.collect(Collectors.toList()));
 
 		return new ModelAndView("/base/admin/menuRoleFunctionList", model);
 	}
@@ -127,7 +131,9 @@ public class MenuRoleFunctionController {
 			
 			model.put("menuItems", mrfServ.getMenuItemsList());
 			model.put("funcItems", mrfServ.getFunctionList());
-			model.put("roleItems", mrfServ.getRoleList());
+			model.put("roleItems", mrfServ.getRoleList().stream()
+					.filter(arg0 -> arg0.getOrgId().equals((String) model.get("loggedUserOrg")))
+					.collect(Collectors.toList()));
 			
 			model.put("pkFtypeId", dto.getPkMrfId());
 			model.put("menuRoleFuncItem", dto);
@@ -178,7 +184,9 @@ public class MenuRoleFunctionController {
 		model.put("menuRoleFuncItem", new MenuRoleFunctionDto());
 		model.put("menuItems", mrfServ.getMenuItemsList());
 		model.put("funcItems", mrfServ.getFunctionList());
-		model.put("roleItems", mrfServ.getRoleList());
+		model.put("roleItems", mrfServ.getRoleList().stream()
+				.filter(arg0 -> arg0.getOrgId().equals((String) model.get("loggedUserOrg")))
+				.collect(Collectors.toList()));
 
 		// Set form header
 		model.put("header", "Add " + MODULE_NAME);

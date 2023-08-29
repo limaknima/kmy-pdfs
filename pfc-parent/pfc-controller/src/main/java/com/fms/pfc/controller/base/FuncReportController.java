@@ -34,6 +34,7 @@ import com.fms.pfc.common.Authority;
 import com.fms.pfc.common.CommonConstants;
 import com.fms.pfc.domain.model.TranxHistory;
 import com.fms.pfc.service.api.base.LoginService;
+import com.fms.pfc.service.api.base.MenuRoleFunctionService;
 import com.fms.pfc.service.api.base.OrganizationService;
 import com.fms.pfc.service.api.base.TrxHisService;
 import com.fms.pfc.validation.common.CommonValidation;
@@ -75,7 +76,7 @@ public class FuncReportController {
 		model = auth.onPageLoad(model, request);
 		auth.isAuthUrl(request, response);
 		model.put("userList", logServ.searchAllActiveUser());
-		model.put("orgList", orgServ.searchOrganization("", "", "", "", ""));
+		//model.put("orgList", orgServ.searchOrganization("", "", "", "", ""));
 
 		//request.getSession().setAttribute("sessionModel", model);
 
@@ -85,7 +86,7 @@ public class FuncReportController {
 	@PostMapping("/base/activity/funcExeReport")
 	@ResponseBody
 	public ModelAndView PrintAuthReport(HttpServletRequest request, HttpServletResponse response,
-			@RequestParam(name = "userId") String userId, @RequestParam(name = "orgId") String orgId,
+			@RequestParam(name = "userId") String userId,
 			@RequestParam(name = "dateFr") String dateFr, @RequestParam(name = "dateTo") String dateTo,
 			@RequestParam(name = "insert", required = false) String insert,
 			@RequestParam(name = "update", required = false) String update,
@@ -95,6 +96,8 @@ public class FuncReportController {
 			@RequestParam(name = "search", required = false) String search, HttpSession session) {
 
 		//Map<String, Object> model = (Map<String, Object>) session.getAttribute("sessionModel");
+		
+		String orgId = (String) model.get("loggedUserOrg");
 
 		clearForm(model);
 

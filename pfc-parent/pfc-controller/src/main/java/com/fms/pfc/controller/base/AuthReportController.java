@@ -78,7 +78,7 @@ public class AuthReportController {
 		model = auth.onPageLoad(model, request);
 		auth.isAuthUrl(request, response);
 		model.put("userList", logServ.searchAllActiveUser());
-		model.put("orgList", orgServ.searchOrganization("", "", "", "", ""));
+		//model.put("orgList", orgServ.searchOrganization("", "", "", "", ""));
 
 		//request.getSession().setAttribute("sessionModel", model);
 
@@ -88,11 +88,11 @@ public class AuthReportController {
 	@PostMapping("/base/activity/authReport")
 	public ModelAndView PrintAuthReport(HttpServletRequest request, HttpServletResponse response,
 			@RequestParam(name = "userSession") String userSession, @RequestParam(name = "userId") String userId,
-			@RequestParam(name = "orgId") String orgId, @RequestParam(name = "dateFr") String dateFr,
+			@RequestParam(name = "dateFr") String dateFr,
 			@RequestParam(name = "dateTo") String dateTo, HttpSession session) {
 
 		//Map<String, Object> model = (Map<String, Object>) session.getAttribute("sessionModel");
-
+		String orgId = (String) model.get("loggedUserOrg");
 		clearForm(model);
 
 		boolean error = false;

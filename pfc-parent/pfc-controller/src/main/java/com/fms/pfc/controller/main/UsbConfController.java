@@ -117,6 +117,7 @@ public class UsbConfController {
 	private void filter(boolean init) {
 		boolean isAdmin = (Boolean) model.get("isAdmin");
 		String grp = (String) model.get("loggedUserGrp");
+		String org = (String) model.get("loggedUserOrg");
 		List<String> defaultHpl = g2LotServ.hplList();
 
 		if (init) {
@@ -136,11 +137,16 @@ public class UsbConfController {
 			if (!isAdmin) {
 				model.put("hplItems", defaultHpl.stream().filter(arg0 -> arg0.equals(grp)).collect(Collectors.toList()));
 				model.put("usrItems", usbConfServ.getAllActiveUsr().stream()
-						.filter(arg0 -> arg0.getGroupId().equals(grp)).collect(Collectors.toList()));
+						.filter(arg0 -> arg0.getGroupId().equals(grp))
+						.filter(arg0 -> arg0.getOrgId().equals(org))
+						.collect(Collectors.toList()));
 			} else {
 				// if user is admin, remove filter
 				model.put("hplItems", defaultHpl);
-				model.put("usrItems", usbConfServ.getAllActiveUsr());
+				model.put("usrItems", usbConfServ.getAllActiveUsr()
+						.stream()
+						.filter(arg0 -> arg0.getOrgId().equals(org))
+						.collect(Collectors.toList()));
 			}
 		}
 		
