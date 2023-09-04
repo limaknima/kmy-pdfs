@@ -404,6 +404,7 @@ public class ProdFileController {
 //			FileUtils.checksumCRC32(finalFileContent.transferTo(new File("")));long fileSize = fileContent.getSize();
 			dto.setFileType(finalFileContent.getContentType());
 			dto.setFileSize(finalFileContent.getSize());
+			dto.setContentObject(finalFileContent.getBytes());
 //			dto.setCrcValue(crcValue);
 		}
 
@@ -661,6 +662,7 @@ public class ProdFileController {
 			e.printStackTrace();
 		}
 		//data = reglFileDto.getContentObject();
+//		data = pfDto.getContentObject();
 
 		MediaType mt = MediaTypeUtils.getMediaTypeForFileName(servletContext, fileName);
 

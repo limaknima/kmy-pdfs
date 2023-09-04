@@ -136,6 +136,7 @@ public class MenuController {
 		for (String hpl : hpls) {
 			BarChartJs bar = new BarChartJs();
 			bar.setLabel(hpl);
+			bar.setName(hpl);
 			bar.setBackgroundColor(CommonUtil.randomHexColor());
 			
 			List<Integer> mths = new ArrayList<Integer>();
@@ -147,6 +148,25 @@ public class MenuController {
 		}     
 		
 		model.put("bars", bars);
+	}
+	
+	private void generatePieChart2(Map<String, Object> model) {
+		List<Object[]> result = g2Serv.lotCountByHpl();
+		//List<String> cols = result.stream().map(arg0 -> (String) arg0[0]).sorted().collect(Collectors.toList());
+		// List<String> data = result.stream().map(arg0 ->
+		// arg0[1].toString()).collect(Collectors.toList());
+		//model.put("cols", String.join(",", cols));
+		// model.put("data", String.join(",", data));
+
+		List<PieChartData> pcList = new ArrayList<PieChartData>();
+		for (Object[] obj : result) {
+			PieChartData pc = new PieChartData();
+			pc.setName((String)obj[0]);
+			pc.setY((Integer)obj[1]);
+			pcList.add(pc);
+		}
+		
+		model.put("pcList", pcList);
 	}
 
 	@GetMapping("/menu/regulationMenu")
@@ -211,6 +231,9 @@ public class MenuController {
 
 		model = auth.onPageLoad(model, request);
 		auth.isAuthUrl(request, response);
+		
+		generateBarChart(model);
+		generatePieChart2(model);
 
 		return new ModelAndView("menu/reportMenu", model);
 	}
@@ -262,6 +285,7 @@ public class MenuController {
 	@Data
 	public class BarChartJs{
 		private String label;
+		private String name;
 		private String backgroundColor;
 		private List<Integer> data;
 		
@@ -271,6 +295,12 @@ public class MenuController {
 	public class PieChartJs{
 		private List<String> backgroundColor;
 		private List<Integer> data;
+	}
+	
+	@Data
+	public class PieChartData{
+		private String name;
+		private int y;
 	}
 
 }

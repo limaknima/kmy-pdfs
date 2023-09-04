@@ -53,36 +53,6 @@
                         <i class="fas fa-folder-open"></i>
                     </div> <span th:text="#{menuProdFile}"></span>
                 </a>
-                <a class="nav-link" th:href="@{/menu/regulationMenu}" th:if="${M200}">
-                    <div class="sb-nav-link-icon">
-                        <i class="fas fa-folder-open"></i>
-                    </div> <span th:text="#{menuReg}"></span>
-                </a>
-                <a class="nav-link" th:href="@{/menu/rawMaterialMenu}" th:if="${M300}">
-                    <div class="sb-nav-link-icon">
-                        <i class="far fa-file-alt"></i>
-                    </div> <span th:text="#{menuRM}"></span>
-                </a>
-                <a class="nav-link" th:href="@{/menu/recipeMenu}" th:if="${M400}">
-                    <div class="sb-nav-link-icon">
-                        <i class="fa fa-book"></i>
-                    </div> <span th:text="#{menuPR}"></span>
-                </a>
-                <a class="nav-link" th:href="@{/menu/permissibilityMenu}" th:if="${M500}">
-                    <div class="sb-nav-link-icon">
-                        <i class="far fa-calendar-check"></i>
-                    </div> <span th:text="#{menuFinalPerm}"></span>
-                </a>
-                <a class="nav-link" th:href="@{/menu/letterMenu}" th:if="${M1100}">
-                    <div class="sb-nav-link-icon">
-                        <i class="far fa-envelope-open"></i>
-                    </div> <span th:text="#{menuLetter}"></span>
-                </a>
-                <a class="nav-link" th:href="@{/menu/reportMenu}" th:if="${M600}">
-                    <div class="sb-nav-link-icon">
-                        <i class="fas fa-print"></i>
-                    </div> <span th:text="#{menuReport}"></span>
-                </a>
                 <a class="nav-link" th:href="@{/menu/adminMenu}" th:if="${M700}">
                     <div class="sb-nav-link-icon">
                         <i class="far fa-address-book"></i>
@@ -97,6 +67,11 @@
                     <div class="sb-nav-link-icon">
                         <i class="fas fa-chart-line"></i>
                     </div> <span th:text="#{menuActLog}"></span>
+                </a>
+                <a class="nav-link" th:href="@{/menu/reportMenu}" th:if="${M600}">
+                    <div class="sb-nav-link-icon">
+                        <i class="fas fa-print"></i>
+                    </div> <span th:text="#{menuReport}"></span>
                 </a>
             </div>
         </div>
