@@ -68,7 +68,7 @@
 														<option value="" selected hidden="true">Please Select</option>
 														<option th:each="menuItem: ${smenuItems}"
 															th:value="${menuItem.value}"
-															th:text="${menuItem.label}"
+															th:utext="${menuItem.label}"
 															th:selected="${menuItem.value} == ${menu}"/>
 													</select>
 												</div>

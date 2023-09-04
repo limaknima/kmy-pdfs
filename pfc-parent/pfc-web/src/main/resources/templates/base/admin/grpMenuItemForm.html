@@ -29,8 +29,8 @@
 					<ol class="breadcrumb mb-4">
 						<li class="breadcrumb-item active" ><a th:href="@{/}"><i class="fa fa-home"></i></a></li>
 						<li class="breadcrumb-item active" ><a th:href="@{/menu/adminMenu}"><span th:text="#{menuAdmin}"></span></a></li>
-						<li class="breadcrumb-item active" ><a th:href="@{/base/admin/menuRoleFuncList}"><span th:text="#{moduleMenuRoleFunctionList}"></span></a></li>
-						<li class="breadcrumb-item active" ><span th:text="#{moduleMenuRoleFunctionForm}"></span></li>
+						<li class="breadcrumb-item active" ><a th:href="@{/base/admin/grpMenuItemList}"><span th:text="#{moduleGrpMenuItemList}"></span></a></li>
+						<li class="breadcrumb-item active" ><span th:text="#{moduleGrpMenuItemForm}"></span></li>
 					</ol>
 					<div class="alert alert-danger alert-dismissible" th:if=${error}>
 						<a class="close" data-dismiss="alert" aria-label="close">&times;</a>
@@ -46,65 +46,57 @@
 							th:text="${mode}"></a>
 						<div class="card-body">
 							<form action="#" id="mainForm"
-								th:action="@{/base/admin/menuRoleFuncFormSave}"
-								th:object="${menuRoleFuncItem}" method="POST"
+								th:action="@{/base/admin/grpMenuItemFormSave}"
+								th:object="${grpMenuItemItem}" method="POST"
 								data-toggle="validator" novalidate="true"
 								enctype="multipart/form-data">
 								
-								<div id="menuDiv" class="form-group row">
-									<label class="col-sm-2 col-form-label control-label"><span th:text="#{navMenu}"></span>
-									 <a name="asterisk" style="color: red;"
-										hidden="true">*</a>
+								<div id="hplDiv" class="form-group row">
+									<label class="col-sm-2 col-form-label control-label"><span th:text="#{lblGrpType}"></span>
+										<a name="asterisk" style="color: red;" hidden="true">*</a>
 									</label>
+
 									<div class="row col-sm-5">
 										<label class="col-form-label">:</label>
-										<div class="col">	
-											<select id="menuId" class="custom-select" name="menuId" th:field="*{menuItemId}" disabled required>
+										<div class="col">
+											<select id="hpl" class="custom-select" name="hpl" th:value="${hpl}" disabled required
+												 onchange="onHplChange(); loadProdLn();">
 												<option value="" selected hidden="true">Please Select</option>
-												<option th:each="menuItem: ${menuItems}"
-													th:value="${menuItem.value}"
-													th:text="${menuItem.label}"
-													th:selected="${menuItem.value} == ${menuItemId}"/>
-											</select>
-										</div>
-										<input th:field="*{pkMrfId}" hidden="true">
-									</div>
-								</div>
-								
-								<div id="roleDiv" class="form-group row">
-									<label class="col-sm-2 col-form-label control-label"><span th:text="#{lblRole}"></span>
-									 <a name="asterisk" style="color: red;"
-										hidden="true">*</a>
-									</label>
-									<div class="row col-sm-5">
-										<label class="col-form-label">:</label>
-										<div class="col">	
-											<select id="roleId" class="custom-select" name="roleId" th:field="*{roleId}" disabled required>
-												<option value="" selected hidden="true">Please Select</option>
-												<option th:each="roleItem: ${roleItems}"
-													th:value="${roleItem.roleId}"
-													th:text="${roleItem.roleName}"
-													th:selected="${roleItem.roleId} == ${roleId}"/>
+												<option th:each="hplItem: ${hplItems}"
+													th:value="${hplItem}"
+													th:text="${hplItem}"
+													th:selected="${hplItem} == ${hpl}"/>
 											</select>
 										</div>
 									</div>
 								</div>
 								
-								<div id="funcTypeDiv" class="form-group row">
-									<label class="col-sm-2 col-form-label control-label"><span th:text="#{lblFuncType}"></span>
-									 <a name="asterisk" style="color: red;"
-										hidden="true">*</a>
-									</label>
-									<div class="row col-sm-5">
-										<label class="col-form-label">:</label>
-										<div class="col">	
-											<select id="functionTypeId" class="custom-select" name="functionTypeId" th:field="*{functionType}" disabled required>
-												<option value="" selected hidden="true">Please Select</option>
-												<option th:each="funcItem: ${funcItems}"
-													th:value="${funcItem.value}"
-													th:text="${funcItem.label}"
-													th:selected="${funcItem.value} == ${functionTypeId}"/>
+								<div id="usrListDiv" class="form-group row">
+									<label class="col-sm-2 col-form-label control-label"><span>Menu Item</span>
+										<a name="asterisk" style="color: red;" hidden="true">*</a>
+									</label> 
+									<label class="col-form-label">:</label>
+									<div id="usrListSel" class="col col-sm-5">
+										<div >
+											<ul class="list-group" id="selMenuItemView">
+												<li class="list-group-item" id="selMenuItemView1"
+													th:each="item : ${selMenuItems}"
+													th:value="${item.value}" th:utext="${item.label}">
+												</li>
+											</ul>
+										</div>
+										<div id="usrChoice" hidden="true">
+											<select multiple="multiple" size="20" name="menuItemChoice1" 
+												data-error="User selection cannot be empty!" 
+												class="dualList" >
+												<option th:each="item : ${menuItems}"
+													th:value="${item.value}" th:utext="${item.label}">
+												</option>
+												<option id="selMenuItemView1" th:each="item : ${selMenuItems}"
+													th:value="${item.value}" th:utext="${item.label}"
+													selected></option>
 											</select>
+											<div class="help-block with-errors"></div>
 										</div>
 									</div>
 								</div>
@@ -132,7 +124,7 @@
 							style="width: 90px; margin-right: 5px;" hidden="true"
 							id="btnSave">Save</button>
 						<a class="btn btn-primary" style="width: 90px;" type="button"
-							id="btnCancel" th:href="@{/base/admin/menuRoleFuncList}">Cancel</a>
+							id="btnCancel" th:href="@{/base/admin/grpMenuItemList}">Cancel</a>
 						<button class="btn btn-primary" style="width: 90px;" type="button"
 							hidden="true" id="btnConfirmCancel" data-toggle="modal"
 							data-target="#confirmDialog">Cancel</button> -->
@@ -140,7 +132,7 @@
 						<button class="btn btn-primary dropdown-toggle" type="button"
 							id="btnAction" data-toggle="dropdown" style="width: 90px;"
 							aria-haspopup="true" aria-expanded="false"
-							th:hidden="${btnAction}"><span th:text="#{btnAction}"></span></button>
+							th:hidden="${hidFunctionType_2}"><span th:text="#{btnAction}"></span></button>
 						<div class="dropdown-menu" style="width: 90px;"
 							aria-labelledby="dropdownMenuButton">
 							<button class="dropdown-item btn" type="submit" form="mainForm"
@@ -156,7 +148,7 @@
 							data-target="#cancelConfirmDialog">Cancel</button>
 
 						<a class="btn btn-primary" style="width: 90px;" type="button"
-							hidden="true" id="btnViewCancel" th:href="@{/base/admin/menuRoleFuncList}">Close</a>
+							hidden="true" id="btnViewCancel" th:href="@{/base/admin/grpMenuItemList}">Close</a>
 							
 						<button class="btn btn-primary" style="width: 90px;"
 							hidden="true" id="btnEditCancel" type="button"
@@ -247,7 +239,7 @@
 									<div class="modal-body">Do you want to cancel edit this record?</div>
 									<div class="modal-footer">
 										<a class="btn btn-primary" style="width: 90px;" type="button"
-											id="btnAddCancel" th:href="@{/base/admin/menuRoleFuncList}">Confirm</a>
+											id="btnAddCancel" th:href="@{/base/admin/grpMenuItemList}">Confirm</a>
 
 										<button type="button" class="btn btn-secondary"
 											data-dismiss="modal">Cancel</button>
@@ -271,7 +263,7 @@
 									<div class="modal-body">Do you want to cancel this record?</div>
 									<div class="modal-footer">
 										<a class="btn btn-primary" style="width: 90px;" type="button"
-											id="btnAddCancel" th:href="@{/base/admin/menuRoleFuncList}">Confirm</a>
+											id="btnAddCancel" th:href="@{/base/admin/grpMenuItemList}">Confirm</a>
 
 										<button type="button" class="btn btn-secondary"
 											data-dismiss="modal">Cancel</button>
@@ -300,6 +292,7 @@
 				enableEditMode();
 				document.getElementById("btnEditCancel").hidden = false;
 			} else {
+				document.getElementById("break").hidden = false;
 				document.getElementById("btnViewCancel").hidden = false;
 			}
 		}
@@ -315,11 +308,11 @@
 			}
 			
 			document.getElementById("break").hidden = false;
-			document.getElementById("menuId").disabled = false;
+			/*document.getElementById("menuId").disabled = false;
 			document.getElementById("roleId").disabled = false;
-			document.getElementById("functionTypeId").disabled = false;
+			document.getElementById("functionTypeId").disabled = false;*/
 			
-			$("#menuDiv").addClass("required");
+			/*$("#menuDiv").addClass("required");
 			$("#menuId").addClass("form-control");
 			$("#menuId").removeClass("form-control-plaintext");
 			document.getElementById("menuId").removeAttribute("readonly");
@@ -332,19 +325,26 @@
 			$("#funcTypeDiv").addClass("required");
 			$("#functionTypeId").addClass("form-control");
 			$("#functionTypeId").removeClass("form-control-plaintext");
-			document.getElementById("functionTypeId").removeAttribute("readonly");
+			document.getElementById("functionTypeId").removeAttribute("readonly");*/
 						
 			document.getElementsByName("asterisk").forEach(e => {e.hidden = false;});
 
 			document.getElementById("btnSave").hidden = false;
 			document.getElementById("btnEdit").hidden = true;
 			
-			
+			$("#usrListDiv").addClass("required");
+			$("#selMenuItemView").hide()
+			document.getElementById("usrChoice").hidden = false;
 		}
+		
+		var dualList = $('.dualList').bootstrapDualListbox({
+			preserveSelectionOnMove : 'moved',
+			moveOnSelect : false,
+		});
 		
 				
 		//To enable before submit since disabled values won't pass to the server
-		$('#mainForm').on('submit', function() {
+		/*$('#mainForm').on('submit', function() {
 		    $('#menuId').prop('disabled', false);
 		});
 		$('#mainForm').on('submit', function() {
@@ -352,11 +352,11 @@
 		});
 		$('#mainForm').on('submit', function() {
 		    $('#functionTypeId').prop('disabled', false);
-		});
+		});*/
 
 		function onCancel() {
 
-			window.location = "[[@{/base/admin/menuRoleFuncList}]]";
+			window.location = "[[@{/base/admin/grpMenuItemList}]]";
 		}
 		
 		

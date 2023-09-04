@@ -1,5 +1,7 @@
 package com.fms.pfc.repository.base.api;
 
+import java.util.List;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
@@ -17,5 +19,17 @@ public interface MenuRepository extends JpaRepository<MenuItem, String> {
 			+ "where b.grp_id = ?1 "
 			+ "and a.url = ?2", nativeQuery = true)
 	MenuItem checkAuthority(String groupId, String url);
+	
+	@Query(value = "select a.* from menu_item a "
+			+ "where 1=1 "
+			+ "and a.seq_no != 0 "
+			+ "order by a.menu_item_id", nativeQuery = true)
+	List<MenuItem> searchMenuItems();
+	
+	@Query(value = "select a.* from menu_item a "
+			+ "where 1=1 "
+			+ "and a.menu_item_id =?1 "
+			+ "order by a.seq_no", nativeQuery = true)
+	MenuItem searchMenuItem(int menuItemId);
 	
 }

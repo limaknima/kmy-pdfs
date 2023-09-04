@@ -164,6 +164,7 @@ public class CommonConstants implements Serializable {
 	public static final int RECORD_TYPE_ID_USB_CONF = 22;
 	public static final int RECORD_TYPE_ID_G2_LOT_LIST = 23;
 	public static final int RECORD_TYPE_ID_MENU_ROLE_FUNC = 24;
+	public static final int RECORD_TYPE_ID_GRP_MENU_ITEM = 25;
 
 	public static final int RECORD_TYPE_ID_REGL = 101;
 	public static final int RECORD_TYPE_ID_RAW_MATL = 201;

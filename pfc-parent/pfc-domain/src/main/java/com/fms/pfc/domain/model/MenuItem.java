@@ -4,6 +4,7 @@ import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Table;
+import javax.persistence.Transient;
 
 @Entity
 @Table(name = "menu_item")
@@ -27,6 +28,17 @@ public class MenuItem {
 	
 	@Column(name = "url")
 	private String url;
+	
+	@Transient
+	private String menuItemNameTemp;
+
+	public String getMenuItemNameTemp() {
+		return menuItemNameTemp;
+	}
+
+	public void setMenuItemNameTemp(String menuItemNameTemp) {
+		this.menuItemNameTemp = menuItemNameTemp;
+	}
 
 	public int getMenuId() {
 		return menuId;

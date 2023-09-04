@@ -96,6 +96,28 @@ public class MenuRoleFunctionService {
 		}
 		return items;
 	}
+	
+	/**
+	 * Menu drop down items
+	 * 
+	 * @return List<LabelAndValueDto>
+	 */
+	public List<LabelAndValueDto> getAllMenuItemsList() {
+		List<LabelAndValueDto> items = new ArrayList<>();
+		List<Object[]> obj = mrfRepo.getAllMenuItemsList();
+		int idx = 1;
+		for (Object[] o : obj) {
+			String label = "#"+idx+" "+(String) o[1];
+			
+			if((Integer) o[2] ==0 ) idx ++; 
+			if((Integer) o[2] !=0 ) {
+				label ="---- " + (String) o[1];
+			}
+			LabelAndValueDto lbl = new LabelAndValueDto(label, (Integer) o[0]);
+			items.add(lbl);
+		}
+		return items;
+	}
 
 	/**
 	 * Role drop down items

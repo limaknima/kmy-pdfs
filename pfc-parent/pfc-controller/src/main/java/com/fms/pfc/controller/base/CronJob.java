@@ -7,7 +7,6 @@ import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.StringTokenizer;
@@ -38,8 +37,6 @@ import com.fms.pfc.domain.model.AlertMessage;
 import com.fms.pfc.domain.model.Task;
 import com.fms.pfc.domain.model.UsrProfile;
 import com.fms.pfc.domain.model.UsrRole;
-import com.fms.pfc.domain.model.main.OnDemandSearch;
-import com.fms.pfc.domain.model.main.RmManf;
 import com.fms.pfc.exception.CommonException;
 import com.fms.pfc.service.api.base.AlertMessageService;
 import com.fms.pfc.service.api.base.AlertService;
@@ -47,10 +44,6 @@ import com.fms.pfc.service.api.base.ManufacturerService;
 import com.fms.pfc.service.api.base.TaskService;
 import com.fms.pfc.service.api.base.UserProfileService;
 import com.fms.pfc.service.api.base.UsrRoleService;
-import com.fms.pfc.service.api.main.OnDemandSearchService;
-import com.fms.pfc.service.api.main.ProductRecipeService;
-import com.fms.pfc.service.api.main.RawMaterialService;
-import com.fms.pfc.service.api.main.RmManfService;
 
 public class CronJob extends QuartzJobBean implements InterruptableJob {
 
@@ -59,23 +52,17 @@ public class CronJob extends QuartzJobBean implements InterruptableJob {
 	@Autowired
 	private JavaMailSender javaMailSender;
 	@Autowired
-	private RmManfService rmManfService;
-	@Autowired
 	private UserProfileService usrProfileService;
 	@Autowired
 	private AlertService alertService;
 	@Autowired
 	private ManufacturerService vendorService;
 	@Autowired
-	private RawMaterialService rmService;
-	@Autowired
 	private AlertMessageService alertMsgServ;
 	@Autowired
 	private TaskService taskServ;
 	@Autowired
 	private UsrRoleService usrRoleServ;
-	@Autowired
-	private ProductRecipeService prServ;
 	@Autowired
 	private Environment env;
 	@Autowired
@@ -245,7 +232,7 @@ public class CronJob extends QuartzJobBean implements InterruptableJob {
 		}
 		logger.debug("doIndividualReminder() END");
 	}
-
+/*
 	private void doRenewalReminder(String jobName) {
 		List<RmManf> rmManfList = rmManfService.searchRenewaldate();
 		DateFormat ddMMyyyyFormat = new SimpleDateFormat("dd/MM/yyyy");
@@ -292,7 +279,8 @@ public class CronJob extends QuartzJobBean implements InterruptableJob {
 
 		}
 	}
-
+*/
+	/*
 	private void doVipdReminder(String systemEmail, String usrGrpVipd, RmManf rmManf, LocalDate crrDate,
 			int monthToRemindBeforeExpiry, LocalDate vipdDate, int vipdYearsExpiry) {
 		LocalDate vipdRemindExpDate = null;
@@ -334,7 +322,8 @@ public class CronJob extends QuartzJobBean implements InterruptableJob {
 			}
 		}
 	}
-
+*/
+	/*
 	private void doDeclLetterReminder(String systemEmail, String usrGrpDecl, RmManf rmManf,
 			LocalDate crrDate, int monthToRemindBeforeExpiry, LocalDate letterDate, int decLetterYearsExpiry) {
 
@@ -377,7 +366,8 @@ public class CronJob extends QuartzJobBean implements InterruptableJob {
 			}
 		}
 	}
-
+*/
+	/*
 	private void sendAlertAndEmail(String systemEmail, RmManf rmManf, UsrProfile usr, String subject, String content) {
 		String rm = "";
 		if (rmManf != null)
@@ -398,7 +388,7 @@ public class CronJob extends QuartzJobBean implements InterruptableJob {
 			sendEmail(usr.getEmail(), subject, content, null);
 		}
 	}
-
+*/
 	private void sendEmail(String to, String subject, String content, String[] cc) {
 
 		if (!isHtml) {
@@ -456,8 +446,8 @@ public class CronJob extends QuartzJobBean implements InterruptableJob {
 	private void generateTdData(StringBuffer stringBuffer, int rowno, Task task) {
 		stringBuffer.append("<tr>");
 		stringBuffer.append("<td align ='right'>").append(rowno).append("</td>");
-		stringBuffer.append("<td>").append(getRefName(task.getRecordTypeId(), Integer.parseInt(task.getReferenceNum())))
-				.append("</td>");
+		//stringBuffer.append("<td>").append(getRefName(task.getRecordTypeId(), Integer.parseInt(task.getReferenceNum())))
+		//		.append("</td>");
 		stringBuffer.append("<td align ='center'>").append(getRecTypeDesc(task.getRecordTypeId())).append("</td>");
 		stringBuffer.append("<td align ='center'>").append(task.getAssignedTo()).append("</td>");
 		stringBuffer.append("<td>").append(new SimpleDateFormat("dd/MM/yyyy hh:mm:ss a").format(task.getDateAssigned()))
@@ -475,7 +465,7 @@ public class CronJob extends QuartzJobBean implements InterruptableJob {
 		generateCommonFooter(stringBuffer);
         return stringBuffer.toString();
 	}
-    
+    /*
 	private String getRefName(int recType, int ref) {
 		String result = "";
 		if (recType == CommonConstants.RECORD_TYPE_ID_RAW_MATL) {
@@ -486,6 +476,7 @@ public class CronJob extends QuartzJobBean implements InterruptableJob {
 
 		return result;
 	}
+	*/
 
 	private String getRecTypeDesc(int recType) {
 		String result = "";

@@ -9,7 +9,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -26,8 +25,6 @@ import com.fms.pfc.service.api.base.LoginService;
 import com.fms.pfc.service.api.base.TaskService;
 import com.fms.pfc.service.api.base.TrxHisService;
 import com.fms.pfc.service.api.base.UsrRoleService;
-import com.fms.pfc.service.api.main.ProductRecipeService;
-import com.fms.pfc.service.api.main.RawMaterialService;
 
 @Controller
 @SessionScope
@@ -36,8 +33,6 @@ public class TaskController {
 	private Authority auth;
 	private TaskService taskService;
 	private UsrRoleService usrRoleServ;
-	private RawMaterialService rmServ;
-	private ProductRecipeService prdRcpServ;
 	private LoginService logServ;
 	private TrxHisService trxHistServ;
 
@@ -45,18 +40,18 @@ public class TaskController {
 	private String context;
 	private Map<String, Object> model = new HashMap<String, Object>();
 
-	@Autowired
-	public TaskController(Authority auth, TaskService taskService, UsrRoleService usrRoleServ,
-			RawMaterialService rmServ, ProductRecipeService prdRcpServ, LoginService logServ, TrxHisService trxHistServ) {
-		super();
-		this.auth = auth;
-		this.taskService = taskService;
-		this.usrRoleServ = usrRoleServ;
-		this.rmServ = rmServ;
-		this.prdRcpServ = prdRcpServ;
-		this.logServ = logServ;
-		this.trxHistServ = trxHistServ;
-	}
+//	@Autowired
+//	public TaskController(Authority auth, TaskService taskService, UsrRoleService usrRoleServ,
+//			RawMaterialService rmServ, ProductRecipeService prdRcpServ, LoginService logServ, TrxHisService trxHistServ) {
+//		super();
+//		this.auth = auth;
+//		this.taskService = taskService;
+//		this.usrRoleServ = usrRoleServ;
+//		this.rmServ = rmServ;
+//		this.prdRcpServ = prdRcpServ;
+//		this.logServ = logServ;
+//		this.trxHistServ = trxHistServ;
+//	}
 
 	@GetMapping("/base/tray/myTask")
 	public ModelAndView getTaskList(HttpServletRequest request, HttpSession session, HttpServletResponse response) {
@@ -142,15 +137,15 @@ public class TaskController {
 	public void directToMaterialSrc(HttpServletRequest request, @RequestParam(name = "ref") String refName,
 			@RequestParam(name = "type") int recordTypeId, HttpServletResponse response) throws IOException {
 
-		if (recordTypeId == CommonConstants.RECORD_TYPE_ID_RAW_MATL) {
-			response.sendRedirect(context + "/main/material/rawMatlFormView?matlId="
-					+ rmServ.searchRawMaterial(refName, String.valueOf(CommonConstants.SEARCH_OPTION_EXACT), 0, 0)
-							.get(0).getRawMatlId());
-		} else if (recordTypeId == CommonConstants.RECORD_TYPE_ID_PROD_RECP) {
-			response.sendRedirect(context + "/main/product/productFormView?prId="
-					+ prdRcpServ.searchProductIdByName(refName, String.valueOf(CommonConstants.SEARCH_OPTION_EXACT))
-							.get(0).getPrId());
-		}
+//		if (recordTypeId == CommonConstants.RECORD_TYPE_ID_RAW_MATL) {
+//			response.sendRedirect(context + "/main/material/rawMatlFormView?matlId="
+//					+ rmServ.searchRawMaterial(refName, String.valueOf(CommonConstants.SEARCH_OPTION_EXACT), 0, 0)
+//							.get(0).getRawMatlId());
+//		} else if (recordTypeId == CommonConstants.RECORD_TYPE_ID_PROD_RECP) {
+//			response.sendRedirect(context + "/main/product/productFormView?prId="
+//					+ prdRcpServ.searchProductIdByName(refName, String.valueOf(CommonConstants.SEARCH_OPTION_EXACT))
+//							.get(0).getPrId());
+//		}
 
 	}
 }

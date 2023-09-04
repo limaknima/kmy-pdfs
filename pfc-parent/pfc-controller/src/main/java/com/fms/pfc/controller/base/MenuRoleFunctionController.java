@@ -85,7 +85,7 @@ public class MenuRoleFunctionController {
 		mrfServ.menuRoleFunction(model, MENU_ITEM_ID, (String) model.get("loggedUser"));
 		
 		model.put("mrfItems", mrfServ.findAllDto(true));
-		model.put("smenuItems", mrfServ.getMenuItemsList());
+		model.put("smenuItems", mrfServ.getAllMenuItemsList());
 		model.put("sfuncItems", mrfServ.getFunctionList());
 		model.put("sroleItems",
 				mrfServ.getRoleList().stream()
@@ -129,7 +129,7 @@ public class MenuRoleFunctionController {
 		// Put model to HTML
 		if (dto != null) {
 			
-			model.put("menuItems", mrfServ.getMenuItemsList());
+			model.put("menuItems", mrfServ.getAllMenuItemsList());
 			model.put("funcItems", mrfServ.getFunctionList());
 			model.put("roleItems", mrfServ.getRoleList().stream()
 					.filter(arg0 -> arg0.getOrgId().equals((String) model.get("loggedUserOrg")))
@@ -182,7 +182,7 @@ public class MenuRoleFunctionController {
 
 		// Set fields
 		model.put("menuRoleFuncItem", new MenuRoleFunctionDto());
-		model.put("menuItems", mrfServ.getMenuItemsList());
+		model.put("menuItems", mrfServ.getAllMenuItemsList());
 		model.put("funcItems", mrfServ.getFunctionList());
 		model.put("roleItems", mrfServ.getRoleList().stream()
 				.filter(arg0 -> arg0.getOrgId().equals((String) model.get("loggedUserOrg")))

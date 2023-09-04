@@ -6,7 +6,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
-import java.util.Locale;
 import java.util.Objects;
 import java.util.StringTokenizer;
 
@@ -16,8 +15,6 @@ import javax.mail.internet.MimeMessage;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.MessageSource;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
@@ -25,20 +22,15 @@ import org.springframework.stereotype.Service;
 
 import com.fms.pfc.domain.dto.ChangeHistoryDto;
 import com.fms.pfc.domain.model.AlertMessage;
-import com.fms.pfc.domain.model.ChangeHistory;
 import com.fms.pfc.domain.model.Task;
 import com.fms.pfc.domain.model.TrxHistoryLog;
 import com.fms.pfc.domain.model.Usr;
-import com.fms.pfc.domain.model.main.ProductRecipe;
 import com.fms.pfc.service.api.base.AlertMessageService;
 import com.fms.pfc.service.api.base.AlertService;
 import com.fms.pfc.service.api.base.ChangeHisService;
-import com.fms.pfc.service.api.base.DocumentTypeService;
 import com.fms.pfc.service.api.base.LoginService;
 import com.fms.pfc.service.api.base.TaskService;
 import com.fms.pfc.service.api.base.TrxHisService;
-import com.fms.pfc.service.api.main.ProductRecipeService;
-import com.fms.pfc.service.api.main.RawMaterialService;
 
 @Service
 public class TaskCreation {
@@ -46,8 +38,8 @@ public class TaskCreation {
 	private final Logger logger = LoggerFactory.getLogger(TaskCreation.class);
 
 	private LoginService loginServ;
-	private RawMaterialService rmServ;
-	private ProductRecipeService prdRcpServ;
+//	private RawMaterialService rmServ;
+	//private ProductRecipeService prdRcpServ;
 	private AlertService alertServ;
 	private AlertMessageService alertMsgServ;
 	private TaskService taskServ;
@@ -60,21 +52,21 @@ public class TaskCreation {
 	private int pooledActorType = 0;
 	private int taskAction = 0;
 
-	@Autowired
-	public TaskCreation(LoginService loginServ, RawMaterialService rmServ, ProductRecipeService prdRcpServ,
-			AlertService alertServ, AlertMessageService alertMsgServ, TaskService taskServ,
-			JavaMailSender javaMailSender, ChangeHisService chgHisServ, TrxHisService trxServ) {
-		super();
-		this.loginServ = loginServ;
-		this.rmServ = rmServ;
-		this.prdRcpServ = prdRcpServ;
-		this.alertServ = alertServ;
-		this.alertMsgServ = alertMsgServ;
-		this.taskServ = taskServ;
-		this.javaMailSender = javaMailSender;
-		this.chgHisServ = chgHisServ;
-		this.trxServ = trxServ;
-	}
+//	@Autowired
+//	public TaskCreation(LoginService loginServ, RawMaterialService rmServ, ProductRecipeService prdRcpServ,
+//			AlertService alertServ, AlertMessageService alertMsgServ, TaskService taskServ,
+//			JavaMailSender javaMailSender, ChangeHisService chgHisServ, TrxHisService trxServ) {
+//		super();
+//		this.loginServ = loginServ;
+//		this.rmServ = rmServ;
+//		this.prdRcpServ = prdRcpServ;
+//		this.alertServ = alertServ;
+//		this.alertMsgServ = alertMsgServ;
+//		this.taskServ = taskServ;
+//		this.javaMailSender = javaMailSender;
+//		this.chgHisServ = chgHisServ;
+//		this.trxServ = trxServ;
+//	}
 
 	/*
 	 * Task Creation for Raw Material
@@ -181,7 +173,7 @@ public class TaskCreation {
 				}
 				
 			} else {
-				notifyUser = rmServ.searchRawMaterial("", "", rawMatlId, 0).get(0).getCreatorId();
+			//	notifyUser = rmServ.searchRawMaterial("", "", rawMatlId, 0).get(0).getCreatorId();
 
 				if (notifyUser.equals(CommonConstants.USER_ID_SYSTEM)) {
 					notifyUser = taskServ
@@ -311,7 +303,7 @@ public class TaskCreation {
 
 	protected void findPooledActorPR(int refId, int nextStatus, int recordTypeId) {
 		//Find PR creator, and it should not be system
-		String tempActor = prdRcpServ.searchProductRecipe("", "", "", "", refId, 0).get(0).getCreatorId();
+		String tempActor = "";//prdRcpServ.searchProductRecipe("", "", "", "", refId, 0).get(0).getCreatorId();
 		if (StringUtils.equals(tempActor, CommonConstants.USER_ID_SYSTEM)) {
 			// Find latest occurrence of Task involving maker assign to checker, take the
 			// creator which is maker
@@ -348,7 +340,7 @@ public class TaskCreation {
 	}
 
 	protected void findPooledActorRM(int refId, int nextStatus, int recordTypeId) {
-		String tempActor = rmServ.searchRawMaterial("", "", refId, 0).get(0).getCreatorId();
+		String tempActor = "";//rmServ.searchRawMaterial("", "", refId, 0).get(0).getCreatorId();
 		if (StringUtils.equals(tempActor, CommonConstants.USER_ID_SYSTEM)) {
 			// Find latest occurrence of Task involving maker assign to checker, take the
 			// creator which is maker
@@ -479,7 +471,7 @@ public class TaskCreation {
 			}
 		} else {
 			Task searchLatestTask = taskServ.searchLatestTask(String.valueOf(prId),CommonConstants.RECORD_TYPE_ID_PROD_RECP);			
-			ProductRecipe productRecipe = prdRcpServ.searchProductRecipe("", "", "", "", prId, 0).get(0);
+			//ProductRecipe productRecipe = prdRcpServ.searchProductRecipe("", "", "", "", prId, 0).get(0);
 			
 			if (alertType.equals(AlertDefEnum.PR_CONFIRMED.strValue())) {//
 				
@@ -491,7 +483,7 @@ public class TaskCreation {
 				}
 
 				// Send notification to creator about verification status
-				String creatorId = productRecipe.getCreatorId();
+				String creatorId = "";//productRecipe.getCreatorId();
 				if (creatorId.equals(CommonConstants.USER_ID_SYSTEM)) {
 					if (null == searchLatestTask)
 						return;
@@ -531,7 +523,7 @@ public class TaskCreation {
 						//subDesc = setChangeLogEmailBody(prId, subDesc, modDateStr, CommonConstants.RECORD_TYPE_ID_PROD_RECP);
 					}
 				} else {
-					notifyUser = productRecipe.getCreatorId();
+					notifyUser = "";//productRecipe.getCreatorId();
 					if (notifyUser.equals(CommonConstants.USER_ID_SYSTEM)) {
 						if (null == searchLatestTask)
 							return;

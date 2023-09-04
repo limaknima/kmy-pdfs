@@ -5,6 +5,17 @@ import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Table;
 
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+import lombok.ToString;
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@ToString
+@EqualsAndHashCode
 @Entity
 @Table(name = "grp_menu_item")
 public class GrpMenuItem {
@@ -21,38 +32,5 @@ public class GrpMenuItem {
 	@Id
 	@Column(name = "menu_item_id")
 	private int menuItemId;
-
-	public String getGroupId() {
-		return groupId;
-	}
-
-	public void setGroupId(String groupId) {
-		this.groupId = groupId;
-	}
-
-	public int getMenuId() {
-		return menuId;
-	}
-
-	public void setMenuId(int menuId) {
-		this.menuId = menuId;
-	}
-
-	public int getParentMenuId() {
-		return parentMenuId;
-	}
-
-	public void setParentMenuId(int parentMenuId) {
-		this.parentMenuId = parentMenuId;
-	}
-
-	public int getMenuItemId() {
-		return menuItemId;
-	}
-
-	public void setMenuItemId(int menuItemId) {
-		this.menuItemId = menuItemId;
-	}
-
 	
 }

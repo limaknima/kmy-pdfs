@@ -21,8 +21,19 @@ public interface MenuRoleFunctionRepository extends JpaRepository<MenuRoleFuncti
 			+ ",menu_item_name "
 			+ "from menu_item "
 			+ "where 1=1 "
-			+ "and parent_menu_item_id !=0 ", nativeQuery = true)
+			+ "and parent_menu_item_id !=0 "
+			+ "and seq_no !=0 ", nativeQuery = true)
 	List<Object[]> getMenuItemsList();
+	
+	@Query(value = "select "
+			+ "menu_item_id "
+			+ ",menu_item_name "
+			+ ",parent_menu_item_id "
+			+ "from menu_item "
+			+ "where 1=1 "
+			+ "and seq_no !=0 "
+			+ "order by seq_no", nativeQuery = true)
+	List<Object[]> getAllMenuItemsList();
 	
 	@Query(value = "select "
 			+ "* "

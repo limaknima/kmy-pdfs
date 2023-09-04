@@ -21,10 +21,8 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import javax.sql.DataSource;
 
-import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.MessageSource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Controller;
@@ -42,8 +40,6 @@ import com.fms.pfc.common.CommonConstants;
 import com.fms.pfc.domain.dto.LabelAndValueDto;
 import com.fms.pfc.domain.model.TrxHistoryLog;
 import com.fms.pfc.service.api.base.TrxHisService;
-import com.fms.pfc.service.api.main.ProductRecipeService;
-import com.fms.pfc.service.api.main.RawMaterialService;
 
 import net.sf.jasperreports.engine.JasperCompileManager;
 import net.sf.jasperreports.engine.JasperExportManager;
@@ -60,23 +56,21 @@ public class TraceabilityReportController {
 	private Authority auth;
 	private TrxHisService trxHisServ;
 	private MessageSource msgSource;
-	private RawMaterialService rmServ;
-	private ProductRecipeService prServ;
 	private DataSource ds;
 
 	private Map<String, Object> model = new HashMap<String, Object>();
 
-	@Autowired
-	public TraceabilityReportController(Authority auth, TrxHisService trxHisServ, MessageSource msgSource,
-			RawMaterialService rmServ, ProductRecipeService prServ, DataSource ds) {
-		super();
-		this.auth = auth;
-		this.trxHisServ = trxHisServ;
-		this.msgSource = msgSource;
-		this.rmServ = rmServ;
-		this.prServ = prServ;
-		this.ds = ds;
-	}
+//	@Autowired
+//	public TraceabilityReportController(Authority auth, TrxHisService trxHisServ, MessageSource msgSource,
+//			RawMaterialService rmServ, ProductRecipeService prServ, DataSource ds) {
+//		super();
+//		this.auth = auth;
+//		this.trxHisServ = trxHisServ;
+//		this.msgSource = msgSource;
+//		this.rmServ = rmServ;
+//		this.prServ = prServ;
+//		this.ds = ds;
+//	}
 
 	@GetMapping("/base/activity/traceabilityReport")
 	public ModelAndView loadAuthReport(HttpServletRequest request, HttpServletResponse response) {
@@ -187,12 +181,12 @@ public class TraceabilityReportController {
 
 		List<LabelAndValueDto> lblVal = new ArrayList<LabelAndValueDto>();
 		String colName = "Raw Material";
-		if (StringUtils.equals(option, String.valueOf(CommonConstants.RECORD_TYPE_ID_RAW_MATL))) {
-			lblVal = rmServ.getRmNameLabelAndValue();
-		} else if (StringUtils.equals(option, String.valueOf(CommonConstants.RECORD_TYPE_ID_PROD_RECP))) {
-			lblVal = prServ.getPrNameLabelAndValue();
-			colName = "Product Recipe";
-		}
+//		if (StringUtils.equals(option, String.valueOf(CommonConstants.RECORD_TYPE_ID_RAW_MATL))) {
+//			lblVal = rmServ.getRmNameLabelAndValue();
+//		} else if (StringUtils.equals(option, String.valueOf(CommonConstants.RECORD_TYPE_ID_PROD_RECP))) {
+//			lblVal = prServ.getPrNameLabelAndValue();
+//			colName = "Product Recipe";
+//		}
 		lblVal.sort(Comparator.comparing(LabelAndValueDto::getLabel));
 
 		model.put("items", lblVal);
