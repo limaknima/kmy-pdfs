@@ -33,6 +33,7 @@ public class MenuRoleFunctionService {
 	private UsrRoleService usrRoleServ;
 	
 	private static final String ROLE_ID_ADM = "ADM";
+	private static final String ROLE_ID_SUSR = "SUSR";
 
 	@Autowired
 	public MenuRoleFunctionService(MenuRoleFunctionRepository mrfRepo, MenuRoleFunctionConverter mrfConv,
@@ -180,6 +181,7 @@ public class MenuRoleFunctionService {
 		List<UsrRole> userRoles = searchUserRole(userId);
 		List<String> roleStrList = userRoles.stream().map(UsrRole::getRoleId).sorted().collect(Collectors.toList());
 		model.put("isAdmin", roleStrList.contains(ROLE_ID_ADM) ? true : false);
+		model.put("isSuperUser", roleStrList.contains(ROLE_ID_SUSR) ? true : false);
 
 		// default function/button to hidden
 		List<Integer> func = mrf.stream().map(MenuRoleFunctionDto::getFunctionType).distinct()

@@ -192,18 +192,7 @@
 													th:value="${notificationItem.alertId}" /></td>
 												<td
 													th:text="${#dates.format(notificationItem.createdDate, 'dd/MM/yyyy hh:mm:ss a')}"></td>
-												<td><a
-													th:if="${notificationItem.recordTypeId} == 201"
-													th:href="@{/main/material/rawMatlFormView(matlId=${notificationItem.recordRef})}"
-													th:text="${notificationItem.recordRefDesc}"></a> 
-													<a
-													th:if="${notificationItem.recordTypeId} == 202"
-													th:href="@{/main/material/flavStatusRmList}"
-													th:text="${notificationItem.recordRefDesc}"></a> 
-													<a
-													th:if="${notificationItem.recordTypeId} == 301"
-													th:href="@{/main/product/productFormView(prId=${notificationItem.recordRef})}"
-													th:text="${notificationItem.recordRefDesc}"></a> 													
+												<td th:text="${notificationItem.recordRefDesc}"></a> 													
 												</td>
 												<td> <a
 													th:href="@{/base/tray/viewNotification(alertId=${notificationItem.alertId})}"

@@ -137,15 +137,17 @@
 										<div class="ml-auto">  	
 											<!-- 
 											* based on SIT Incident Register 127 - need to hide Add and Delete button.
-											* added empty braille code &#10240; just to align the div.	
+											* added empty braille code &#10240; just to align the div.	-->
 																					
 										  	<button class="btn btn-danger" id="btnDelete" type="button"
 										  		data-toggle="modal" data-target="#confirmDialog"
-												style="margin-bottom: 10px; width: 90px;" disabled="disabled">Delete</button>
+												style="margin-bottom: 10px; width: 90px;" disabled="disabled"
+												th:hidden="${hidFunctionType_3}">Delete</button>
 										
 											<a class="btn btn-primary" th:href="@{/base/admin/group/addGroup}" 
-												style="margin-bottom: 10px; width: 90px;">Add</a> 
-											-->
+												style="margin-bottom: 10px; width: 90px;"
+												th:hidden="${hidFunctionType_1}">Add</a> 
+											
 											&#10240;
 										</div>	
 									</div>

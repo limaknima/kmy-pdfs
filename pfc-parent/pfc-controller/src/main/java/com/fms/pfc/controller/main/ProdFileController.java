@@ -166,28 +166,28 @@ public class ProdFileController {
 	 * @param init
 	 */
 	private void filter(boolean init) {
-		boolean isAdmin = (Boolean) model.get("isAdmin");
+		boolean isSuperUser = (Boolean) model.get("isSuperUser");
 		String grp = (String) model.get("loggedUserGrp");
 		List<String> defaultHpl = g2LotServ.hplList();
 		
 		if (init) {
-			// check if user is not admin, do filtering
-			if (!isAdmin) {
+			// check if user is not super user, do filtering
+			if (!isSuperUser) {
 				model.put("prodFileAllItems", prodFileServ.searchByCriteria(grp, "", "", "", "", "", "", ""));
 				model.put("searchHplItems",
 						defaultHpl.stream().filter(arg0 -> arg0.equals(grp)).collect(Collectors.toList()));
 				model.put("searchHplModelItems", g2LotServ.hplModelList(grp));
 
 			} else {
-				// if user is admin, remove filter
+				// if user is super user, remove filter
 				model.put("prodFileAllItems", prodFileServ.searchByCriteria("", "", "", "", "", "", "", ""));
 				model.put("searchHplItems", defaultHpl);
 				model.put("searchHplModelItems", g2LotServ.hplModelList(""));
 			}
 
 		} else {
-			// check if user is not admin, do filtering
-			if (!isAdmin) {
+			// check if user is not super user, do filtering
+			if (!isSuperUser) {
 				model.put("hplItems",
 						defaultHpl.stream().filter(arg0 -> arg0.equals(grp)).collect(Collectors.toList()));
 
@@ -197,7 +197,7 @@ public class ProdFileController {
 		}
 		
 		// for search
-		if (!isAdmin) {
+		if (!isSuperUser) {
 			model.put("filterHpl", grp);
 		}
 	}
@@ -768,7 +768,7 @@ public class ProdFileController {
 					ftypeCnt++;
 					// check min and max file size
 					if (fileSize < fstDto.getMinSize()) {
-						errorMsg += "Minimum File size must be minimum " + fstDto.getMinSize() + " KB.";
+						errorMsg += "Minimum File size must be minimum " + fstDto.getMinSize() + " KB"+BREAKLINE;
 					} else if (fileSize > fstDto.getMaxSize()) {
 						model.put("info", "Take note that File size has exceeded the maximum file size configured.");
 					}
@@ -777,11 +777,11 @@ public class ProdFileController {
 
 			if (ftypeCnt == 0) {
 				errorMsg += "File type/extension=" + fileType + " for the file has not been configured for HPL="
-						+ dto.getHpl();
+						+ dto.getHpl()+BREAKLINE;
 			}
 
 		} else {
-			errorMsg += "No file type and size configuration found for this HPL=" + dto.getHpl();
+			errorMsg += "No file type and size configuration found for this HPL=" + dto.getHpl()+BREAKLINE;
 		}
 		return errorMsg;
 	}
@@ -807,22 +807,22 @@ public class ProdFileController {
 				if (!StringUtils.equals(usbConf.getHpl(), dto.getHpl())
 						|| !StringUtils.equalsIgnoreCase(usbConf.getProdLn(), dto.getProdLn())) {
 					errorMsg += "No configuration found for USB=" + usbConf.getName() + ", Serial No="
-							+ usbConf.getSerialNo() + ", HPL=" + usbConf.getHpl() + ",Prod Ln=" + usbConf.getProdLn();
+							+ usbConf.getSerialNo() + ", HPL=" + usbConf.getHpl() + ",Prod Ln=" + usbConf.getProdLn()+BREAKLINE;
 				}
 				// check if current user is permitted
 				List<Usr> usrList = prodFileServ.findUsbUsrByParent(usbConf.getPkUconfId());
 				if (!usrList.isEmpty()) {
 					usrList = usrList.stream().filter(arg0 -> arg0.getUserId() == userId).collect(Collectors.toList());
 					if (usrList.isEmpty()) {
-						errorMsg += "Current user " + userId + " is not configured to be an uploader from this device.";
+						errorMsg += "Current user " + userId + " is not configured to be an uploader from this device"+BREAKLINE;
 					}
 				} else {
 					// user list empty
-					errorMsg += "No user is configured to be an uploader from this device.";
+					errorMsg += "No user is configured to be an uploader from this device"+BREAKLINE;
 				}
 			} else {
 				// no conf found
-				errorMsg += "No configuration found for USB=" + dev.getDeviceName() + ", Serial No=" + dev.getUuid();
+				errorMsg += "No configuration found for USB=" + dev.getDeviceName() + ", Serial No=" + dev.getUuid()+BREAKLINE;
 			}
 
 		} else {
@@ -846,7 +846,7 @@ public class ProdFileController {
 		logger.debug("Validating HPL={}, File={}", pfDto.getHpl(), originalFileName);
 
 		if (StringUtils.isEmpty(originalFileName) || StringUtils.isEmpty(pfDto.getHpl())) {
-			errorMsg += "No file/HPL selected for upload! File={"+originalFileName+"}, HPL={"+pfDto.getHpl()+"}";
+			errorMsg += "No file/HPL selected for upload! File={"+originalFileName+"}, HPL={"+pfDto.getHpl()+"}"+BREAKLINE;
 			return errorMsg;
 		}
 		
@@ -867,25 +867,25 @@ public class ProdFileController {
 								path = pathDto.getFilePath();
 								fileFormat = pathDto.getProdFileFormat();
 								if (StringUtils.isEmpty(fileFormat)) {
-									errorMsg += "File format not configured for HPL={" + pfDto.getHpl() + "} and folder={"+pathDto.getFilePath()+"}";
+									errorMsg += "File format not configured for HPL={" + pfDto.getHpl() + "} and folder={"+pathDto.getFilePath()+"}"+BREAKLINE;
 								}
 							}
 						}
 					} else {
-						errorMsg += "Path and File format configuration not found for HPL={"+pfDto.getHpl()+"}";
+						errorMsg += "Path and File format configuration not found for HPL={"+pfDto.getHpl()+"}"+BREAKLINE;
 					}
 					
 				} else {
 					// other than gtms
 					fileFormat = confDto.getProdFileFormat();
 					if (StringUtils.isEmpty(fileFormat)) {
-						errorMsg += "File format not configured for HPL={" + pfDto.getHpl() + "}";
+						errorMsg += "File format not configured for HPL={" + pfDto.getHpl() + "}"+BREAKLINE;
 					}
 				}
 			}
 			
 		} else {
-			errorMsg += "Folder-Category configuration not found for HPL={"+pfDto.getHpl()+"}";
+			errorMsg += "Folder-Category configuration not found for HPL={"+pfDto.getHpl()+"}"+BREAKLINE;
 		}
 		
 		if(!StringUtils.isEmpty(errorMsg)) {

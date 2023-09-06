@@ -95,7 +95,7 @@
          <id>dev</id>
          <properties>
              <spring.profiles.active>dev</spring.profiles.active>
-             <build.warname>${artifactId}</build.warname>
+             <build.warname>pdfs-app</build.warname>
          </properties>
          <activation>
              <activeByDefault>true</activeByDefault>
@@ -105,21 +105,21 @@
          <id>sit</id>
          <properties>
              <spring.profiles.active>sit</spring.profiles.active>
-             <build.warname>pfc-sit</build.warname>
+             <build.warname>pdfs-sit</build.warname>
          </properties>
      </profile>
      <profile>
          <id>uat</id>
          <properties>
              <spring.profiles.active>uat</spring.profiles.active>
-             <build.warname>pfc-test</build.warname>
+             <build.warname>pdfs-test</build.warname>
          </properties>
      </profile>
      <profile>
          <id>prod</id>
          <properties>
              <spring.profiles.active>prod</spring.profiles.active>
-             <build.warname>${artifactId}</build.warname>
+             <build.warname>pdfs-app</build.warname>
          </properties>
      </profile>
  </profiles>

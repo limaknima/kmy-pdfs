@@ -104,36 +104,36 @@ public class FileTypeSzController {
 	}
 	
 	private void filter(boolean init) {
-		boolean isAdmin = (Boolean) model.get("isAdmin");
+		boolean isSuperUser = (Boolean) model.get("isSuperUser");
 		String grp = (String) model.get("loggedUserGrp");
 		List<String> defaultHpl = g2LotServ.hplList();
 		
 		if (init) {
-			// check if user is not admin, do filtering
-			if (!isAdmin) {
+			// check if user is not super user, do filtering
+			if (!isSuperUser) {
 				model.put("hplItems",
 						defaultHpl.stream().filter(arg0 -> arg0.equals(grp)).collect(Collectors.toList()));
 				model.put("fileTypeSzAllItems", fileTypeSzServ.findAllDto().stream()
 						.filter(arg0 -> arg0.getHpl().equals(grp)).collect(Collectors.toList()));
 			} else {
-				// if user is admin, remove filter
+				// if user is super user, remove filter
 				model.put("hplItems", defaultHpl);
 				model.put("fileTypeSzAllItems", fileTypeSzServ.findAllDto());
 			}
 
 		} else {
-			// check if user is not admin, do filtering
-			if (!isAdmin) {
+			// check if user is not super user, do filtering
+			if (!isSuperUser) {
 				model.put("hplItems",
 						defaultHpl.stream().filter(arg0 -> arg0.equals(grp)).collect(Collectors.toList()));
 			} else {
-				// if user is admin, remove filter
+				// if user is super user, remove filter
 				model.put("hplItems", defaultHpl);
 			}
 		}
 		
 		// for search
-		if (!isAdmin) {
+		if (!isSuperUser) {
 			model.put("filterHpl", grp);
 		}
 		
@@ -176,6 +176,9 @@ public class FileTypeSzController {
 			model.put("pkFtypeId", dto.getPkFtypeId());
 			model.put("fileTypeSzItem", dto);
 			model.put("fileTypeSzItemCurrItem", dto);
+			model.put("prodLn2Temp", dto.getProdLn());
+			model.put("prodLnItems", g2LotServ.prodLnList(dto.getHpl(), "", "", "", ""));
+			model.put("ftItems", fileTypeSzServ.findFileTypeItems());
 
 			logger.debug("viewForm() ftype {}", dto.getFileType());
 
@@ -252,14 +255,16 @@ public class FileTypeSzController {
 	 * @throws Exception
 	 */
 	@PostMapping(value = "/main/pfc/fileTypeSzFormSave", params = "action=save")
-	public ModelAndView saveForm(@Valid FileTypeSzDto dto, HttpServletRequest request, BindingResult bindingResult,
+	public ModelAndView saveForm(@Valid FileTypeSzDto dto, HttpServletRequest request, 
+			@RequestParam(name = "prodLn2", required = false) String prodLn2,
+			BindingResult bindingResult,
 			HttpSession session) throws Exception {
 
 		logger.debug("saveForm ()");
 
 		removeAlert(model);
 		String mode = screenMode;
-
+		dto.setProdLn(prodLn2);
 		model.put("fileTypeSzItem", dto);
 
 		String errorMsg = validateForm(dto);
@@ -268,6 +273,7 @@ public class FileTypeSzController {
 			model.put("error", errorMsg);
 			model.remove("success");
 			model.put("fileTypeSzItem", dto);
+			model.put("prodLn2Temp", prodLn2);
 
 			if (mode.equals(CommonConstants.SCREEN_MODE_EDIT)) {
 				screenMode = CommonConstants.SCREEN_MODE_EDIT;

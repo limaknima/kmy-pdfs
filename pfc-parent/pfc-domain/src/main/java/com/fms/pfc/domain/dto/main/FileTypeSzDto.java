@@ -24,4 +24,5 @@ public class FileTypeSzDto {
 	private String indicator;
 	private int rowNo;
 	private String hpl;
+	private String prodLn;
 }

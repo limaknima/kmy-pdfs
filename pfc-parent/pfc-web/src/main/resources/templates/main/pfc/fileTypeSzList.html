@@ -101,7 +101,7 @@
 										<button class="btn btn-danger" id="btnDelete" type="button"
 											data-toggle="modal" data-target="#confirmDialog"
 											style="width: 90px;" disabled="disabled"
-											th:hidden="${hidFunctionType_1}">Delete</button>
+											th:hidden="${hidFunctionType_3}">Delete</button>
 										<a class="btn btn-primary" href="fileTypeSzForm" 
 											style="width: 90px;"
 											th:hidden="${hidFunctionType_1}">Add</a> 
@@ -136,6 +136,7 @@
 											<th scope="col" width="40px"><input type="checkbox"
 												id="checkAll"></th>
 											<th scope="col"><span th:text="#{lblHpl}"></span></th>
+											<th scope="col"><span th:text="#{lblProdLn}"></span></th>	
 											<th scope="col"><span th:text="#{lblFileType}"></span></th>											
 											<th scope="col"><span th:text="#{lblMinSize}"></span> (KB)</th>										
 											<th scope="col"><span th:text="#{lblMaxSize}"></span> (KB)</th>
@@ -148,6 +149,7 @@
 												name="tableRow" id="tableRow"/></td>
 											<td><a th:text="${fstDto.hpl}"
 													th:href="@{/main/pfc/fileTypeSzFormView(pkFtypeId=${fstDto.pkFtypeId})}"></a></td>
+											<td th:text="${fstDto.prodLn}"></td>
 											<td th:text="${fstDto.fileType}"></td>
 											<td th:text="${fstDto.minSize}"></td>
 											<td th:text="${fstDto.maxSize}"></td>

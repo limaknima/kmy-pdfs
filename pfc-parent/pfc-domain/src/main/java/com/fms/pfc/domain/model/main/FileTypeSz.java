@@ -61,4 +61,7 @@ public class FileTypeSz implements Serializable {
 	
 	@Column(name = "HPL")
 	private String hpl;
+	
+	@Column(name = "PROD_LN")
+	private String prodLn;
 }

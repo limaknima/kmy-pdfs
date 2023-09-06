@@ -58,7 +58,7 @@
 									<div class="row col-sm-5">
 										<label class="col-form-label">:</label>
 										<div class="col">	
-											<select id="hplId" class="custom-select" name="hplId" th:field="*{hpl}" disabled required>
+											<select id="hplId" class="custom-select" name="hplId" th:field="*{hpl}" disabled required onchange="loadProdLn();">
 												<option value="" selected hidden="true">Please Select</option>
 												<option th:each="hplItem: ${hplItems}"
 													th:value="${hplItem}"
@@ -67,6 +67,33 @@
 											</select>
 										</div>
 										<input th:field="*{pkFtypeId}" hidden="true">
+									</div>
+								</div>
+								<div id="prodLnDiv" class="form-group row">
+									<label class="col-sm-2 col-form-label control-label"><span th:text="#{lblProdLn}"></span>
+										<a name="asterisk" style="color: red;" hidden="true">*</a>
+									</label>
+
+									<div class="row col-sm-5">
+										<label class="col-form-label">:</label>
+										<div class="col">
+											<!-- <input type="text" id="prodLn" readonly name="prodLn"
+												class="form-control-plaintext" th:field="*{prodLn}"
+												onchange=" reloadPathSuggestion();"
+												required maxlength="20"> -->
+												
+											<select id="prodLn" class="custom-select" name="prodLn" th:field="*{prodLn}" disabled >
+												<option value="" selected hidden="true">Please Select</option>
+												<option th:each="prodLnItem: ${prodLnItems}"
+													th:value="${prodLnItem}"
+													th:text="${prodLnItem}"
+													th:selected="${prodLnItem} == ${prodLn}"/>
+											</select>
+											<select class="custom-select" name="prodLn2" id="prodLn2" disabled hidden="true" >
+												<option value="" selected hidden="true">Please Select</option>
+											</select>
+											
+										</div>
 									</div>
 								</div>
 								<div id="fileTypeDiv" class="form-group row">
@@ -327,6 +354,10 @@
 			document.getElementById("break").hidden = false;
 			document.getElementById("hplId").disabled = false;
 			document.getElementById("fileType").disabled = false;
+			document.getElementById("prodLn").disabled = true;
+			document.getElementById("prodLn").hidden = true;
+			document.getElementById("prodLn2").disabled = false;
+			document.getElementById("prodLn2").hidden = false;
 			
 			$("#hplIdDiv").addClass("required");
 			$("#hplId").addClass("form-control");
@@ -355,7 +386,46 @@
 			
 			
 		}
+
+		function loadProdLn(){
+			var hplId = document.getElementById("hplId").value;		
+			var hplModelId2 = "";		
+			var year = "";				
+			var mth = "";					
+			var day = "";					
+			var prodLn2 = "";		
+			
+			var ctx = "[[@{/}]]"; 
+			var prodLn2Temp = "[(${prodLn2Temp})]";
+			
+			$.ajax({
+				url : ctx+"main/pfc/api/getProdLnByHpl?hplId="+ hplId+"&hplModelId2="+hplModelId2+"&year="+year+"&mth="+mth+"&day="+day,
+				type : "GET",
+				success : function(data) {
+					var prodLnList = data.items;					
+					// ProdLn ddropdown
+					$("#prodLn2").empty();
+					var prodLnOption = "<option value = ''>Please Select</option>";
+					$("#prodLn2").append(prodLnOption);
+					for(var dt2 in prodLnList){				
+						if(prodLn2Temp == prodLnList[dt2]){
+							prodLnOption = "<option value = " + prodLnList[dt2] + " selected>" + prodLnList[dt2] +  "</option>";
+							$("#prodLn2").append(prodLnOption);
+						} else {
+							prodLnOption = "<option value = " + prodLnList[dt2] + ">" + prodLnList[dt2] +  "</option>";
+							$("#prodLn2").append(prodLnOption);
+						}												
+					}	
+					
+				}
+			});
+		}
 		
+		$(document).ready(function() {
+			if(!$("#prodLn2").val()) {
+		    	loadProdLn();
+		    };
+		});
 				
 		//To enable before submit since disabled values won't pass to the server
 		$('#mainForm').on('submit', function() {

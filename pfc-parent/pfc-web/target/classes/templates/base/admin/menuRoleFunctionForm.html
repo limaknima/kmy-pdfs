@@ -156,7 +156,7 @@
 							data-target="#cancelConfirmDialog">Cancel</button>
 
 						<a class="btn btn-primary" style="width: 90px;" type="button"
-							id="btnViewCancel" th:href="@{/base/admin/menuRoleFuncList}">Cancel</a>
+							hidden="true" id="btnViewCancel" th:href="@{/base/admin/menuRoleFuncList}">Close</a>
 							
 						<button class="btn btn-primary" style="width: 90px;"
 							hidden="true" id="btnEditCancel" type="button"
@@ -295,8 +295,12 @@
 			//Enable form for add
 			if (mode == "add") {				
 				enableEditMode();
+				document.getElementById("btnAddCancel").hidden = false;
 			} else if (mode == "edit") {
 				enableEditMode();
+				document.getElementById("btnEditCancel").hidden = false;
+			} else {
+				document.getElementById("btnViewCancel").hidden = false;
 			}
 		}
 
@@ -306,7 +310,7 @@
 			var mode = document.getElementById("formMode").text;
 
 			if (mode == "view") {
-				document.getElementById("headingTwo").textContent = "Edit File-Type-Size Config";
+				document.getElementById("headingTwo").textContent = "Edit Menu Role Function";
 				document.getElementById("createdInfo").hidden = true;
 			}
 			

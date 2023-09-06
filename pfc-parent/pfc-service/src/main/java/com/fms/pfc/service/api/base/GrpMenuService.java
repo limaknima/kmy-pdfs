@@ -63,6 +63,7 @@ public class GrpMenuService {
 		int idx = 1;
 		String label = "";
 		for (GrpMenuItemDto dto : dtos) {
+			logger.debug("getMenuItemId={}", dto.getMenuItemId());
 			if (dto.getParentMenuId() != 0) {
 				label = "---- " + menuRepo.searchMenuItem(dto.getMenuItemId()).getMenuItemName();
 				//dto.setMenuItemNameTemp(label);

@@ -123,35 +123,35 @@ public class FoldCatgConfController {
 	}
 	
 	private void filter(boolean init) {
-		boolean isAdmin = (Boolean) model.get("isAdmin");
+		boolean isSuperUser = (Boolean) model.get("isSuperUser");
 		String grp = (String) model.get("loggedUserGrp");
 		List<String> defaultHpl = g2LotServ.hplList();
 
 		if (init) {
-			// check if user is not admin, do filtering
-			if (!isAdmin) {
+			// check if user is not super user, do filtering
+			if (!isSuperUser) {
 				model.put("foldCatgAllItems", foldCatgConfServ.searchByCriteria2(grp, "", "", "", "", "", "", "", ""));
 				model.put("searchHplItems", defaultHpl.stream().filter(arg0 -> arg0.equals(grp)).collect(Collectors.toList()));
 				model.put("searchHplModelItems", g2LotServ.hplModelList(grp));
 			} else {
-				// if user is admin, remove filter
+				// if user is super user, remove filter
 				model.put("foldCatgAllItems", foldCatgConfServ.searchByCriteria2("", "", "", "", "", "", "", "", ""));
 				model.put("searchHplItems", defaultHpl);
 				model.put("searchHplModelItems", g2LotServ.hplModelList(""));
 			}
 
 		} else {
-			// check if user is not admin, do filtering
-			if (!isAdmin) {
+			// check if user is not super user, do filtering
+			if (!isSuperUser) {
 				model.put("hplItems", defaultHpl.stream().filter(arg0 -> arg0.equals(grp)).collect(Collectors.toList()));
 			} else {
-				// if user is admin, remove filter
+				// if user is super user, remove filter
 				model.put("hplItems", defaultHpl);
 			}
 		}
 		
 		// for search
-		if (!isAdmin) {
+		if (!isSuperUser) {
 			model.put("filterHpl", grp);
 		}
 
