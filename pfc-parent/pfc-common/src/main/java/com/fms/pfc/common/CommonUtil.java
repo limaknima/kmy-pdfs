@@ -155,7 +155,7 @@ public class CommonUtil implements Serializable {
 	 */
 	public static List<LabelAndValueDto> monthDropdownItems() {
 		List<LabelAndValueDto> result = new ArrayList<LabelAndValueDto>();
-		result.add(new LabelAndValueDto("January", "01"));
+		/*result.add(new LabelAndValueDto("January", "01"));
 		result.add(new LabelAndValueDto("February", "02"));
 		result.add(new LabelAndValueDto("March", "03"));
 		result.add(new LabelAndValueDto("April", "04"));
@@ -166,7 +166,19 @@ public class CommonUtil implements Serializable {
 		result.add(new LabelAndValueDto("September", "09"));
 		result.add(new LabelAndValueDto("October", "10"));
 		result.add(new LabelAndValueDto("November", "11"));
-		result.add(new LabelAndValueDto("December", "12"));
+		result.add(new LabelAndValueDto("December", "12"));*/
+		result.add(new LabelAndValueDto("01", "01"));
+		result.add(new LabelAndValueDto("02", "02"));
+		result.add(new LabelAndValueDto("03", "03"));
+		result.add(new LabelAndValueDto("04", "04"));
+		result.add(new LabelAndValueDto("05", "05"));
+		result.add(new LabelAndValueDto("06", "06"));
+		result.add(new LabelAndValueDto("07", "07"));
+		result.add(new LabelAndValueDto("08", "08"));
+		result.add(new LabelAndValueDto("09", "09"));
+		result.add(new LabelAndValueDto("10", "10"));
+		result.add(new LabelAndValueDto("11", "11"));
+		result.add(new LabelAndValueDto("12", "12"));
 
 		return result;
 	}
@@ -180,10 +192,18 @@ public class CommonUtil implements Serializable {
 		int maxDay = 31;
 		List<LabelAndValueDto> result = new ArrayList<LabelAndValueDto>();
 		for (int idx = 1; idx <= maxDay; idx++) {
-			result.add(new LabelAndValueDto(String.valueOf(idx), String.valueOf(idx)));
+			result.add(new LabelAndValueDto(String.valueOf(idx >= 10 ? idx : "0" + idx),
+					String.valueOf(idx >= 10 ? idx : "0" + idx)));
 		}
 
 		return result;
+	}
+	
+	public static List<LabelAndValueDto> hplProcTypeDropdownItems() {
+		List<LabelAndValueDto> result = new ArrayList<LabelAndValueDto>();
+		result.add(new LabelAndValueDto("Mikron", CommonConstants.PROCESS_TYPE_HPL_MIKRON));
+		result.add(new LabelAndValueDto("Back End", CommonConstants.PROCESS_TYPE_HPL_BACKEND));
+		return result;		
 	}
 
 	public static boolean isPathValid(String path) {
@@ -385,12 +405,14 @@ public class CommonUtil implements Serializable {
 			default:
 				result = "0";
 			}
+		} else {
+			result = prodLn;
 		}
 
 		return result;
 	}
 	
-	public static boolean isEmpty(Path path) throws IOException {
+	public static boolean isEmptyDir(Path path) throws IOException {
 		if (Files.isDirectory(path)) {
 			try (Stream<Path> entries = Files.list(path)) {
 				return !entries.findFirst().isPresent();

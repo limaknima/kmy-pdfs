@@ -126,6 +126,11 @@ public class G2LotViewController {
 		model.put("prodLnExp", prodLnExp);
 		model.put("seqExp", seqExp);
 		model.put("lotExp", lotExp);
+		
+		model.put("tempHplModel", hplModel);
+		model.put("tempYear", year);
+		model.put("tempMth", mth);
+		model.put("tempDay", day);
 
 		try {
 			if (errorMsg.length() == 0) {

@@ -132,6 +132,8 @@ public class CommonConstants implements Serializable {
 	// used for PROCESS_TYPE field
 	public static final int PROCESS_TYPE_RAW_MATL = 1;
 	public static final int PROCESS_TYPE_PROD_RECP = 2;
+	public static final int PROCESS_TYPE_HPL_MIKRON = 1;
+	public static final int PROCESS_TYPE_HPL_BACKEND = 2;
 
 	/*
 	 * IMPORTANT NOTE: used for *.RECORD_TYPE_ID field, which are not defined in
@@ -204,6 +206,8 @@ public class CommonConstants implements Serializable {
 	public static final String ROLE_ID_FILE_MAN = "FILE_MAN";
 	public static final String ROLE_ID_USR = "USR";
 	public static final String ROLE_ID_ADM = "ADM";
+	public static final String ROLE_ID_SUSR = "SUSR";
+	
 
 	// used for COUNTRY_ID field
 	public static final String COUNTRY_ID_LOCAL = "MY";
@@ -304,6 +308,12 @@ public class CommonConstants implements Serializable {
 	public static final String HPL_LOT_KEY_MONTH = "month";
 	public static final String HPL_LOT_KEY_DAY = "day";
 	public static final String HPL_LOT_KEY_PRODLN = "prodLn";
-	public static final String HPL_LOT_KEY_SEQ = "seq";
+	public static final String HPL_LOT_KEY_SEQ = "seq";	
+
+	public static final int FILENAME_LEN_IF = 14;
+	public static final int FILENAME_LEN_MGG = 17;
+	public static final int FILENAME_LEN_GTMS_M = 12;
+	public static final int FILENAME_LEN_GTMS_B1 = 17;
+	public static final int FILENAME_LEN_GTMS_B2 = 12;
 
 }

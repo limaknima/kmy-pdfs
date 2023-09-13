@@ -59,8 +59,7 @@
 									<div class="row col-sm-5">
 										<label class="col-form-label">:</label>
 										<div class="col">
-											<select id="hpl" class="custom-select" name="hpl" th:value="${hpl}" disabled required
-												 onchange="onHplChange(); loadProdLn();">
+											<select id="hpl" class="custom-select" name="hpl" th:value="${hpl}" disabled required>
 												<option value="" selected hidden="true">Please Select</option>
 												<option th:each="hplItem: ${hplItems}"
 													th:value="${hplItem}"
@@ -288,6 +287,7 @@
 			if (mode == "add") {				
 				enableEditMode();
 				document.getElementById("btnAddCancel").hidden = false;
+				document.getElementById("hpl").disabled = false;
 			} else if (mode == "edit") {
 				enableEditMode();
 				document.getElementById("btnEditCancel").hidden = false;

@@ -127,6 +127,14 @@ public class GrpMenuService {
 		}
 		return result;
 	}
+	
+	public List<String> defaultGrpList (String orgId) {
+		return grpMenuRepo.defaultGrpList(orgId);
+	}
+	
+	public List<String> defaultGrpList () {
+		return grpMenuRepo.defaultGrpList();
+	}
 
 	public void save(String hpl, List<String> selected, List<String> current) {
 		// existing from db

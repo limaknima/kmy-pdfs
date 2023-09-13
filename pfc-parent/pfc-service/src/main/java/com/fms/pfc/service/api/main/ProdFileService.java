@@ -21,7 +21,7 @@ import com.fms.pfc.domain.converter.main.ProdFileConverter;
 import com.fms.pfc.domain.dto.main.FileTypeSzDto;
 import com.fms.pfc.domain.dto.main.HplModelDto;
 import com.fms.pfc.domain.dto.main.ProdFileDto;
-import com.fms.pfc.domain.dto.main.RelPathDto;
+import com.fms.pfc.domain.dto.main.RelPathDto2;
 import com.fms.pfc.domain.dto.main.UsbConfDto;
 import com.fms.pfc.domain.model.Usr;
 import com.fms.pfc.domain.model.main.ProdFile;
@@ -40,12 +40,12 @@ public class ProdFileService {
 	private HplModelService hplModelServ;
 	private UsbConfService usbConfServ;
 	private FileTypeSzService ftSzServ;
-	private RelPathService pathServ;
+	private RelPathService2 pathServ;
 
 	@Autowired
 	public ProdFileService(ProdFileRepository prodFileRepo, ProdFileConverter prodFileConv,
 			ProdFileSearchRepository prodFileSearchRepo, HplModelService hplModelServ, UsbConfService usbConfServ,
-			FileTypeSzService ftSzServ, RelPathService pathServ) {
+			FileTypeSzService ftSzServ, RelPathService2 pathServ) {
 		super();
 		this.prodFileRepo = prodFileRepo;
 		this.prodFileConv = prodFileConv;
@@ -124,7 +124,7 @@ public class ProdFileService {
 	@Transactional
 	public Integer save(ProdFileDto dto, String userId, boolean isFileChanged, MultipartFile finalFileContent)
 			throws Exception {
-		RelPathDto path = pathServ.findDtoById(Integer.valueOf(dto.getFilePath()));
+		RelPathDto2 path = pathServ.findDtoById(Integer.valueOf(dto.getFilePath()));
 		Date currentDate = new Date();
 		boolean isCreate = false;
 		String dir = "";
@@ -153,7 +153,7 @@ public class ProdFileService {
 			} else {
 				// if file change
 				// if (!StringUtils.equals(existing.getFilePath(), dto.getFilePath())) {
-				RelPathDto oldPath = pathServ.findDtoById(Integer.valueOf(existing.getFilePath()));
+				RelPathDto2 oldPath = pathServ.findDtoById(Integer.valueOf(existing.getFilePath()));
 				oldDir = oldPath.getFilePath();
 				deleteDir = (StringUtils.isEmpty(oldDir) ? dir : oldDir) + File.separator + existing.getFileName();
 
@@ -312,5 +312,11 @@ public class ProdFileService {
 		} catch (Exception e) {
 			throw new Exception();
 		}
+	}
+	
+	public void deleteFileFromDisk(ProdFileDto pfDto) {
+		RelPathDto2 rel = pathServ.findDtoById(Integer.parseInt(pfDto.getFilePath()));
+		String deleteDir = rel.getFilePath()  + File.separator +  pfDto.getFileName();
+		FileUtils.deleteQuietly(new File(deleteDir));
 	}
 }

@@ -49,7 +49,6 @@ public class FileTypeSzController {
 	private MessageSource msgSource;
 	private FileTypeSzService fileTypeSzServ;
 	private TrxHisService trxHistServ;
-	private HplService hplServ;
 	private G2LotViewService g2LotServ;
 	private MenuRoleFunctionService mrfServ;
 	
@@ -68,14 +67,13 @@ public class FileTypeSzController {
 
 	@Autowired
 	public FileTypeSzController(Authority auth, CommonValidation commonValServ, MessageSource msgSource,
-			FileTypeSzService fileTypeSzServ, TrxHisService trxHistServ, HplService hplServ, G2LotViewService g2LotServ, MenuRoleFunctionService mrfServ) {
+			FileTypeSzService fileTypeSzServ, TrxHisService trxHistServ, G2LotViewService g2LotServ, MenuRoleFunctionService mrfServ) {
 		super();
 		this.auth = auth;
 		this.commonValServ = commonValServ;
 		this.msgSource = msgSource;
 		this.fileTypeSzServ = fileTypeSzServ;
 		this.trxHistServ = trxHistServ;
-		this.hplServ = hplServ;
 		this.g2LotServ = g2LotServ;
 		this.mrfServ = mrfServ;
 
@@ -155,7 +153,7 @@ public class FileTypeSzController {
 
 		FileTypeSzDto dto = fileTypeSzServ.findDtoById(pkFtypeId);
 		trxHistServ.addTrxHistory(new Date(), "View " + MODULE_NAME, request.getRemoteUser(),
-				CommonConstants.FUNCTION_TYPE_VIEW, dto.getPkFtypeId().toString(),
+				CommonConstants.FUNCTION_TYPE_VIEW, dto.getHpl() +"-"+ dto.getFileType(),
 				CommonConstants.RECORD_TYPE_ID_FILE_TYPE_SZ, null);
 
 		// Set mode
@@ -300,7 +298,7 @@ public class FileTypeSzController {
 				model.put("fileTypeSzItem", new FileTypeSzDto());
 
 				trxHistServ.addTrxHistory(new Date(), "Insert " + MODULE_NAME, request.getRemoteUser(),
-						CommonConstants.FUNCTION_TYPE_INSERT, result != null ? result.toString() : "",
+						CommonConstants.FUNCTION_TYPE_INSERT, result != null ? dto.getHpl() +"-"+ dto.getFileType() : "",
 						CommonConstants.RECORD_TYPE_ID_FILE_TYPE_SZ, null);
 
 			} catch (Exception e) {
@@ -325,7 +323,7 @@ public class FileTypeSzController {
 				model.put("success", "Record updated successfully.");
 
 				trxHistServ.addTrxHistory(new Date(), "Update " + MODULE_NAME, request.getRemoteUser(),
-						CommonConstants.FUNCTION_TYPE_UPDATE, result != null ? result.toString() : "",
+						CommonConstants.FUNCTION_TYPE_UPDATE, result != null ? dto.getHpl() +"-"+ dto.getFileType() : "",
 						CommonConstants.RECORD_TYPE_ID_FILE_TYPE_SZ, null);
 
 			} catch (Exception e) {
@@ -412,13 +410,14 @@ public class FileTypeSzController {
 //					// Print delete failed
 //					model.put("error", "Letter Content is in used and it is not allow to delete from the system.");
 //				} else {
+				FileTypeSzDto dto = fileTypeSzServ.findDtoById(Integer.parseInt(check[i]));
 				fileTypeSzServ.delete(Integer.parseInt(check[i]));
 				// Print delete success`
 				model.put("success", msgSource.getMessage("msgSuccessDelete", new Object[] {}, Locale.getDefault()));
 				model.remove("error");
 
 				trxHistServ.addTrxHistory(new Date(), "Delete " + MODULE_NAME, request.getRemoteUser(),
-						CommonConstants.FUNCTION_TYPE_DELETE, check[i], CommonConstants.RECORD_TYPE_ID_FILE_TYPE_SZ,
+						CommonConstants.FUNCTION_TYPE_DELETE, dto.getHpl() +"-"+ dto.getFileType(), CommonConstants.RECORD_TYPE_ID_FILE_TYPE_SZ,
 						null);
 //				}
 			}

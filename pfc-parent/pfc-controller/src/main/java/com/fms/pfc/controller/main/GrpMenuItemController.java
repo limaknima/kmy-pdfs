@@ -101,25 +101,26 @@ public class GrpMenuItemController {
 		boolean isSuperUser = (Boolean) model.get("isSuperUser");
 		String grp = (String) model.get("loggedUserGrp");
 		String org = (String) model.get("loggedUserOrg");
-		List<String> defaultHpl = g2LotServ.hplList();
+		//List<String> defaultHpl = g2LotServ.hplList();
+		//List<String> defaultHpl = gmServ.defaultGrpList(org);
 
 		if (init) {
 			// check if user is not super user, do filtering
 			if (!isSuperUser) {
 				model.put("searchHplItems",
-						defaultHpl.stream().filter(arg0 -> arg0.equals(grp)).collect(Collectors.toList()));
+						gmServ.defaultGrpList().stream().filter(arg0 -> arg0.equals(grp)).collect(Collectors.toList()));
 			} else {
 				// if user is super user, remove filter
-				model.put("searchHplItems", defaultHpl);
+				model.put("searchHplItems", gmServ.defaultGrpList());
 			}
 
 		} else {
 			// check if user is not super user, do filtering
 			if (!isSuperUser) {
-				model.put("hplItems", defaultHpl.stream().filter(arg0 -> arg0.equals(grp)).collect(Collectors.toList()));
+				model.put("hplItems", gmServ.defaultGrpList(org).stream().filter(arg0 -> arg0.equals(grp)).collect(Collectors.toList()));
 			} else {
 				// if user is super user, remove filter
-				model.put("hplItems", defaultHpl);
+				model.put("hplItems", gmServ.defaultGrpList(org));
 			}
 		}
 		
@@ -222,10 +223,9 @@ public class GrpMenuItemController {
 		// Set fields
 		model.put("grpMenuItemItem", new GrpMenuItemDto());
 		filter(false);
-		
-		// model.put("letterTypeItems", ltServ.getLetterTypeList());
-		// model.put("refCountryItems", ltServ.getRefCountryList());
-		// model.put("prItems", ltServ.getPrList());
+
+		List<LabelAndValueDto> remaining = getRemainingMenuItem(new ArrayList<LabelAndValueDto>(), "");
+		model.put("menuItems", remaining);
 
 		// Set form header
 		model.put("header", "Add " + MODULE_NAME);
@@ -254,6 +254,7 @@ public class GrpMenuItemController {
 	@PostMapping(value = "/base/admin/grpMenuItemFormSave", params = "action=save")
 	public ModelAndView saveForm(@Valid GrpMenuItemDto dto,
 			@RequestParam(value = "menuItemChoice1", required = false) String[] usrChoiceList,
+			@RequestParam(name = "hpl", required = false) String hplId,
 			HttpServletRequest request,
 			BindingResult bindingResult, HttpSession session) throws Exception {
 
@@ -262,7 +263,6 @@ public class GrpMenuItemController {
 
 //		dto.setProdLn(prodLn2);
 		model.put("grpMenuItemItem", dto);
-		String hpl = (String) model.get("hpl");
 
 		String errorMsg = validateForm( usrChoiceList);
 
@@ -294,7 +294,7 @@ public class GrpMenuItemController {
 			try {
 				// If no error proceed to save add form
 				// Add form
-				Integer result = null;//usbConfServ.save2(dto, request.getRemoteUser(), usrIds);
+				gmServ.save(hplId, selected, new ArrayList<String>());
 
 				// Print add success
 				model.put("success", "Record added successfully.");
@@ -302,9 +302,8 @@ public class GrpMenuItemController {
 				model.put("grpMenuItemItem", new GrpMenuItemDto());
 
 				trxHistServ.addTrxHistory(new Date(), "Insert " + MODULE_NAME, request.getRemoteUser(),
-						CommonConstants.FUNCTION_TYPE_INSERT,
-						Objects.nonNull(result) ? result.toString() : "",
-						CommonConstants.RECORD_TYPE_ID_GRP_MENU_ITEM, null);
+						CommonConstants.FUNCTION_TYPE_INSERT, hplId, CommonConstants.RECORD_TYPE_ID_GRP_MENU_ITEM,
+						null);
 
 			} catch (Exception e) {
 				// Print DB exception
@@ -318,10 +317,10 @@ public class GrpMenuItemController {
 			screenMode = CommonConstants.SCREEN_MODE_VIEW;
 			model.put("mode", screenMode);
 			model.put("header", MODULE_NAME);
+			String hpl = (String) model.get("hpl");
 
 			try {
 				// Update form
-				Integer result = null;//usbConfServ.save2(dto, request.getRemoteUser(), usrIds);
 				List<String> current = getSelectedMenuItem(hpl)
 						.stream()
 						.map(arg0 -> String.valueOf(arg0.getValue()))
@@ -340,8 +339,7 @@ public class GrpMenuItemController {
 				model.remove("error");
 
 				trxHistServ.addTrxHistory(new Date(), "Update " + MODULE_NAME, request.getRemoteUser(),
-						CommonConstants.FUNCTION_TYPE_UPDATE,
-						Objects.nonNull(result) ? result.toString() : "",
+						CommonConstants.FUNCTION_TYPE_UPDATE,(String) model.get("hpl"),
 						CommonConstants.RECORD_TYPE_ID_GRP_MENU_ITEM, null);
 
 			} catch (Exception e) {
@@ -353,7 +351,8 @@ public class GrpMenuItemController {
 		}
 
 		model.put("btnEdit", false);
-		model.put("searchHplItems", g2LotServ.hplList());
+		//model.put("searchHplItems", g2LotServ.hplList());
+		filter(true);
 
 		return new ModelAndView("/base/admin/grpMenuItemList", model);
 	}
@@ -363,14 +362,12 @@ public class GrpMenuItemController {
 
 		screenMode = CommonConstants.SCREEN_MODE_EDIT;
 		model.put("mode", screenMode);
-		// manageHplModelButton(false, true, true, model);
 		model.put("btnEdit", true);
 		model.put("btnSaveSts", false);
 		model.put("btnSave", "Save");
 		model.put("header", "Edit " + MODULE_NAME);
 		model.remove("success");
 		model.remove("error");
-		// clearHplModelForm(model);
 
 		return new ModelAndView("/base/admin/grpMenuItemForm", model);
 	}
@@ -421,7 +418,7 @@ public class GrpMenuItemController {
 	 * @return
 	 */
 	@RequestMapping("/base/admin/grpMenuItemFormDel")
-	public ModelAndView deleteUsbConfBatch(HttpServletRequest request,
+	public ModelAndView grpMenuItemFormDel(HttpServletRequest request,
 			@RequestParam(value = "tableRow") String[] check, HttpSession session) {
 
 		model.remove("error");
@@ -429,18 +426,17 @@ public class GrpMenuItemController {
 		try {
 			// Delete form
 			for (int i = 0; i < check.length; i++) {
-
-//				if (1==1) {
-//					// Print delete failed
-//					model.put("error", "Letter Content is in used and it is not allow to delete from the system.");
-//				} else {
-				//usbConfServ.delete(Integer.parseInt(check[i]));
-				// Print delete success`
-				model.put("success", msgSource.getMessage("msgSuccessDelete", new Object[] {}, Locale.getDefault()));
-
-				trxHistServ.addTrxHistory(new Date(), "Delete " + MODULE_NAME, request.getRemoteUser(),
-						CommonConstants.FUNCTION_TYPE_DELETE, check[i], CommonConstants.RECORD_TYPE_ID_GRP_MENU_ITEM, null);
-//				}
+				if (checkDelete()) {
+					// Print delete failed
+					model.put("error", MODULE_NAME+" is in use and it is not allowed to be deleted from the system.");
+				} else {
+					gmServ.deleteGrpMenuItem(check[i], 0);
+					// Print delete success`
+					model.put("success", msgSource.getMessage("msgSuccessDelete", new Object[] {}, Locale.getDefault()));
+	
+					trxHistServ.addTrxHistory(new Date(), "Delete " + MODULE_NAME, request.getRemoteUser(),
+							CommonConstants.FUNCTION_TYPE_DELETE, check[i], CommonConstants.RECORD_TYPE_ID_GRP_MENU_ITEM, null);
+				}
 			}
 
 		} catch (Exception e) {
@@ -454,85 +450,15 @@ public class GrpMenuItemController {
 		return new ModelAndView(("/base/admin/grpMenuItemList"), model);
 	}
 
-	/**
-	 * Do search
-	 * 
-	 * @param prName
-	 * @param ltType
-	 * @param prNameExp
-	 * @param session
-	 * @return
-	 */
-	@PostMapping("/base/admin/grpMenuItemSearch")
-	public ModelAndView search(HttpServletRequest request, @RequestParam(name = "serialNo") String serialNo,
-			@RequestParam(name = "serialNoExp") String serialNoExp, @RequestParam(name = "usbName") String usbName,
-			@RequestParam(name = "usbNameExp") String usbNameExp, @RequestParam(name = "grpType") String grpType,
-			@RequestParam(name = "assignTo") String assignTo, @RequestParam(name = "assignToExp") String assignToExp,
-			HttpSession session) {
-
-		boolean hasError = false;
-
-		removeAlert(model);
-		String errorMsg = "";
-		
-		if (StringUtils.isNotEmpty((String) model.get("filterHpl")))
-			grpType = (String) model.get("filterHpl");
-
-		model.put("serialNo", serialNo);
-		model.put("serialNoExp", serialNoExp);
-		model.put("usbName", usbName);
-		model.put("usbNameExp", usbNameExp);
-		model.put("grpType", grpType);
-		model.put("assignTo", assignTo);
-		model.put("assignToExp", assignToExp);
-		
-		logger.debug(
-				"doSearch() ... serialNo={}, serialNoExp={}, usbName={}, usbNameExp={}, grpType={}, assignTo={}, assignToExp={} ",
-				serialNo, serialNoExp, usbName, usbNameExp, grpType, assignTo, assignToExp);
-
-		try {
-			if (errorMsg.length() == 0) {
-
-//				List<UsbConfSearch> items = usbConfServ.searchByCriteria(serialNo, serialNoExp, usbName, usbNameExp,
-//						grpType, assignTo, assignToExp);
-//				model.put("searchHplItems", items);
-
-//				StringBuffer sb = new StringBuffer();
-//				sb.append("Search Criteria: ");
-//				sb.append(SERIALNO_TXT).append("=").append(serialNo.isEmpty() ? "<ALL>" : serialNo).append(", ");
-//				sb.append(USBNAME_TXT).append("=").append(usbName.isEmpty() ? "<ALL>" : usbName).append(", ");
-//				sb.append(GROUP_TXT).append("=").append(grpType.isEmpty() ? "<ALL>" : grpType).append(", ");
-//				sb.append(ASSIGNTO_TXT).append("=").append(assignTo.isEmpty() ? "<ALL>" : assignTo);
-//
-//				trxHistServ.addTrxHistory(new Date(), "Search " + MODULE_NAME, request.getRemoteUser(),
-//						CommonConstants.FUNCTION_TYPE_SEARCH, "Search " + MODULE_NAME,
-//						CommonConstants.RECORD_TYPE_ID_GRP_MENU_ITEM, sb.toString());
-
-			} else {
-				hasError = true;
-			}
-
-		} catch (Exception e) {
-			e.printStackTrace();
-			hasError = true;
-			errorMsg += "Failed to get record.";
-			errorMsg += e.toString();
-
-		} finally {
-			if (hasError == true) {
-				model.put("error", errorMsg);
-				model.remove("success");
-				// return back user input
-				model.put("searchHplItems", g2LotServ.hplList());
-			}
-		}
-
-		return new ModelAndView("/base/admin/grpMenuItemList", model);
-	}
-	
 	@PreDestroy
 	public void destroy() throws IOException {
 		
+	}
+	
+	private boolean checkDelete() {
+		boolean isSuperUser = (Boolean) model.get("isSuperUser");
+		boolean cannotDelete = isSuperUser ? false : true;
+		return cannotDelete;
 	}
 	
 	private Map<String, Object> removeAlert(Map<String, Object> model) {
@@ -540,22 +466,6 @@ public class GrpMenuItemController {
 		model.remove("success");
 
 		return model;
-	}
-
-	private String validateDuplicateSerialNo(String serialNo) {
-//		List<UsbConfDto> dtoList = usbConfServ.findAllBySerialNo(serialNo);
-//		if (!dtoList.isEmpty()) {
-//			return SERIALNO_TXT + serialNo + ERR_MSG_UNIQUE + BREAKLINE;
-//		}
-		return "";
-	}
-
-	private String validateDuplicateName(String name) {
-//		List<UsbConfDto> dtoList = usbConfServ.findAllByName(name);
-//		if (!dtoList.isEmpty()) {
-//			return USBNAME_TXT + name + ERR_MSG_UNIQUE + BREAKLINE;
-//		}
-		return "";
 	}
 
 	/**
@@ -575,8 +485,9 @@ public class GrpMenuItemController {
 	 * @return
 	 */
 	protected List<LabelAndValueDto> getRemainingMenuItem(List<LabelAndValueDto> selected, String hpl) {
+		List<Integer> selIds = selected.stream().map(LabelAndValueDto :: getValue).collect(Collectors.toList());
 		List<LabelAndValueDto> remaining = gmServ.searchMenuItems().stream()
-				.filter(arg0 -> !selected.contains(arg0))
+				.filter(arg0 -> !selIds.contains(arg0.getValue()))
 				.collect(Collectors.toList());
 		return remaining;
 	}

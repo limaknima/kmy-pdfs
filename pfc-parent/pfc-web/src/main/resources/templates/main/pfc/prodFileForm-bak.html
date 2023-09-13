@@ -53,7 +53,6 @@
 								th:action="@{/main/pfc/prodFileFormSave}" th:object="${prodFileItem}"
 								method="POST" data-toggle="validator" novalidate="true"
 								enctype="multipart/form-data">
-								
 								<div id="hplDiv" class="form-group row">
 									<label class="col-sm-2 col-form-label control-label" >
 										<span th:text="#{lblHpl}"></span>
@@ -72,6 +71,151 @@
 											</select>
 										</div>
 										<input th:field="*{pkPfileId}" hidden="true">
+									</div>
+								</div>
+								<div id="hplModelDiv" class="form-group row">
+									<label class="col-sm-2 col-form-label control-label" >
+										<span th:text="#{lblHplModel}"></span>
+									</label>
+
+									<div id="hplModelFrag" class="row col-sm-5">
+										<label class="col-form-label">:</label>
+										<div class="col">
+											<select id="hplModelId" class="custom-select" name="hplModelId" th:field="*{hModel}" disabled
+												onchange="reloadG2LotNumbers();">
+												<option value="" selected hidden="true">Please Select</option>
+												<option th:each="hplModelItem: ${hplModelItems}"
+													th:value="${hplModelItem}"
+													th:text="${hplModelItem}"
+													th:selected="${hplModelItem} == ${hModel}"/>
+											</select>
+											<select class="custom-select" name="hplModelId2" id="hplModelId2" disabled hidden="true" onchange="reloadG2LotNumbers();">
+												<option value="" selected hidden="true">Please Select</option>
+											</select>
+										</div>
+									</div>
+								</div>
+								
+								<div id="yearDiv" class="form-group row">
+									<label class="col-sm-2 col-form-label control-label">
+										<span th:text="#{lblYear}"></span>
+										<a name="asterisk" style="color: red;" hidden="true">*</a>
+									</label>
+
+									<div class="row col-sm-5">
+										<label class="col-form-label">:</label>
+										<div class="col">
+											<select id="year" class="custom-select" name="year" th:field="*{year}" disabled required
+												onchange="reloadG2LotNumbers();">
+												<option value="" selected hidden="true">Please Select</option>
+												<option th:each="yearItem: ${yearItems}"
+													th:value="${yearItem.strValue}"
+													th:text="${yearItem.label}"
+													th:selected="${yearItem.strValue} == ${year}"/>
+											</select>
+										</div>
+									</div>
+								</div>
+								
+								<div id="mthDiv" class="form-group row">
+									<label class="col-sm-2 col-form-label control-label">
+										<span th:text="#{lblMonth}"></span>
+									</label>
+
+									<div class="row col-sm-5">
+										<label class="col-form-label">:</label>
+										<div class="col">
+											<select id="mth" class="custom-select" name="mth" th:field="*{mth}" disabled 
+												onchange="reloadG2LotNumbers();">
+												<option value="" selected hidden="true">Please Select</option>
+												<option th:each="monthItem: ${monthItems}"
+													th:value="${monthItem.strValue}"
+													th:text="${monthItem.label}"
+													th:selected="${monthItem.strValue} == ${mth}"/>
+											</select>
+										</div>
+									</div>
+								</div>
+								
+								<div id="prodLnDiv" class="form-group row">
+									<label class="col-sm-2 col-form-label control-label">
+										<span th:text="#{lblProdLn}"></span>
+										<a name="asterisk" style="color: red;" hidden="true">*</a>
+									</label>
+
+									<div class="row col-sm-5">
+										<label class="col-form-label">:</label>
+										<div class="col">
+											<!-- <input type="text" id="prodLn" readonly name="prodLn"
+												class="form-control-plaintext" th:field="*{prodLn}"
+												required maxlength="20"
+												onchange="reloadG2LotNumbers();"> -->
+												
+											<select id="prodLn" class="custom-select" name="prodLn" th:field="*{prodLn}" disabled 
+												onchange="reloadG2LotNumbers();">
+												<option value="" selected hidden="true">Please Select</option>
+												<option th:each="prodLnItem: ${prodLnItems}"
+													th:value="${prodLnItem}"
+													th:text="${prodLnItem}"
+													th:selected="${prodLnItem} == ${prodLn}"/>
+											</select>
+											<select class="custom-select" name="prodLn2" id="prodLn2" disabled hidden="true" onchange="onProdLnChange();">
+												<option value="" selected hidden="true">Please Select</option>
+											</select>
+											
+										</div>
+									</div>
+								</div>
+								
+								<div id="mthDiv" class="form-group row">
+									<label class="col-sm-2 col-form-label control-label">
+										<span th:text="#{lblG2LotNo}"></span>
+										<a name="asterisk" style="color: red;" hidden="true">*</a>
+									</label>
+
+									<div class="row col-sm-5">
+										<label class="col-form-label">:</label>
+										<div class="col">
+											<select id="g2Lot" class="custom-select" name="g2Lot" th:field="*{g2Lot}" disabled >
+												<option value="" selected hidden="true">Please Select</option>
+												<option th:each="g2LotItem: ${g2LotItems}"
+													th:value="${g2LotItem.lot}"
+													th:text="${g2LotItem.lot}"
+													th:selected="${g2LotItem.lot} == ${g2Lot}"/>
+											</select>
+											<select class="custom-select" name="g2Lot2" id="g2Lot2" disabled hidden="true" >
+												<option value="" selected hidden="true">Please Select</option>
+											</select>
+										</div>
+									</div>
+								</div>
+								
+								<div id="seqDiv" class="form-group row">
+									<label class="col-sm-2 col-form-label control-label">
+										<span th:text="#{lblFilePath}"></span>
+										<a name="asterisk" style="color: red;" hidden="true">*</a>
+									</label>
+
+									<div class="row col-sm-5">
+										<label class="col-form-label">:</label>
+										<div class="col">
+											<!-- <input type="text" id="filePath" readonly name="filePath"
+												class="form-control-plaintext" th:field="*{filePath}"
+												required maxlength="100">
+												<label><span th:text="#{lblFilePathFormatEg}"></span></label> -->
+												
+											<select id="filePath" class="custom-select" name="filePath" th:field="*{filePath}" disabled >
+												<option value="" selected hidden="true">Please Select</option>
+												<option th:each="filePathItem: ${filePathItems}"
+													th:value="${filePathItem.pkRelPathId}"
+													th:text="${filePathItem.filePath}"
+													th:selected="${filePathItem.pkRelPathId} == ${filePath}"/>
+											</select>
+											<select class="custom-select" name="filePath2" id="filePath2" disabled hidden="true" >
+												<option value="" selected hidden="true">Please Select</option>
+											</select>
+											
+										</div>
 									</div>
 								</div>
 								
@@ -141,176 +285,7 @@
 										</div>
 									</div>
 								</div>
-								
-								<div id="hplModelDiv" class="form-group row">
-									<label class="col-sm-2 col-form-label control-label" >
-										<span th:text="#{lblHplModel}"></span>
-									</label>
-
-									<div id="hplModelFrag" class="row col-sm-5">
-										<label class="col-form-label">:</label>
-										<div class="col">
-											<select id="hplModelId" class="custom-select" name="hplModelId" th:field="*{hModel}" disabled
-												onchange="reloadG2LotNumbers();">
-												<option value="" selected hidden="true">Please Select</option>
-												<option th:each="hplModelItem: ${hplModelItems}"
-													th:value="${hplModelItem}"
-													th:text="${hplModelItem}"
-													th:selected="${hplModelItem} == ${hModel}"/>
-											</select>
-											<select class="custom-select" name="hplModelId2" id="hplModelId2" disabled hidden="true" onchange="reloadG2LotNumbers();">
-												<option value="" selected hidden="true">Please Select</option>
-											</select>
-										</div>
-									</div>
-								</div>
-								
-								<div id="yearDiv" class="form-group row">
-									<label class="col-sm-2 col-form-label control-label">
-										<span th:text="#{lblYear}"></span>
-										<a name="asterisk" style="color: red;" hidden="true">*</a>
-									</label>
-
-									<div class="row col-sm-5">
-										<label class="col-form-label">:</label>
-										<div class="col">
-											<select id="year" class="custom-select" name="year" th:field="*{year}" disabled required
-												onchange="reloadG2LotNumbers();">
-												<option value="" selected hidden="true">Please Select</option>
-												<option th:each="yearItem: ${yearItems}"
-													th:value="${yearItem}"
-													th:text="${yearItem}"
-													th:selected="${yearItem} == ${year}"/>
-											</select>
-										</div>
-									</div>
-								</div>
-								
-								<div id="mthDiv" class="form-group row">
-									<label class="col-sm-2 col-form-label control-label">
-										<span th:text="#{lblMonth}"></span>
-									</label>
-
-									<div class="row col-sm-5">
-										<label class="col-form-label">:</label>
-										<div class="col">
-											<select id="mth" class="custom-select" name="mth" th:field="*{mth}" disabled 
-												onchange="reloadG2LotNumbers();">
-												<option value="" selected hidden="true">Please Select</option>
-												<option th:each="monthItem: ${monthItems}"
-													th:value="${monthItem.strValue}"
-													th:text="${monthItem.label}"
-													th:selected="${monthItem.strValue} == ${mth}"/>
-											</select>
-										</div>
-									</div>
-								</div>
-								
-								<div id="prodLnDiv" class="form-group row">
-									<label class="col-sm-2 col-form-label control-label">
-										<span th:text="#{lblProdLn}"></span>
-										<a name="asterisk" style="color: red;" hidden="true">*</a>
-									</label>
-
-									<div class="row col-sm-5">
-										<label class="col-form-label">:</label>
-										<div class="col">
-											<!-- <input type="text" id="prodLn" readonly name="prodLn"
-												class="form-control-plaintext" th:field="*{prodLn}"
-												required maxlength="20"
-												onchange="reloadG2LotNumbers();"> -->
 												
-											<select id="prodLn" class="custom-select" name="prodLn" th:field="*{prodLn}" disabled 
-												onchange="reloadG2LotNumbers();">
-												<option value="" selected hidden="true">Please Select</option>
-												<option th:each="prodLnItem: ${prodLnItems}"
-													th:value="${prodLnItem}"
-													th:text="${prodLnItem}"
-													th:selected="${prodLnItem} == ${prodLn}"/>
-											</select>
-											<select class="custom-select" name="prodLn2" id="prodLn2" disabled hidden="true" onchange="onProdLnChange();">
-												<option value="" selected hidden="true">Please Select</option>
-											</select>
-											
-										</div>
-									</div>
-								</div>
-								
-								<div id="seqDiv" class="form-group row" hidden = "true">
-									<label class="col-sm-2 col-form-label control-label">
-										<span th:text="#{lblSeq}"></span>
-										<a name="asterisk" style="color: red;" hidden="true">*</a>
-									</label>
-
-									<div class="row col-sm-5">
-										<label class="col-form-label">:</label>
-										<div class="col">
-											<select id="seq" class="custom-select" name="seq" th:field="*{seq}" disabled >
-												<option value="" selected hidden="true">Please Select</option>
-												<option th:each="seqItem: ${seqItems}"
-													th:value="${seqItem}"
-													th:text="${seqItem}"
-													th:selected="${seqItem} == ${seq}"/>
-											</select>
-											<select class="custom-select" name="seq2" id="seq2" disabled hidden="true" >
-												<option value="" selected hidden="true">Please Select</option>
-											</select>
-										</div>
-									</div>
-								</div>
-								
-								<div id="g2LotDiv" class="form-group row">
-									<label class="col-sm-2 col-form-label control-label">
-										<span th:text="#{lblG2LotNo}"></span>
-										<a name="asterisk" style="color: red;" hidden="true">*</a>
-									</label>
-
-									<div class="row col-sm-5">
-										<label class="col-form-label">:</label>
-										<div class="col">
-											<select id="g2Lot" class="custom-select" name="g2Lot" th:field="*{g2Lot}" disabled >
-												<option value="" selected hidden="true">Please Select</option>
-												<option th:each="g2LotItem: ${g2LotItems}"
-													th:value="${g2LotItem.lot}"
-													th:text="${g2LotItem.lot}"
-													th:selected="${g2LotItem.lot} == ${g2Lot}"/>
-											</select>
-											<select class="custom-select" name="g2Lot2" id="g2Lot2" disabled hidden="true" >
-												<option value="" selected hidden="true">Please Select</option>
-											</select>
-										</div>
-									</div>
-								</div>
-								
-								<div id="pathDiv" class="form-group row">
-									<label class="col-sm-2 col-form-label control-label">
-										<span th:text="#{lblFilePath}"></span>
-										<a name="asterisk" style="color: red;" hidden="true">*</a>
-									</label>
-
-									<div class="row col-sm-5">
-										<label class="col-form-label">:</label>
-										<div class="col">
-											<!-- <input type="text" id="filePath" readonly name="filePath"
-												class="form-control-plaintext" th:field="*{filePath}"
-												required maxlength="100">
-												<label><span th:text="#{lblFilePathFormatEg}"></span></label> -->
-												
-											<select id="filePath" class="custom-select" name="filePath" th:field="*{filePath}" disabled >
-												<option value="" selected hidden="true">Please Select</option>
-												<option th:each="filePathItem: ${filePathItems}"
-													th:value="${filePathItem.pkRelPathId}"
-													th:text="${filePathItem.filePath}"
-													th:selected="${filePathItem.pkRelPathId} == ${filePath}"/>
-											</select>
-											<select class="custom-select" name="filePath2" id="filePath2" disabled hidden="true" >
-												<option value="" selected hidden="true">Please Select</option>
-											</select>
-											
-										</div>
-									</div>
-								</div>
-																				
 								</br>
 
 							</form>
@@ -381,12 +356,10 @@
 							aria-labelledby="dropdownMenuButton">
 							<button class="dropdown-item btn" type="submit" form="mainForm"
 								th:hidden="${btnEdit}" id="btnEdit" value="edit" name="action" th:text="#{btnEdit}"></button>
-							<button class="dropdown-item btn" form="mainForm" type="button"
+							<button class="dropdown-item btn" form="mainForm" type="submit"
 								th:hidden="${btnSaveSts}" id="btnSave" value="save" name="action"
 								th:text="${btnSave}"
 								data-toggle="modal" data-target="#saveConfirmDialog"></button>
-							<a class="dropdown-item btn" type="button"
-								th:hidden="${btnResetForm}" th:href="prodFileForm" style="width: 90px;" th:text="#{btnResetForm}"></a>
 						</div>
 
 						<button class="btn btn-primary" style="width: 90px;" type="button"
@@ -542,12 +515,6 @@
 
 				document.getElementById("prodLn2").disabled = false;
 				document.getElementById("prodLn2").hidden = false;
-				
-				document.getElementById("seq").disabled = true;
-				document.getElementById("seq").hidden = true;
-
-				document.getElementById("seq2").disabled = false;
-				document.getElementById("seq2").hidden = false;
 
 				document.getElementById("btnAddCancel").hidden = false;
 				document.getElementById("btnViewCancel").hidden = true;
@@ -586,12 +553,6 @@
 				document.getElementById("prodLn2").disabled = false;
 				document.getElementById("prodLn2").hidden = false;
 				
-				document.getElementById("seq").disabled = true;
-				document.getElementById("seq").hidden = true;
-
-				document.getElementById("seq2").disabled = false;
-				document.getElementById("seq2").hidden = false;
-				
 				onHplChange();
 
 				document.getElementById("btnEditCancel").hidden = false;
@@ -605,7 +566,6 @@
 				document.getElementById("g2Lot").hidden = false;
 				document.getElementById("filePath").hidden = false;
 				document.getElementById("prodLn").hidden = false;
-				document.getElementById("seq").hidden = false;
 			}
 		}
 
@@ -626,7 +586,6 @@
 			document.getElementById("g2Lot").disabled = false;
 			document.getElementById("filePath").disabled = false;
 			document.getElementById("prodLn").disabled = false;
-			document.getElementById("seq").disabled = false;
 			//document.getElementById("hplModelId").disabled = false;
 
 			//$("#hplDiv").addClass("required");
@@ -654,10 +613,6 @@
 			$("#prodLn").addClass("form-control");
 			$("#prodLn").removeClass("form-control-plaintext");
 			document.getElementById("prodLn").removeAttribute("readonly");
-			
-			$("#seq").addClass("form-control");
-			$("#seq").removeClass("form-control-plaintext");
-			document.getElementById("seq").removeAttribute("readonly");
 			
 			$("#filePath").addClass("form-control");
 			$("#filePath").removeClass("form-control-plaintext");
@@ -710,12 +665,6 @@
 				}
 			});		
 			
-			if(id === 'GTMS'){
-				document.getElementById("seqDiv").hidden = false;
-			} else {
-				document.getElementById("seqDiv").hidden = true;
-			}
-			
 		}
 		
 		function reloadG2LotNumbers() {
@@ -724,27 +673,19 @@
 			var year = document.getElementById("year").value;				
 			var mth = document.getElementById("mth").value;					
 			var prodLn2 = document.getElementById("prodLn2").value;		
-			var seq = document.getElementById("seq2").value;		
-			
-			// to avoid search all
-			if(hplId === ""){
-				return;
-			}
 			
 			var ctx = "[[@{/}]]"; 
 			var g2Lot2Temp = "[(${g2Lot2Temp})]";
 			var filePath2Temp = "[(${filePath2Temp})]";
 			var prodLn2Temp = "[(${prodLn2Temp})]";
-			var seq2Temp = "[(${seq2Temp})]";
 			
 			$.ajax({
-				url : ctx+"main/pfc/loadCompletedG2Lot?hplId="+ hplId+"&hplModelId2="+hplModelId2+"&year="+year+"&mth="+mth+"&prodLn2="+prodLn2+"&seq"+seq,
+				url : ctx+"main/pfc/loadCompletedG2Lot?hplId="+ hplId+"&hplModelId2="+hplModelId2+"&year="+year+"&mth="+mth+"&prodLn2="+prodLn2,
 				type : "GET",
 				success : function(data) {
 					var items = data.items;
 					var paths = data.pathsItems;
 					var prodLnList = data.prodLnItems;
-					var seqList = data.seqItems;
 					
 					// G2 lot dropdown
 					$("#g2Lot2").empty();
@@ -789,21 +730,6 @@
 						}												
 					}	
 					
-					// seq ddropdown
-					$("#seq2").empty();
-					var seq2Opt = "<option value = ''>Please Select</option>";
-					$("#seq2").append(seq2Opt);
-					for(var dt3 in seqList){				
-						//alert("dt3="+dt3+"; seqList[dt3]="+seqList[dt3]+"; seq2Temp="+seq2Temp);
-						if(seq2Temp == seqList[dt3]){
-							seq2Opt = "<option value = " + seqList[dt3] + " selected>" + seqList[dt3] +  "</option>";
-							$("#seq2").append(seq2Opt);
-						} else {
-							seq2Opt = "<option value = " + seqList[dt3] + ">" + seqList[dt3] +  "</option>";
-							$("#seq2").append(seq2Opt);
-						}												
-					}
-					
 				}
 			});
 		}
@@ -813,15 +739,14 @@
 			var hplModelId2 = document.getElementById("hplModelId2").value;		
 			var year = document.getElementById("year").value;				
 			var mth = document.getElementById("mth").value;					
-			var prodLn2 = document.getElementById("prodLn2").value;			
-			var seq = document.getElementById("seq2").value;		
+			var prodLn2 = document.getElementById("prodLn2").value;		
 			
 			var ctx = "[[@{/}]]"; 
 			var g2Lot2Temp = "[(${g2Lot2Temp})]";
 			var filePath2Temp = "[(${filePath2Temp})]";
 			
 			$.ajax({
-				url : ctx+"main/pfc/loadCompletedG2Lot?hplId="+ hplId+"&hplModelId2="+hplModelId2+"&year="+year+"&mth="+mth+"&prodLn2="+prodLn2+"&seq"+seq,
+				url : ctx+"main/pfc/loadCompletedG2Lot?hplId="+ hplId+"&hplModelId2="+hplModelId2+"&year="+year+"&mth="+mth+"&prodLn2="+prodLn2,
 				type : "GET",
 				success : function(data) {
 					var items = data.items;
@@ -847,10 +772,10 @@
 					$("#filePath2").append(pathOption);
 					for(var dt1 in paths){						
 						if(filePath2Temp == paths[dt1].filePath){
-							pathOption = "<option value = " + paths[dt1].pkRelPathId + " selected>" + paths[dt1].filePath +  "</option>";
+							pathOption = "<option value = " + paths[dt1].filePath + " selected>" + paths[dt1].filePath +  "</option>";
 							$("#filePath2").append(pathOption);
 						} else {
-							pathOption = "<option value = " + paths[dt1].pkRelPathId + ">" + paths[dt1].filePath +  "</option>";
+							pathOption = "<option value = " + paths[dt1].filePath + ">" + paths[dt1].filePath +  "</option>";
 							$("#filePath2").append(pathOption);
 						}												
 					}	 						
@@ -864,47 +789,20 @@
 				var fileName = $(this).val().split("\\").pop();
 				$(this).siblings(".custom-file-label").addClass("selected").html(fileName);
 				var mode = document.getElementById("formMode").text;
-				var fname = "";
+				
 				var f1 = document.getElementById("fileContentName");
 				if (mode == "add") {
 					f1.value = fileName;
-					fname = f1.value;
+					//alert("1="+f1.value);
 				}
 
 				var f2 = document.getElementById("newFileContentName");
 				if (mode == "edit") {
 					f2.value = fileName;
-					fname = f2.value;
+					//alert("2="+f2.value);
 				}			
 				
-				var hplId = document.getElementById("hplId").value;	
-				
-				loadInfoByFile(hplId,fname);
-				
 		});
-		
-		function loadInfoByFile(hpl,fileName){			
-			alert(hpl + " >> " + fileName);
-			var ctx = "[[@{/}]]"; 
-			$.ajax({
-				url : ctx+"main/pfc/loadInfoByFile?hpl="+hpl+"&file="+fileName,
-				type : "GET",
-				success : function (data) {		
-					document.getElementById("hplModelId2").value = data.model;
-					document.getElementById("year").value = data.year;
-					document.getElementById("mth").value = data.month;
-					//document.getElementById("day").value = data.day;
-					document.getElementById("prodLn2").value = data.prodLn;	
-					document.getElementById("g2Lot2").value = data.lot;
-					
-					if(hpl === 'GTMS'){						
-						document.getElementById("seq2").value = data.seq;
-					}
-					
-					//reloadG2LotNumbers();
-				}				
-			});
-		}
 		
 		var fileContent = document.getElementById("fileContent");
 		fileContent.onchange = function() {
@@ -937,7 +835,7 @@
 				}
 			}
 		};
-				
+		
 		$(document).ready(function() {
 			$("#hplId").change(function() {
 				onHplChange();

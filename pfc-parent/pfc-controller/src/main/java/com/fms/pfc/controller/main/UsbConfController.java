@@ -171,7 +171,7 @@ public class UsbConfController {
 
 		UsbConfDto dto = usbConfServ.findDtoById(pkUconfId);
 		trxHistServ.addTrxHistory(new Date(), "View " + MODULE_NAME, request.getRemoteUser(),
-				CommonConstants.FUNCTION_TYPE_VIEW, dto.getPkUconfId().toString(),
+				CommonConstants.FUNCTION_TYPE_VIEW, dto.getHpl() +"-"+ dto.getName(),
 				CommonConstants.RECORD_TYPE_ID_USB_CONF, null);
 
 		// Set mode
@@ -326,7 +326,7 @@ public class UsbConfController {
 
 				trxHistServ.addTrxHistory(new Date(), "Insert " + MODULE_NAME, request.getRemoteUser(),
 						CommonConstants.FUNCTION_TYPE_INSERT,
-						Objects.nonNull(result) ? result.toString() : dto.getName(),
+						Objects.nonNull(result) ? dto.getHpl() +"-"+ dto.getName() : "",
 						CommonConstants.RECORD_TYPE_ID_USB_CONF, null);
 
 			} catch (Exception e) {
@@ -352,7 +352,7 @@ public class UsbConfController {
 
 				trxHistServ.addTrxHistory(new Date(), "Update " + MODULE_NAME, request.getRemoteUser(),
 						CommonConstants.FUNCTION_TYPE_UPDATE,
-						Objects.nonNull(result) ? result.toString() : dto.getName(),
+						Objects.nonNull(result) ? dto.getHpl() +"-"+ dto.getName() : "",
 						CommonConstants.RECORD_TYPE_ID_USB_CONF, null);
 
 			} catch (Exception e) {
@@ -445,17 +445,18 @@ public class UsbConfController {
 			// Delete form
 			for (int i = 0; i < check.length; i++) {
 
-//				if (1==1) {
-//					// Print delete failed
-//					model.put("error", "Letter Content is in used and it is not allow to delete from the system.");
-//				} else {
-				usbConfServ.delete(Integer.parseInt(check[i]));
-				// Print delete success`
-				model.put("success", msgSource.getMessage("msgSuccessDelete", new Object[] {}, Locale.getDefault()));
-
-				trxHistServ.addTrxHistory(new Date(), "Delete " + MODULE_NAME, request.getRemoteUser(),
-						CommonConstants.FUNCTION_TYPE_DELETE, check[i], CommonConstants.RECORD_TYPE_ID_USB_CONF, null);
-//				}
+				if (checkDelete()) {
+					// Print delete failed
+					model.put("error", MODULE_NAME+" is in use and it is not allowed to be deleted from the system.");
+				} else {
+					UsbConfDto dto = usbConfServ.findDtoById(Integer.parseInt(check[i]));
+					usbConfServ.delete(Integer.parseInt(check[i]));
+					// Print delete success`
+					model.put("success", msgSource.getMessage("msgSuccessDelete", new Object[] {}, Locale.getDefault()));
+	
+					trxHistServ.addTrxHistory(new Date(), "Delete " + MODULE_NAME, request.getRemoteUser(),
+							CommonConstants.FUNCTION_TYPE_DELETE, dto.getHpl() +"-"+ dto.getName(), CommonConstants.RECORD_TYPE_ID_USB_CONF, null);
+				}
 			}
 
 		} catch (Exception e) {
@@ -560,6 +561,12 @@ public class UsbConfController {
 		if (Objects.nonNull(usbDet.getUsbDetMan())) {
 			usbDet.destroy();
 		}
+	}
+	
+	private boolean checkDelete() {
+		boolean isSuperUser = (Boolean) model.get("isSuperUser");
+		boolean cannotDelete = isSuperUser ? false : true;
+		return cannotDelete;
 	}
 	
 	/**

@@ -97,8 +97,8 @@ public interface G2LotViewRepository extends JpaRepository<G2LotView, String> {
 	@Query(value = "select distinct PROD_LN from CV22PDF where 1=1 "
 			+ "and ('' = ?1 or HPL = ?1) "
 			+ "and ('' = ?2 or MODEL = ?2) "
-			//+ "and ('' = ?3 or YEAR = ?3) "
-			+ " and ?3 = ?3 "
+			+ "and ('' = ?3 or YEAR = ?3) "
+			//+ " and ?3 = ?3 "
 			+ "and ('' = ?4 or MTH = ?4) "
 			+ "and ('' = ?5 or DDAY = ?5) "
 			+ "order by PROD_LN ", nativeQuery = true)

@@ -65,7 +65,7 @@
 												<label class="col-form-label">:</label>
 												<div class="col col-sm-8">
 													<select id="searchHplId" class="custom-select" name="searchHplId" th:value="${searchHplId}" 
-														onchange="onHplSelectItemsChange()">
+														onchange="onHplChg2()">
 														<option value="" selected hidden="true">Please Select</option>
 														<option th:each="hplItem: ${searchHplItems}"
 															th:value="${hplItem}"
@@ -80,12 +80,15 @@
 											<div class="row col-sm-7">
 												<label class="col-form-label">:</label>
 												<div class="col col-sm-8">
-													<select id="searchHplModelId" class="custom-select" name="searchHplModelId" th:value="${searchHplModelId}" >
+													<!-- <select id="searchHplModelId" class="custom-select" name="searchHplModelId" th:value="${searchHplModelId}" >
 														<option value="" selected hidden="true">Please Select</option>
 														<option th:each="hplModelItem: ${searchHplModelItems}"
 															th:value="${hplModelItem}"
 															th:text="${hplModelItem}"
 															th:selected="${hplModelItem} == ${searchHplModelId}"/>
+													</select> -->
+													<select class="custom-select" name="searchHplModelId" id="searchHplModelId">
+														<option value="" selected hidden="true">Please Select</option>
 													</select>
 												</div>
 											</div>
@@ -95,12 +98,15 @@
 											<div class="row col-sm-7">
 												<label class="col-form-label">:</label>
 												<div class="col col-sm-8">
-													<select id="searchYear" class="custom-select" name="searchYear" th:value="${searchYear}" >
+													<!-- <select id="searchYear" class="custom-select" name="searchYear" th:value="${searchYear}" >
 														<option value="" selected hidden="true">Please Select</option>
 														<option th:each="yearItem: ${searchYearItems}"
 															th:value="${yearItem.strValue}"
 															th:text="${yearItem.label}"
 															th:selected="${yearItem.strValue} == ${searchYear}"/>
+													</select> -->
+													<select class="custom-select" name="searchYear" id="searchYear">
+														<option value="" selected hidden="true">Please Select</option>
 													</select>
 												</div>
 											</div>
@@ -110,12 +116,15 @@
 											<div class="row col-sm-7">
 												<label class="col-form-label">:</label>
 												<div class="col col-sm-8">
-													<select id="searchMth" class="custom-select" name="searchMth" th:value="${searchMth}" >
+													<!-- <select id="searchMth" class="custom-select" name="searchMth" th:value="${searchMth}" >
 														<option value="" selected hidden="true">Please Select</option>
 														<option th:each="monthItem: ${searchMonthItems}"
 															th:value="${monthItem.strValue}"
 															th:text="${monthItem.label}"
 															th:selected="${monthItem.strValue} == ${searchMth}"/>
+													</select> -->
+													<select class="custom-select" name="searchMth" id="searchMth">
+														<option value="" selected hidden="true">Please Select</option>
 													</select>
 												</div>
 											</div>
@@ -250,13 +259,13 @@
 			window.location = "[[@{/main/pfc/prodFileList}]]";
 		}
 		
-		function onHplSelectItemsChange(){
+		function onHplChg(){
 			var searchHplId = document.getElementById("searchHplId");			
 			var ctx = "[[@{/}]]"; 
-			//var pkHplModelIdTemp = "[(${pkHplModelIdTemp})]";
+			var tempHplModel = "[(${tempHplModel})]";
 
 			$.ajax({
-				url : ctx+"main/pfc/getHplModelByHpl?pkHplId="
+				url : ctx+"main/pfc/api/getHplModelByHpl?hpl="
 						+ searchHplId.value,
 				type : "GET",
 				success : function(data) {
@@ -266,21 +275,93 @@
 					$("#searchHplModelId").append(option);
 					for(var dt in hplModelData){
 						
-						/*if(pkHplModelIdTemp == hplModelData[dt].pkHplModelId){
-							option = "<option value = " + hplModelData[dt].pkHplModelId + " selected>" + hplModelData[dt].hplModelName +  "</option>";
+						if(tempHplModel == hplModelData[dt]){
+							option = "<option value = " + hplModelData[dt] + " selected>" + hplModelData[dt] +  "</option>";
 							$("#searchHplModelId").append(option);
 						} else {
-							option = "<option value = " + hplModelData[dt].pkHplModelId + ">" + hplModelData[dt].hplModelName +  "</option>";
+							option = "<option value = " + hplModelData[dt] + ">" + hplModelData[dt] +  "</option>";
 							$("#searchHplModelId").append(option);
-						}*/
+						}
 						
-						option = "<option value = " + hplModelData[dt] + ">" + hplModelData[dt] +  "</option>";
-						$("#searchHplModelId").append(option);
+						//option = "<option value = " + hplModelData[dt] + ">" + hplModelData[dt] +  "</option>";
+						//$("#searchHplModelId").append(option);
 												
 					}	 		
 				}
 			});
 		}
+		
+		function onHplChg2(){
+			var searchHplId = document.getElementById("searchHplId");	
+			var hplModel = document.getElementById("searchHplModelId");		
+			var year = document.getElementById("searchYear");	
+			var ctx = "[[@{/}]]"; 
+			var tempHplModel = "[(${tempHplModel})]";
+			var tempYear = "[(${tempYear})]";
+			var tempMth = "[(${tempMth})]";
+
+			$.ajax({
+				url : ctx+"main/pfc/api/getModelYearMonthByHpl?hpl="
+						+ searchHplId.value +"&hplModel="+hplModel.value+"&year="+year.value,
+				type : "GET",
+				success : function(data) {
+					var hplModelData = data.models;
+					var yearData = data.years;
+					var monthData = data.months;
+					
+					$("#searchHplModelId").empty();
+					var option = "<option value = ''>Please Select</option>";
+					$("#searchHplModelId").append(option);
+					for(var dt in hplModelData){						
+						if(tempHplModel == hplModelData[dt]){
+							option = "<option value = " + hplModelData[dt] + " selected>" + hplModelData[dt] +  "</option>";
+							$("#searchHplModelId").append(option);
+						} else {
+							option = "<option value = " + hplModelData[dt] + ">" + hplModelData[dt] +  "</option>";
+							$("#searchHplModelId").append(option);
+						}												
+					}	 	
+					
+					$("#searchYear").empty();
+					var option = "<option value = ''>Please Select</option>";
+					$("#searchYear").append(option);
+					for(var dt in yearData){						
+						if(tempYear == yearData[dt]){
+							option = "<option value = " + yearData[dt] + " selected>" + yearData[dt] +  "</option>";
+							$("#searchYear").append(option);
+						} else {
+							option = "<option value = " + yearData[dt] + ">" + yearData[dt] +  "</option>";
+							$("#searchYear").append(option);
+						}												
+					}	 
+					
+					$("#searchMth").empty();
+					var option = "<option value = ''>Please Select</option>";
+					$("#searchMth").append(option);
+					for(var dt in monthData){						
+						if(tempMth == monthData[dt]){
+							option = "<option value = " + monthData[dt] + " selected>" + monthData[dt] +  "</option>";
+							$("#searchMth").append(option);
+						} else {
+							option = "<option value = " + monthData[dt] + ">" + monthData[dt] +  "</option>";
+							$("#searchMth").append(option);
+						}												
+					}	 
+				}
+			});
+		}
+		
+		$(document).ready(function() {
+			$("#searchHplId").change(function() {
+				onHplChg2();
+		    });
+		    
+		    if(!$("#searchHplModelId").val() || !$("#searchHplModelId").val() || !$("#searchMth").val()) {
+		    	onHplChg2();
+		    };
+		    
+		    
+		});
 			
 	</script>
 

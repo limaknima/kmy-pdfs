@@ -7,6 +7,7 @@
 <link rel="stylesheet" type="text/css" th:href="@{/css/bootstrap-duallistbox.css}">
 <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/css/bootstrap-datepicker.css" />
+<link rel="stylesheet" type="text/css" href="//cdn.datatables.net/1.10.20/css/dataTables.material.css">
 
 <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
 <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
@@ -16,6 +17,30 @@
 <script	src="https://cdn.rawgit.com/google/code-prettify/master/loader/run_prettify.js"></script>
 <script type="text/javascript" src="../../js/jquery.bootstrap-duallistbox.js"></script>
 <script	src="https://cdnjs.cloudflare.com/ajax/libs/1000hz-bootstrap-validator/0.11.9/validator.min.js"></script>
+<script src="https://cdn.datatables.net/1.10.20/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.10.20/js/dataTables.bootstrap4.min.js"></script>
+<style>
+.tableFixHead {
+	overflow-y: auto;
+	overflow-x: hidden;
+	height: 300px;
+	margin-bottom: 10px;
+}
+
+.tableFixHead thead th {
+	position: sticky;
+	top: 0;
+	background: #F5F5F5;
+	border-top: none;
+	border-bottom: none;
+	box-shadow: inset 0 0.1px 0 #000000, inset 0 -0.1px 0 #000000;
+	border-bottom: none;
+}
+
+.formGap {
+	margin-top: -20px;
+}
+</style>
 
 </head>
 <body onload="init()" class="sb-nav-fixed">
@@ -33,7 +58,7 @@
 							th:href="@{/menu/maintenanceMenu}"><span
 								th:text="#{menuMaint}"></span></a></li>
 						<li class="breadcrumb-item active"><a
-							th:href="@{/main/pfc/foldCatgConfList}"><span
+							th:href="@{/main/pfc/foldCatgConfList2}"><span
 								th:text="#{moduleFoldCatgConfList}"></span></a></li>
 						<li class="breadcrumb-item active"><span th:text="#{moduleFoldCatgConfForm}"></span></li>
 					</ol>
@@ -51,7 +76,7 @@
 							th:text="${mode}"></a>
 						<div class="card-body">
 							<form action="#" id="mainForm"
-								th:action="@{/main/pfc/foldCatgConfFormSave}" th:object="${foldCatgConfItem}"
+								th:action="@{/main/pfc/foldCatgConfForm2Save}" th:object="${foldCatgConfItem}"
 								method="POST" data-toggle="validator" novalidate="true"
 								enctype="multipart/form-data">
 								<div id="hplDiv" class="form-group row">
@@ -62,7 +87,7 @@
 										<label class="col-form-label">:</label>
 										<div class="col">
 											<select id="hplId" class="custom-select" name="hplId" th:field="*{hpl}" disabled required
-												onchange="onHplChange(); reloadPathSuggestion(); loadProdLn();">
+												onchange="onHplChange(); reloadPathSuggestion(); loadProdLn(); loadYear(); loadMonth();">
 												<option value="" selected hidden="true">Please Select</option>
 												<option th:each="hplItem: ${hplItems}"
 													th:value="${hplItem}"
@@ -73,130 +98,10 @@
 										<input th:field="*{pkCatgId}" hidden="true">
 									</div>
 								</div>
-								<div id="hplModelDiv" class="form-group row">
-									<label class="col-sm-2 col-form-label control-label"><span th:text="#{lblHplModel}"></span>
-									</label>
-
-									<div id="hplModelFrag" class="row col-sm-5">
-										<label class="col-form-label">:</label>
-										<div class="col">
-											<select id="hplModelId" class="custom-select" name="hplModelId" th:field="*{hModel}" disabled>
-												<option value="" selected hidden="true">Please Select</option>
-												<option th:each="hplModelItem: ${hplModelItems}"
-													th:value="${hplModelItem}"
-													th:text="${hplModelItem}"
-													th:selected="${hplModelItem} == ${hModel}"/>
-											</select>
-											<select class="custom-select" name="hplModelId2" id="hplModelId2" disabled hidden="true">
-												<option value="" selected hidden="true">Please Select</option>
-											</select>
-										</div>
-									</div>
-								</div>
-								
-								<div id="yearDiv" class="form-group row">
-									<label class="col-sm-2 col-form-label control-label"><span th:text="#{lblYear}"></span>
-										<a name="asterisk" style="color: red;" hidden="true">*</a>
-									</label>
-
-									<div class="row col-sm-5">
-										<label class="col-form-label">:</label>
-										<div class="col">
-											<select id="year" class="custom-select" name="year" th:field="*{year}" disabled required
-												onchange=" reloadPathSuggestion(); loadProdLn();">
-												<option value="" selected hidden="true">Please Select</option>
-												<option th:each="yearItem: ${yearItems}"
-													th:value="${yearItem.strValue}"
-													th:text="${yearItem.label}"
-													th:selected="${yearItem.strValue} == ${year}"/>
-											</select>
-										</div>
-									</div>
-								</div>
-								
-								<div id="mthDiv" class="form-group row">
-									<label class="col-sm-2 col-form-label control-label"><span th:text="#{lblMonth}"></span>
-									</label>
-
-									<div class="row col-sm-5">
-										<label class="col-form-label">:</label>
-										<div class="col">
-											<select id="mth" class="custom-select" name="mth" th:field="*{mth}" disabled 
-												onchange=" reloadPathSuggestion(); loadProdLn();">
-												<option value="" selected hidden="true">Please Select</option>
-												<option th:each="monthItem: ${monthItems}"
-													th:value="${monthItem.strValue}"
-													th:text="${monthItem.label}"
-													th:selected="${monthItem.strValue} == ${mth}"/>
-											</select>
-										</div>
-									</div>
-								</div>
-								
-								<div id="dayDiv" class="form-group row">
-									<label class="col-sm-2 col-form-label control-label"><span th:text="#{lblDay}"></span>
-									</label>
-
-									<div class="row col-sm-5">
-										<label class="col-form-label">:</label>
-										<div class="col">
-											<select id="day" class="custom-select" name="day" th:field="*{day}" disabled >
-												<option value="" selected hidden="true">Please Select</option>
-												<option th:each="dayItem: ${dayItems}"
-													th:value="${dayItem.strValue}"
-													th:text="${dayItem.label}"
-													th:selected="${dayItem.strValue} == ${day}"/>
-											</select>
-										</div>
-									</div>
-								</div>
-								
-								<div id="prodLnDiv" class="form-group row">
-									<label class="col-sm-2 col-form-label control-label"><span th:text="#{lblProdLn}"></span>
-										<a name="asterisk" style="color: red;" hidden="true">*</a>
-									</label>
-
-									<div class="row col-sm-5">
-										<label class="col-form-label">:</label>
-										<div class="col">
-											<!-- <input type="text" id="prodLn" readonly name="prodLn"
-												class="form-control-plaintext" th:field="*{prodLn}"
-												onchange=" reloadPathSuggestion();"
-												required maxlength="20"> -->
-												
-											<select id="prodLn" class="custom-select" name="prodLn" th:field="*{prodLn}" disabled >
-												<option value="" selected hidden="true">Please Select</option>
-												<option th:each="prodLnItem: ${prodLnItems}"
-													th:value="${prodLnItem}"
-													th:text="${prodLnItem}"
-													th:selected="${prodLnItem} == ${prodLn}"/>
-											</select>
-											<select class="custom-select" name="prodLn2" id="prodLn2" disabled hidden="true" onchange="reloadPathSuggestion();">
-												<option value="" selected hidden="true">Please Select</option>
-											</select>
-											
-										</div>
-									</div>
-								</div>
-								
-								<div id="seqDiv" class="form-group row">
-									<label class="col-sm-2 col-form-label control-label"><span th:text="#{lblSeq}"></span>
-									</label>
-
-									<div class="row col-sm-5">
-										<label class="col-form-label">:</label>
-										<div class="col">
-										
-											<input type="text" id="seq" readonly name="seq"
-												class="form-control-plaintext" th:field="*{seq}"
-												maxlength="10">
-
-										</div>
-									</div>
-								</div>
-								
-								<div id="fileForm1Div" class="form-group row">
+																
+								<div id="fileForm1Div" class="form-group row" hidden="false">
 									<label class="col-sm-2 col-form-label control-label"><span th:text="#{lblFileFormat}"></span>
+										<a name="asterisk" style="color: red;" hidden="true">*</a>
 									</label>
 
 									<div class="row col-sm-5">
@@ -204,7 +109,7 @@
 										<div class="col">
 												
 											<textarea name="fileForm1"
-												id="fileForm1" readonly th:field="*{prodFileFormat}"
+												id="fileForm1" readonly th:field="*{prodFileFormat}" 
 												class="form-control-plaintext"
 												maxlength="250" rows="2" style="resize: none;"></textarea>
 												
@@ -218,18 +123,34 @@
 										<h5 class="card-title">Directory Information</h5>
 										<p class="card-text">This table shows file path and it's related file format (GTMS).</p>
 										<p class="card-text">File format is not necessary if the format is the same regardless any file path (IF, MGG).</p>
+										<div class="form-group row col"
+											style="margin-bottom: -15px">
+											<div class="col-xs-2">
+												<input id="tabInputSearch"
+													class="form-control form-control-sm"
+													placeholder="Search...">
+											</div>
+										</div>
+										<br>
 										<div class="tableFixHead" style="overflow-x: scroll;">
-											<table class="table table-bordered">
+											<table class="table table-bordered table-striped" >
+												<caption>List of directories</caption>
 												<thead>
 													<tr>
 														<th class="text-left"><span th:text="#{lblFilePath}"></span></th>
+														<th class="text-left"><span th:text="#{lblProdLn}"></span></th>
+														<th class="text-left"><span th:text="#{lblYear}"></span></th>
+														<th class="text-left"><span th:text="#{lblMonth}"></span></th>
 														<th class="text-left"><span th:text="#{lblFileFormat}"></span></th>
 													</tr>
 												</thead>
-												<tbody>
+												<tbody id="tabSearchResult">
 													<tr th:each="relPath: ${relPathList}">
 														<td><a th:text="${relPath.filePath}"
-															th:href="@{/main/pfc/relPathFormGetData(rowNo=${relPath.rowNo})}"></a></td>
+															th:href="@{/main/pfc/relPathFormGetData2(rowNo=${relPath.rowNo})}"></a></td>
+														<td th:text="${relPath.prodLn}"></td>
+														<td th:text="${relPath.year}"></td>
+														<td th:text="${relPath.mth}"></td>
 														<td th:text="${relPath.prodFileFormat}"></td>
 													</tr>
 												</tbody>
@@ -246,9 +167,159 @@
 											name="action" th:disabled="${listDeleteBtn}"
 											style="width: 130px;"><span th:text="#{btnDeleteFromList}"></span></button>
 										<br /> <br />
+										
+										<div id="hplModelDiv" class="form-group row" hidden="true">
+											<label class="col-sm-2 col-form-label control-label"><span th:text="#{lblHplModel}"></span>
+											</label>
 		
+											<div id="hplModelFrag" class="row col-sm-5">
+												<label class="col-form-label">:</label>
+												<div class="col">
+													<select id="hplModelId" class="custom-select" name="hplModelId" th:value="${hModel}" disabled>
+														<option value="" selected hidden="true">Please Select</option>
+														<option th:each="hplModelItem: ${hplModelItems}"
+															th:value="${hplModelItem}"
+															th:text="${hplModelItem}"
+															th:selected="${hplModelItem} == ${hModel}"/>
+													</select>
+													<select class="custom-select" name="hplModelId2" id="hplModelId2" disabled hidden="true">
+														<option value="" selected hidden="true">Please Select</option>
+													</select>
+												</div>
+											</div>
+										</div>
+										
+										<div id="procTypeDiv" class="form-group row"  hidden="true">
+											<label class="col-sm-2 col-form-label control-label"><span th:text="#{lblProcType}"></span>
+												<a name="asterisk" style="color: red;" hidden="true">*</a>
+											</label>
+		
+											<div class="row col-sm-5">
+												<label class="col-form-label">:</label>
+												<div class="col">
+													<select id="procType" class="custom-select" name="procType" th:value="${procType}" disabled 
+														onchange="reloadPathSuggestion();">
+														<option value="" selected hidden="true">Please Select</option>
+														<option th:each="procTypeItem: ${procTypeItems}"
+															th:value="${procTypeItem.value}"
+															th:text="${procTypeItem.label}"
+															th:selected="${procTypeItem.value} == ${procType}"/>
+													</select>
+												</div>
+											</div>
+										</div>	
+										
+										<div id="yearDiv" class="form-group row">
+											<label class="col-sm-2 col-form-label control-label"><span th:text="#{lblYear}"></span>
+												<a name="asterisk" style="color: red;" hidden="true">*</a>
+											</label>
+		
+											<div class="row col-sm-5">
+												<label class="col-form-label">:</label>
+												<div class="col">
+													<select id="year" class="custom-select" name="year" th:value="${year}" disabled >
+														<option value="" selected hidden="true">Please Select</option>
+														<option th:each="yearItem: ${yearItems}"
+															th:value="${yearItem.strValue}"
+															th:text="${yearItem.label}"
+															th:selected="${yearItem.strValue} == ${year}"/>
+													</select>
+													<select class="custom-select" name="year2" id="year2" disabled hidden="true"
+														onchange="reloadPathSuggestion(); loadProdLn(); loadMonth();">
+														<option value="" selected hidden="true">Please Select</option>
+													</select>
+												</div>
+											</div>
+										</div>
+										
+										<div id="mthDiv" class="form-group row">
+											<label class="col-sm-2 col-form-label control-label"><span th:text="#{lblMonth}"></span>
+												<a name="asterisk" style="color: red;" hidden="true">*</a>
+											</label>
+		
+											<div class="row col-sm-5">
+												<label class="col-form-label">:</label>
+												<div class="col">
+													<select id="mth" class="custom-select" name="mth" th:value="${mth}" disabled >
+														<option value="" selected hidden="true">Please Select</option>
+														<option th:each="monthItem: ${monthItems}"
+															th:value="${monthItem.strValue}"
+															th:text="${monthItem.label}"
+															th:selected="${monthItem.strValue} == ${mth}"/>
+													</select>
+													<select class="custom-select" name="mth2" id="mth2" disabled hidden="true" 
+														onchange="reloadPathSuggestion(); loadProdLn();">
+														<option value="" selected hidden="true">Please Select</option>
+													</select>
+												</div>
+											</div>
+										</div>
+										
+										<div id="dayDiv" class="form-group row"  hidden="true">
+											<label class="col-sm-2 col-form-label control-label"><span th:text="#{lblDay}"></span>
+											</label>
+		
+											<div class="row col-sm-5">
+												<label class="col-form-label">:</label>
+												<div class="col">
+													<select id="day" class="custom-select" name="day" th:value="${day}" disabled >
+														<option value="" selected hidden="true">Please Select</option>
+														<option th:each="dayItem: ${dayItems}"
+															th:value="${dayItem.strValue}"
+															th:text="${dayItem.label}"
+															th:selected="${dayItem.strValue} == ${day}"/>
+													</select>
+												</div>
+											</div>
+										</div>										
+										
+										<div id="prodLnDiv" class="form-group row">
+											<label class="col-sm-2 col-form-label control-label"><span th:text="#{lblProdLn}"></span>
+												<a name="asterisk" style="color: red;" hidden="true">*</a>
+											</label>
+		
+											<div class="row col-sm-5">
+												<label class="col-form-label">:</label>
+												<div class="col">
+													<!-- <input type="text" id="prodLn" readonly name="prodLn"
+														class="form-control-plaintext" th:value="${prodLn}"
+														onchange=" reloadPathSuggestion();"
+														required maxlength="20"> -->
+														
+													<select id="prodLn" class="custom-select" name="prodLn" th:value="${prodLn}" disabled >
+														<option value="" selected hidden="true">Please Select</option>
+														<option th:each="prodLnItem: ${prodLnItems}"
+															th:value="${prodLnItem}"
+															th:text="${prodLnItem}"
+															th:selected="${prodLnItem} == ${prodLn}"/>
+													</select>
+													<select class="custom-select" name="prodLn2" id="prodLn2" disabled hidden="true" onchange="reloadPathSuggestion();">
+														<option value="" selected hidden="true">Please Select</option>
+													</select>
+													
+												</div>
+											</div>
+										</div>
+										
+										<div id="seqDiv" class="form-group row"  hidden="true">
+											<label class="col-sm-2 col-form-label control-label"><span th:text="#{lblSeq}"></span>
+											</label>
+		
+											<div class="row col-sm-5">
+												<label class="col-form-label">:</label>
+												<div class="col">
+												
+													<input type="text" id="seq" readonly name="seq"
+														class="form-control-plaintext" th:value="${seq}"
+														maxlength="10">
+		
+												</div>
+											</div>
+										</div>
+										
 										<div class="form-group row">
-											<label class="col-sm-2 col-form-label"><span th:text="#{lblFilePath}"></span></label><label
+											<label class="col-sm-2 col-form-label"><span th:text="#{lblFilePath}"></span>
+												<a name="asterisk" style="color: red;" hidden="true">*</a></label><label
 												class="col-form-label">:</label>
 											<div class="row col-sm-5">
 												<div class="col">
@@ -264,8 +335,10 @@
 												</div>
 											</div>
 										</div>
-										<div class="form-group row">
-											<label class="col-sm-2 col-form-label"><span th:text="#{lblFileFormat}"></span></label><label
+										
+										<div id="relPathFormatDiv" class="form-group row">
+											<label class="col-sm-2 col-form-label"><span th:text="#{lblFileFormat}"></span>
+												<a name="asterisk" style="color: red;" hidden="true">*</a></label><label
 												class="col-form-label">:</label>
 											<div class="row col-sm-5">
 												<div class="col">
@@ -283,10 +356,9 @@
 												</div>
 											</div>
 										</div>
+										
 									</div>								
-								</div>
-
-								
+								</div>	
 
 							</form>
 						</div>
@@ -303,43 +375,6 @@
 					<div id="break" hidden="true">
 						<br />
 					</div>
-					<!-- 
-					<div class="form-group row col-sm-3">
-						<button class="btn btn-primary"
-							style="width: 90px; margin-right: 5px;"
-							onclick="enableEditMode()" id="btnEdit">Edit</button>
-						<button class="btn btn-primary" form="mainForm" type="submit"
-							style="width: 90px; margin-right: 5px;" hidden="true"
-							id="btnSave">Save</button>
-						<a class="btn btn-primary" style="width: 90px;" type="button"
-							id="btnCancel" th:href="@{/main/pfc/foldCatgConfList}">Cancel</a>
-						<button class="btn btn-primary" style="width: 90px;" type="button"
-							hidden="true" id="btnConfirmCancel" data-toggle="modal"
-							data-target="#confirmDialog">Cancel</button> -->
-
-						<!-- Confirmation message 
-						<div class="modal fade" id="confirmDialog" tabindex="-1"
-							role="dialog" aria-hidden="true">
-							<div class="modal-dialog modal-dialog-centered" role="document">
-								<div class="modal-content">
-									<div class="modal-header">
-										<h5 class="modal-title" th:text="${confirmHeader}"></h5>
-										<button type="button" class="close" data-dismiss="modal"
-											aria-label="Close">
-											<span aria-hidden="true">&times;</span>
-										</button>
-									</div>
-									<div class="modal-body" th:text="${confirmMsg}"></div>
-									<div class="modal-footer">
-										<button type="submit" class="btn btn-primary"
-											onclick="onCancel()">Confirm</button>
-										<button type="button" class="btn btn-secondary"
-											data-dismiss="modal">Cancel</button>
-									</div>
-								</div>
-							</div>
-						</div>
-					</div>-->
 					<div th:if="${formMode == 'add'}">
 						<br />
 					</div>
@@ -367,7 +402,7 @@
 							data-target="#cancelConfirmDialog">Cancel</button>
 
 						<a class="btn btn-primary" style="width: 90px;" type="button"
-							id="btnViewCancel" th:href="@{/main/pfc/foldCatgConfList}">Close</a>
+							id="btnViewCancel" th:href="@{/main/pfc/foldCatgConfList2}">Close</a>
 							
 						<button class="btn btn-primary" style="width: 90px;"
 							hidden="true" id="btnEditCancel" type="button"
@@ -435,7 +470,7 @@
 									<div class="modal-body">Do you want to cancel edit this record?</div>
 									<div class="modal-footer">
 										<a class="btn btn-primary" style="width: 90px;" type="button"
-											id="btnAddCancel" th:href="@{/main/pfc/foldCatgConfList}">Confirm</a>
+											id="btnAddCancel" th:href="@{/main/pfc/foldCatgConfList2}">Confirm</a>
 
 										<button type="button" class="btn btn-secondary"
 											data-dismiss="modal">Cancel</button>
@@ -459,7 +494,7 @@
 									<div class="modal-body">Do you want to cancel this record?</div>
 									<div class="modal-footer">
 										<a class="btn btn-primary" style="width: 90px;" type="button"
-											id="btnAddCancel" th:href="@{/main/pfc/foldCatgConfList}">Confirm</a>
+											id="btnAddCancel" th:href="@{/main/pfc/foldCatgConfList2}">Confirm</a>
 
 										<button type="button" class="btn btn-secondary"
 											data-dismiss="modal">Cancel</button>
@@ -519,6 +554,7 @@
 				enableEditMode();
 			} else if (mode == "view") {
 				document.getElementById("hplModelId").hidden = false;
+				//document.getElementById('fileForm1').required = false;
 			}
 		}
 
@@ -537,10 +573,11 @@
 			document.getElementById("remarkFormatLbl").hidden = false;
 			document.getElementById("remarkFormatLbl2").hidden = false;
 			document.getElementById("hplId").disabled = false;
-			document.getElementById("year").disabled = false;
-			document.getElementById("mth").disabled = false;
+			//document.getElementById("year").disabled = false;
+			//document.getElementById("mth").disabled = false;
 			document.getElementById("day").disabled = false;
 			//document.getElementById("hplModelId").disabled = false;
+			document.getElementById("procType").disabled = false;
 
 			//$("#hplDiv").addClass("required");
 			
@@ -548,7 +585,17 @@
 			document.getElementById("prodLn").hidden = true;
 			document.getElementById("prodLn2").disabled = false;
 			document.getElementById("prodLn2").hidden = false;
-
+			
+			document.getElementById("year").disabled = true;
+			document.getElementById("year").hidden = true;
+			document.getElementById("year2").disabled = false;
+			document.getElementById("year2").hidden = false;
+			
+			document.getElementById("mth").disabled = true;
+			document.getElementById("mth").hidden = true;
+			document.getElementById("mth2").disabled = false;
+			document.getElementById("mth2").hidden = false;
+			
 			$("#hplId").addClass("form-control");
 			$("#hplId").removeClass("form-control-plaintext");
 			document.getElementById("hplId").removeAttribute("readonly");
@@ -568,6 +615,10 @@
 			$("#day").addClass("form-control");
 			$("#day").removeClass("form-control-plaintext");
 			document.getElementById("day").removeAttribute("readonly");
+			
+			$("#procType").addClass("form-control");
+			$("#procType").removeClass("form-control-plaintext");
+			document.getElementById("procType").removeAttribute("readonly");
 			
 			$("#prodLn").addClass("form-control");
 			$("#prodLn").removeClass("form-control-plaintext");
@@ -598,14 +649,14 @@
 		}
 
 		function onCancel() {
-			window.location = "[[@{/main/pfc/foldCatgConfList}]]";
+			window.location = "[[@{/main/pfc/foldCatgConfList2}]]";
 		}
 		
 		function loadProdLn(){
 			var hplId = document.getElementById("hplId").value;		
 			var hplModelId2 = document.getElementById("hplModelId2").value;		
-			var year = document.getElementById("year").value;				
-			var mth = document.getElementById("mth").value;					
+			var year = document.getElementById("year2").value;				
+			var mth = document.getElementById("mth2").value;					
 			var day = document.getElementById("day").value;					
 			var prodLn2 = "";		
 			
@@ -660,6 +711,79 @@
 					}	 		
 				}
 			});
+			
+			if(id === 'GTMS') {
+				document.getElementById('fileForm1Div').hidden = true;
+				//document.getElementById('fileForm1').required = false;
+				document.getElementById('relPathFormatDiv').hidden = false;
+				document.getElementById('procTypeDiv').hidden = false;
+			} else {
+				document.getElementById('fileForm1Div').hidden = false;
+				//document.getElementById('fileForm1').required = true;
+				document.getElementById('relPathFormatDiv').hidden = true;
+				document.getElementById('procTypeDiv').hidden = true;
+			}
+		}
+		
+		function loadYear(){
+			var hplId = document.getElementById("hplId").value;		
+			var hplModelId2 = document.getElementById("hplModelId2").value;		
+			
+			var ctx = "[[@{/}]]"; 
+			var year2Temp = "[(${year2Temp})]";
+			
+			$.ajax({
+				url : ctx+"main/pfc/api/getYearByHpl?hplId="+ hplId+"&hplModelId2="+hplModelId2,
+				type : "GET",
+				success : function(data) {
+					var yearData = data.items;					
+					// ProdLn ddropdown
+					$("#year2").empty();
+					var prodLnOption = "<option value = ''>Please Select</option>";
+					$("#year2").append(prodLnOption);
+					for(var dt2 in yearData){				
+						if(year2Temp == yearData[dt2]){
+							prodLnOption = "<option value = " + yearData[dt2] + " selected>" + yearData[dt2] +  "</option>";
+							$("#year2").append(prodLnOption);
+						} else {
+							prodLnOption = "<option value = " + yearData[dt2] + ">" + yearData[dt2] +  "</option>";
+							$("#year2").append(prodLnOption);
+						}												
+					}	
+					
+				}
+			});
+		}
+		
+		function loadMonth(){
+			var hplId = document.getElementById("hplId").value;		
+			var hplModelId2 = document.getElementById("hplModelId2").value;	
+			var year = document.getElementById("year2").value;		
+			
+			var ctx = "[[@{/}]]"; 
+			var mth2Temp = "[(${mth2Temp})]";
+			
+			$.ajax({
+				url : ctx+"main/pfc/api/getMonthByHpl?hplId="+ hplId+"&hplModelId2="+hplModelId2+"&year="+year,
+				type : "GET",
+				success : function(data) {
+					var monthData = data.items;					
+					// ProdLn ddropdown
+					$("#mth2").empty();
+					var prodLnOption = "<option value = ''>Please Select</option>";
+					$("#mth2").append(prodLnOption);
+					for(var dt2 in monthData){				
+						if(mth2Temp == monthData[dt2]){
+							prodLnOption = "<option value = " + monthData[dt2] + " selected>" + monthData[dt2] +  "</option>";
+							$("#mth2").append(prodLnOption);
+						} else {
+							prodLnOption = "<option value = " + monthData[dt2] + ">" + monthData[dt2] +  "</option>";
+							$("#mth2").append(prodLnOption);
+						}												
+					}	
+					
+				}
+			});
 		}
 		
 		function reloadPathSuggestion(){
@@ -667,18 +791,29 @@
 			var result = "[(${defaultDataPath})]";
 			var hpl = $("#hplId option:selected").text();
 			var hplId = document.getElementById("hplId").value;	
-			var year = document.getElementById("year").value;	
-			var month = document.getElementById("mth").value;	
+			var year = document.getElementById("year2").value;	
+			var month = document.getElementById("mth2").value;	
 			var prodLn2 = document.getElementById("prodLn2").value;	
-						
+			var proc = document.getElementById("procType").value;	
+			var procType = $("#procType option:selected").text();
+			
 			if(hplId !== '')
 				result = result +  hpl + "/";
-			if(prodLn2 !=='')
-				result = result + prodLn2 + "/";			
+			if(hplId !== '' && hplId === 'GTMS'){
+				if(procType !== '' && proc !== 0)
+					result = result +  procType + "/";	
+				if(prodLn2 !=='')
+					result = result + procType + "#" +prodLn2 + "/";	
+			} else {
+				if(prodLn2 !=='')
+					result = result + hplId + "#" +prodLn2 + "/";						
+			}
 			if(year !== '')
 				result = result + year + "/";			
 			if(month !=='')
 				result = result + month + "/";
+			
+			
 			
 			
 			//alert("result="+result);
@@ -699,6 +834,21 @@
 		    if(!$("#prodLn2").val()) {
 		    	loadProdLn();
 		    };
+		    
+		    if(!$("#year2").val()) {
+		    	loadYear();
+		    };
+		    
+		    if(!$("#mth2").val()) {
+		    	loadMonth();
+		    };
+		    
+		    $("#tabInputSearch").on("keyup",function() {
+				var value = $(this).val().toLowerCase();
+				$("#tabSearchResult tr").filter(function() {
+					$(this).toggle($(this).text().toLowerCase().indexOf(value) > -1)
+				});
+			});
 		});
 		
 	</script>

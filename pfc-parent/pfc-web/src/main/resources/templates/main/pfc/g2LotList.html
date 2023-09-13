@@ -65,8 +65,8 @@
 												<label class="col-form-label">:</label>
 												<div class="col">
 													<select id="hpl" class="custom-select" name="hpl" th:value="${hpl}" 
-														onchange="onHplSelectItemsChange()">
-														<option value="" selected hidden="true">Please Select</option>
+														onchange="onHplChg2()">
+														<option value="" selected >Please Select</option>
 														<option th:each="hplItem: ${searchHplItems}"
 															th:value="${hplItem}"
 															th:text="${hplItem}"
@@ -98,12 +98,15 @@
 											<div class="row col-sm-7">
 												<label class="col-form-label">:</label>
 												<div class="col">
-													<select id="year" class="custom-select" name="year" th:value="${year}" >
-														<option value="" selected hidden="true">Please Select</option>
+													<!-- <select id="year" class="custom-select" name="year" th:value="${year}" >
+														<option value="" selected >Please Select</option>
 														<option th:each="yearItem: ${searchYearItems}"
 															th:value="${yearItem.strValue}"
 															th:text="${yearItem.label}"
 															th:selected="${yearItem.strValue} == ${year}"/>
+													</select>-->
+													<select class="custom-select" name="year" id="year" >
+														<option value="" selected hidden="true">Please Select</option>
 													</select>
 												</div>
 												
@@ -114,12 +117,15 @@
 											<div class="row col-sm-7">
 												<label class="col-form-label">:</label>
 												<div class="col">
-													<select id="mth" class="custom-select" name="mth" th:value="${mth}" >
-														<option value="" selected hidden="true">Please Select</option>
+													<!-- <select id="mth" class="custom-select" name="mth" th:value="${mth}" >
+														<option value="" selected >Please Select</option>
 														<option th:each="monthItem: ${searchMonthItems}"
 															th:value="${monthItem.strValue}"
 															th:text="${monthItem.label}"
 															th:selected="${monthItem.strValue} == ${mth}"/>
+													</select> -->
+													<select class="custom-select" name="mth" id="mth" >
+														<option value="" selected hidden="true">Please Select</option>
 													</select>
 													
 												</div>
@@ -130,12 +136,15 @@
 											<div class="row col-sm-7">
 												<label class="col-form-label">:</label>
 												<div class="col">
-													<select id="day" class="custom-select" name="day" th:value="${day}" >
-														<option value="" selected hidden="true">Please Select</option>
+													<!-- <select id="day" class="custom-select" name="day" th:value="${day}" >
+														<option value="" selected >Please Select</option>
 														<option th:each="dayItem: ${searchDayItems}"
 															th:value="${dayItem.strValue}"
 															th:text="${dayItem.label}"
 															th:selected="${dayItem.strValue} == ${day}"/>
+													</select> -->
+													<select class="custom-select" name="day" id="day" >
+														<option value="" selected hidden="true">Please Select</option>
 													</select>
 													
 												</div>
@@ -316,13 +325,93 @@
 			});
 		}
 		
+		function onHplChg2(){
+			var hpl = document.getElementById("hpl");	
+			var hplModel = document.getElementById("hplModel");		
+			var year = document.getElementById("year");	
+			var mth = document.getElementById("mth");	
+			var day = document.getElementById("day");	
+			var ctx = "[[@{/}]]"; 
+			var tempHplModel = "[(${tempHplModel})]";
+			var tempYear = "[(${tempYear})]";
+			var tempMth = "[(${tempMth})]";
+			var tempDay = "[(${tempDay})]";
+
+			$.ajax({
+				url : ctx+"main/pfc/api/getModelYearMonthDayByHpl"
+						+"?hpl="+ hpl.value 
+						+"&hplModel="+hplModel.value
+						+"&year="+year.value
+						+"&mth="+mth.value,
+				type : "GET",
+				success : function(data) {
+					var hplModelData = data.models;
+					var yearData = data.years;
+					var monthData = data.months;
+					var dayData = data.days;
+					
+					$("#hplModel").empty();
+					var option = "<option value = ''>Please Select</option>";
+					$("#hplModel").append(option);
+					for(var dt in hplModelData){						
+						if(tempHplModel == hplModelData[dt]){
+							option = "<option value = " + hplModelData[dt] + " selected>" + hplModelData[dt] +  "</option>";
+							$("#hplModel").append(option);
+						} else {
+							option = "<option value = " + hplModelData[dt] + ">" + hplModelData[dt] +  "</option>";
+							$("#hplModel").append(option);
+						}												
+					}	 	
+					
+					$("#year").empty();
+					var option = "<option value = ''>Please Select</option>";
+					$("#year").append(option);
+					for(var dt in yearData){						
+						if(tempYear == yearData[dt]){
+							option = "<option value = " + yearData[dt] + " selected>" + yearData[dt] +  "</option>";
+							$("#year").append(option);
+						} else {
+							option = "<option value = " + yearData[dt] + ">" + yearData[dt] +  "</option>";
+							$("#year").append(option);
+						}												
+					}	 
+					
+					$("#mth").empty();
+					var option = "<option value = ''>Please Select</option>";
+					$("#mth").append(option);
+					for(var dt in monthData){						
+						if(tempMth == monthData[dt]){
+							option = "<option value = " + monthData[dt] + " selected>" + monthData[dt] +  "</option>";
+							$("#mth").append(option);
+						} else {
+							option = "<option value = " + monthData[dt] + ">" + monthData[dt] +  "</option>";
+							$("#mth").append(option);
+						}												
+					}	 
+					
+					$("#day").empty();
+					var option = "<option value = ''>Please Select</option>";
+					$("#day").append(option);
+					for(var dt in dayData){						
+						if(tempDay == dayData[dt]){
+							option = "<option value = " + dayData[dt] + " selected>" + dayData[dt] +  "</option>";
+							$("#day").append(option);
+						} else {
+							option = "<option value = " + dayData[dt] + ">" + dayData[dt] +  "</option>";
+							$("#day").append(option);
+						}												
+					}	 
+				}
+			});
+		}
+		
 		$(document).ready(function() {
 			$("#hplId").change(function() {
-				onHplSelectItemsChange();
+				onHplChg2();
 		    });
 		    
-		    if(!$("#hplModelId").val()) {
-		    	onHplSelectItemsChange();
+		    if(!$("#hplModel").val() || !$("#year").val() || !$("#mth").val() || !$("#day").val()) {
+		    	onHplChg2();
 		    };
 		    
 		});

@@ -111,7 +111,7 @@ public class MenuRoleFunctionController {
 
 		MenuRoleFunctionDto dto = mrfServ.findDtoById(pkMrfId);
 		trxHistServ.addTrxHistory(new Date(), "View " + MODULE_NAME, request.getRemoteUser(),
-				CommonConstants.FUNCTION_TYPE_VIEW, dto.getPkMrfId().toString(),
+				CommonConstants.FUNCTION_TYPE_VIEW, dto.getMenuName()+"-"+dto.getRoleName()+"-"+dto.getFunctionName(),
 				CommonConstants.RECORD_TYPE_ID_MENU_ROLE_FUNC, null);
 
 		// Set mode
@@ -255,7 +255,7 @@ public class MenuRoleFunctionController {
 				model.put("menuRoleFuncItem", new MenuRoleFunctionDto());
 
 				trxHistServ.addTrxHistory(new Date(), "Insert " + MODULE_NAME, request.getRemoteUser(),
-						CommonConstants.FUNCTION_TYPE_INSERT, result != null ? result.toString() : "",
+						CommonConstants.FUNCTION_TYPE_INSERT, result != null ? dto.getMenuName()+"-"+dto.getRoleName()+"-"+dto.getFunctionName() : "",
 						CommonConstants.RECORD_TYPE_ID_MENU_ROLE_FUNC, null);
 
 			} catch (Exception e) {
@@ -280,7 +280,7 @@ public class MenuRoleFunctionController {
 				model.put("success", "Record updated successfully.");
 
 				trxHistServ.addTrxHistory(new Date(), "Update " + MODULE_NAME, request.getRemoteUser(),
-						CommonConstants.FUNCTION_TYPE_UPDATE, result != null ? result.toString() : "",
+						CommonConstants.FUNCTION_TYPE_UPDATE, result != null ? dto.getMenuName()+"-"+dto.getRoleName()+"-"+dto.getFunctionName() : "",
 						CommonConstants.RECORD_TYPE_ID_MENU_ROLE_FUNC, null);
 
 			} catch (Exception e) {
@@ -362,19 +362,20 @@ public class MenuRoleFunctionController {
 			// Delete form
 			for (int i = 0; i < check.length; i++) {
 
-//				if (1==1) {
-//					// Print delete failed
-//					model.put("error", "Letter Content is in used and it is not allow to delete from the system.");
-//				} else {
-				mrfServ.delete(Integer.parseInt(check[i]));
-				// Print delete success`
-				model.put("success", msgSource.getMessage("msgSuccessDelete", new Object[] {}, Locale.getDefault()));
-				model.remove("error");
-
-				trxHistServ.addTrxHistory(new Date(), "Delete " + MODULE_NAME, request.getRemoteUser(),
-						CommonConstants.FUNCTION_TYPE_DELETE, check[i], CommonConstants.RECORD_TYPE_ID_MENU_ROLE_FUNC,
-						null);
-//				}
+				if (checkDelete()) {
+					// Print delete failed
+					model.put("error", MODULE_NAME+ " is in use and it is not allowed to be deleted from the system.");
+				} else {
+					MenuRoleFunctionDto dto = mrfServ.findDtoById(Integer.parseInt(check[i]));
+					mrfServ.delete(Integer.parseInt(check[i]));
+					// Print delete success`
+					model.put("success", msgSource.getMessage("msgSuccessDelete", new Object[] {}, Locale.getDefault()));
+					model.remove("error");
+	
+					trxHistServ.addTrxHistory(new Date(), "Delete " + MODULE_NAME, request.getRemoteUser(),
+							CommonConstants.FUNCTION_TYPE_DELETE, dto.getMenuName()+"-"+dto.getRoleName()+"-"+dto.getFunctionName(), CommonConstants.RECORD_TYPE_ID_MENU_ROLE_FUNC,
+							null);
+				}
 			}
 
 		} catch (Exception e) {
@@ -466,6 +467,12 @@ public class MenuRoleFunctionController {
 		model.remove("error");
 
 		return new ModelAndView("/base/admin/menuRoleFunctionForm", model);
+	}
+	
+	private boolean checkDelete() {
+		boolean isSuperUser = (Boolean) model.get("isSuperUser");
+		boolean cannotDelete = isSuperUser ? false : true;
+		return cannotDelete;
 	}
 
 	private Map<String, Object> removeAlert(Map<String, Object> model) {

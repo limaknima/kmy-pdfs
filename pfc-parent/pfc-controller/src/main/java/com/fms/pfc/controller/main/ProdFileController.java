@@ -18,6 +18,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.StringTokenizer;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import javax.annotation.PreDestroy;
@@ -59,19 +60,18 @@ import com.fms.pfc.common.CommonUtil;
 import com.fms.pfc.common.MediaTypeUtils;
 import com.fms.pfc.common.UsbDetectorUtil;
 import com.fms.pfc.domain.dto.main.FileTypeSzDto;
-import com.fms.pfc.domain.dto.main.FoldCatgConfDto;
+import com.fms.pfc.domain.dto.main.FoldCatgConfDto2;
 import com.fms.pfc.domain.dto.main.G2LotViewDto;
 import com.fms.pfc.domain.dto.main.ProdFileDto;
-import com.fms.pfc.domain.dto.main.RelPathDto;
+import com.fms.pfc.domain.dto.main.RelPathDto2;
 import com.fms.pfc.domain.dto.main.UsbConfDto;
 import com.fms.pfc.domain.model.Usr;
 import com.fms.pfc.domain.model.main.ProdFileSearch;
 import com.fms.pfc.service.api.base.MenuRoleFunctionService;
 import com.fms.pfc.service.api.base.TrxHisService;
-import com.fms.pfc.service.api.main.FoldCatgConfService;
+import com.fms.pfc.service.api.main.FoldCatgConfService2;
 import com.fms.pfc.service.api.main.G2LotViewService;
 import com.fms.pfc.service.api.main.ProdFileService;
-import com.fms.pfc.service.api.main.RelPathService;
 import com.fms.pfc.validation.common.CommonValidation;
 
 import net.samuelcampos.usbdrivedetector.USBStorageDevice;
@@ -88,10 +88,9 @@ public class ProdFileController {
 	private TrxHisService trxHistServ;
 	private UsbDetectorUtil usbDet;
 	private G2LotViewService g2LotServ;
-	private FoldCatgConfService foldCatConfServ;
 	private ServletContext servletContext;
-	private RelPathService relPathServ;
 	private MenuRoleFunctionService mrfServ;
+	private FoldCatgConfService2 foldCatConfServ2;
 	
 	private Map<String, Object> model = new HashMap<String, Object>();
 	private String screenMode = "";
@@ -112,8 +111,8 @@ public class ProdFileController {
 
 	@Autowired
 	public ProdFileController(Authority auth, CommonValidation commonValServ, MessageSource msgSource,
-			ProdFileService prodFileServ, TrxHisService trxHistServ, G2LotViewService g2LotServ, FoldCatgConfService foldCatConfServ, UsbDetectorUtil usbDet, ServletContext servletContext, RelPathService relPathServ,
-			MenuRoleFunctionService mrfServ) {
+			ProdFileService prodFileServ, TrxHisService trxHistServ, G2LotViewService g2LotServ, UsbDetectorUtil usbDet, ServletContext servletContext,
+			MenuRoleFunctionService mrfServ, FoldCatgConfService2 foldCatConfServ2) {
 		super();
 		this.auth = auth;
 		this.commonValServ = commonValServ;
@@ -121,11 +120,10 @@ public class ProdFileController {
 		this.prodFileServ = prodFileServ;
 		this.trxHistServ = trxHistServ;
 		this.g2LotServ = g2LotServ;
-		this.foldCatConfServ = foldCatConfServ;
 		this.usbDet = usbDet;
 		this.servletContext = servletContext;
-		this.relPathServ = relPathServ;
 		this.mrfServ = mrfServ;
+		this.foldCatConfServ2 = foldCatConfServ2;
 
 		getAllLabels();
 	}
@@ -156,6 +154,7 @@ public class ProdFileController {
 		model.put("btnSaveSts", false);
 		model.put("btnAction", false);
 		model.put("btnSave", "Save");
+		model.put("btnResetForm", true);
 		
 
 		return new ModelAndView("/main/pfc/prodFileList", model);
@@ -216,7 +215,7 @@ public class ProdFileController {
 
 		ProdFileDto dto = prodFileServ.findDtoById(pkPfileId);
 		trxHistServ.addTrxHistory(new Date(), "View " + MODULE_NAME, request.getRemoteUser(),
-				CommonConstants.FUNCTION_TYPE_VIEW, dto.getPkPfileId().toString(),
+				CommonConstants.FUNCTION_TYPE_VIEW, dto.getHpl() +"-"+ dto.getG2Lot()+"-"+ dto.getFileName(),
 				CommonConstants.RECORD_TYPE_ID_PROD_FILE, null);
 
 		// Set mode
@@ -225,6 +224,7 @@ public class ProdFileController {
 		model.put("btnSaveSts", true);
 		model.put("btnEdit", false);
 		model.put("editDiv", false);
+		model.put("btnResetForm", true);
 
 		// Set form header
 		model.put("header", "View " + MODULE_NAME);
@@ -243,13 +243,15 @@ public class ProdFileController {
 			model.put("g2Lot2Temp", dto.getG2Lot());
 			model.put("filePath2Temp", dto.getFilePath());
 			model.put("prodLn2Temp", dto.getProdLn());
+			model.put("seq2Temp", dto.getSeq());
 
 			model.put("hplItems", g2LotServ.hplList());
 			model.put("hplModelItems", g2LotServ.hplModelList(dto.getHpl()));
-			model.put("yearItems", CommonUtil.yearDropdownItems(YEAR_COUNT));
+			model.put("yearItems", g2LotServ.yearList(dto.getHpl(), ""));
 			model.put("monthItems", CommonUtil.monthDropdownItems());
+			model.put("seqItems", g2LotServ.seqList("", "", "", "", "", ""));
 			generateG2LotItems(dto, model);
-			model.put("filePathItems", generatePathsItems(dto.getHpl(), dto.getYear(), dto.getProdLn(), dto.getMth()));
+			model.put("filePathItems", generatePathsItems2(dto.getHpl(), dto.getYear(), dto.getProdLn(), dto.getMth()));
 			model.put("prodLnItems",
 					g2LotServ.prodLnList(dto.getHpl(), dto.getHModel(), dto.getYear(), dto.getMth(), ""));
 
@@ -290,6 +292,7 @@ public class ProdFileController {
 		getUSBInfo();
 
 		removeAlert(model);
+		removeTempVal(model);
 
 		// Set mode
 		screenMode = CommonConstants.SCREEN_MODE_ADD;
@@ -300,10 +303,9 @@ public class ProdFileController {
 		
 		filter(false);
 		
-		// model.put("hplModelItems", prodFileServ.findHplModelSelectItems(0));
-		model.put("yearItems", CommonUtil.yearDropdownItems(YEAR_COUNT));
+		model.put("yearItems", g2LotServ.yearList("", ""));
 		model.put("monthItems", CommonUtil.monthDropdownItems());
-		// generateG2LotItems(null, model);
+		model.put("seqItems", g2LotServ.seqList("", "", "", "", "", ""));
 
 		// Set form header
 		model.put("header", "Add " + MODULE_NAME);
@@ -312,6 +314,7 @@ public class ProdFileController {
 		model.put("confirmMsg", "Do you want to cancel this record ?");
 
 		model.put("editDiv", true);
+		model.put("btnResetForm", false);
 
 		return new ModelAndView("/main/pfc/prodFileForm", model);
 	}
@@ -335,7 +338,8 @@ public class ProdFileController {
 			@RequestParam(name = "newFileContentName", required = false) String newFileContentName,
 			@RequestParam(name = "g2Lot2", required = false) String g2Lot2,
 			@RequestParam(name = "filePath2", required = false) String filePath2,
-			@RequestParam(name = "prodLn2", required = false) String prodLn2, HttpServletRequest request,
+			@RequestParam(name = "prodLn2", required = false) String prodLn2,
+			@RequestParam(name = "seq2", required = false) String seq2, HttpServletRequest request,
 			BindingResult bindingResult, HttpSession session) throws Exception {
 
 		removeAlert(model);
@@ -347,6 +351,7 @@ public class ProdFileController {
 		dto.setG2Lot(g2Lot2);
 		dto.setFilePath(filePath2);
 		dto.setProdLn(prodLn2);
+		dto.setSeq(seq2);
 		
 		//hold value
 		model.put("hplModelId2", hplModelId2);
@@ -354,6 +359,7 @@ public class ProdFileController {
 		model.put("filePath2", filePath2);
 		model.put("prodLn2", prodLn2);
 		model.put("newFileContentName", newFileContentName);
+		model.put("seq2", seq2);
 
 		model.put("prodFileItem", dto);
 
@@ -384,6 +390,7 @@ public class ProdFileController {
 			model.put("g2Lot2Temp", g2Lot2);
 			model.put("filePath2Temp", filePath2);
 			model.put("prodLn2Temp", prodLn2);
+			model.put("seq2Temp", seq2);
 
 			if (mode.equals(CommonConstants.SCREEN_MODE_EDIT)) {
 				screenMode = CommonConstants.SCREEN_MODE_EDIT;
@@ -423,7 +430,7 @@ public class ProdFileController {
 				model.put("prodFileItem", new ProdFileDto());
 
 				trxHistServ.addTrxHistory(new Date(), "Insert " + MODULE_NAME, request.getRemoteUser(),
-						CommonConstants.FUNCTION_TYPE_INSERT, (null != result && result != 0) ? result.toString() : "",
+						CommonConstants.FUNCTION_TYPE_INSERT, (null != result && result != 0) ? dto.getHpl() +"-"+ dto.getG2Lot()+"-"+ dto.getFileName() : "",
 						CommonConstants.RECORD_TYPE_ID_PROD_FILE, null);
 
 			} catch (Exception e) {
@@ -448,7 +455,7 @@ public class ProdFileController {
 				model.remove("error");
 
 				trxHistServ.addTrxHistory(new Date(), "Update " + MODULE_NAME, request.getRemoteUser(),
-						CommonConstants.FUNCTION_TYPE_UPDATE, (null != result && result != 0) ? result.toString() : "",
+						CommonConstants.FUNCTION_TYPE_UPDATE, (null != result && result != 0) ? dto.getHpl() +"-"+ dto.getG2Lot()+"-"+ dto.getFileName() : "",
 						CommonConstants.RECORD_TYPE_ID_PROD_FILE, null);
 
 			} catch (Exception e) {
@@ -479,6 +486,7 @@ public class ProdFileController {
 		model.put("btnEdit", true);
 		model.put("btnSaveSts", false);
 		model.put("btnSave", "Save");
+		model.put("btnResetForm", true);
 		model.put("header", "Edit " + MODULE_NAME);
 		model.remove("success");
 		model.remove("error");
@@ -504,17 +512,19 @@ public class ProdFileController {
 			// Delete form
 			for (int i = 0; i < check.length; i++) {
 
-				if (fileExists(Integer.parseInt(check[i]))) {
+				if (checkDelete()) {
 					// Print delete failed
-					model.put("error", "Record is in used and it is not allowed to deleted from the system.");
+					model.put("error", "Record is in used and it is not allowed to be deleted from the system.");
 				} else {
+					ProdFileDto dto = prodFileServ.findDtoById(Integer.parseInt(check[i]));
 					prodFileServ.delete(Integer.parseInt(check[i]));
+					prodFileServ.deleteFileFromDisk(dto);
 					// Print delete success`
 					model.put("success",
 							msgSource.getMessage("msgSuccessDelete", new Object[] {}, Locale.getDefault()));
 
 					trxHistServ.addTrxHistory(new Date(), "Delete " + MODULE_NAME, request.getRemoteUser(),
-							CommonConstants.FUNCTION_TYPE_DELETE, check[i], CommonConstants.RECORD_TYPE_ID_PROD_FILE,
+							CommonConstants.FUNCTION_TYPE_DELETE, dto.getHpl() +"-"+ dto.getG2Lot()+"-"+ dto.getFileName(), CommonConstants.RECORD_TYPE_ID_PROD_FILE,
 							null);
 				}
 			}
@@ -568,6 +578,10 @@ public class ProdFileController {
 		model.put("searchG2LotExp", searchG2LotExp);
 		model.put("searchPath", searchPath);
 		model.put("searchPathExp", searchPathExp);
+		
+		model.put("tempHplModel", searchHplModelId);
+		model.put("tempYear", searchYear);
+		model.put("tempMth", searchMth);
 
 		try {
 			if (errorMsg.length() == 0) {
@@ -618,7 +632,8 @@ public class ProdFileController {
 			@RequestParam(name = "hplModelId2", required = false) String hplModelId2,
 			@RequestParam(name = "year", required = false) String year,
 			@RequestParam(name = "mth", required = false) String mth,
-			@RequestParam(name = "prodLn2", required = false) String prodLn2, HttpServletRequest request,
+			@RequestParam(name = "prodLn2", required = false) String prodLn2, 
+			@RequestParam(name = "seq2", required = false) String seq2, HttpServletRequest request,
 			HttpSession session) {
 
 		Map<String, Object> respObjMap = new HashMap<String, Object>();
@@ -626,21 +641,24 @@ public class ProdFileController {
 		// model.put("prodLn2Temp", prodLn2);
 
 		// G2 lot dropdown items
-		List<G2LotViewDto> items = generateG2LotItems(year, mth, prodLn2, hplId, hplModelId2);
+		List<G2LotViewDto> items = generateG2LotItems(year, mth, prodLn2, hplId, hplModelId2, seq2);
 		respObjMap.put("items", items);
 
 		// Prod ln dropdown items
 		List<G2LotViewDto> itemsPrd = items;
 		List<String> prodLnList = generateProdLnItems(itemsPrd);
-		respObjMap.put("prodLnItems", prodLnList);
+		respObjMap.put("prodLnItems", prodLnList);		
+
+		List<String> seqList = generateSeqItems(itemsPrd);
+		respObjMap.put("seqItems", seqList);
 
 		// Path dropdown items
-		List<RelPathDto> paths = generatePathsItems(hplId, year, prodLn2, mth);
+		List<RelPathDto2> paths = generatePathsItems2(hplId, year, prodLn2, mth);
 		respObjMap.put("pathsItems", paths);
 
 		logger.debug(
-				"loadCompletedG2Lot() hpl={}, hplModelId2={}, year={}, mth={}, prodLn2={}, lot size={}, path size={}",
-				hplId, hplModelId2, year, mth, prodLn2, items.size(), paths.size());
+				"loadCompletedG2Lot() hpl={}, hplModelId2={}, year={}, mth={}, prodLn2={}, seq2={}, lot size={}, path size={}",
+				hplId, hplModelId2, year, mth, prodLn2, seq2, items.size(), paths.size());
 		return respObjMap;
 	}
 	
@@ -651,30 +669,182 @@ public class ProdFileController {
 		byte[] data = new byte[1024];
 
 		ProdFileDto pfDto = prodFileServ.findDtoById(pkPfileId);
-		RelPathDto relPath = relPathServ.findDtoById(Integer.valueOf(pfDto.getFilePath()));
+		//RelPathDto relPath = relPathServ.findDtoById(Integer.valueOf(pfDto.getFilePath()));
+		RelPathDto2 relPath = foldCatConfServ2.findRelPathById(Integer.valueOf(pfDto.getFilePath()));
 		Path p = Paths.get(relPath.getFilePath()+ File.separator + pfDto.getFileName());
 		//fileName = pfDto.getFileName();
 		fileName = p.getFileName().toString();
 		try {
 			data = Files.readAllBytes(p);
+//		data = pfDto.getContentObject();
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		//data = reglFileDto.getContentObject();
-//		data = pfDto.getContentObject();
 
 		MediaType mt = MediaTypeUtils.getMediaTypeForFileName(servletContext, fileName);
 
 		return ResponseEntity.ok().contentType(mt)
 				.header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + fileName + "\"").body(data);
 	}
+	
+	@GetMapping(value = "/main/pfc/loadInfoByFile")
+	@ResponseBody
+	public Map<String, Object> loadInfoByFile(@RequestParam(name = "hpl", required = false) String hplId,
+			@RequestParam(name = "file", required = false) String fileName, HttpServletRequest request,
+			HttpSession session) {
+		
+		logger.debug("loadInfoByFile() hpl={}, file={}", hplId, fileName);
+		
+		Map<String, Object> respObjMap = new HashMap<String, Object>();
+		List<FoldCatgConfDto2> confList = foldCatConfServ2.searchByCriteria(hplId, "");
+		respObjMap = extractFileInfo(hplId, fileName, confList.get(0));
+		
+		// map back file path (RelPathDto2) based on hpl, year, month, prodln
+		List<RelPathDto2> relPathList = foldCatConfServ2.searchRelPathByCriteria(confList.get(0).getPkCatgId(), "",
+				(String) respObjMap.get(CommonConstants.HPL_LOT_KEY_YEAR),
+				(String) respObjMap.get(CommonConstants.HPL_LOT_KEY_MONTH), "",
+				(String) respObjMap.get(CommonConstants.HPL_LOT_KEY_PRODLN), "", null);
+		model.put("filePath2Temp", relPathList.isEmpty() ? 0 : relPathList.get(0).getPkRelPathId());		
+
+		return respObjMap;
+	}	
 
 	@PreDestroy
 	public void destroy() throws IOException {
 		if (Objects.nonNull(usbDet.getUsbDetMan())) {
 			usbDet.destroy();
 		}
+	}
+	
+	/**
+	 * Extract information from file namme
+	 * @param hplId
+	 * @param fileName
+	 * @return Map<String, Object>
+	 */	
+	private Map<String, Object> extractFileInfo(String hplId, String fileName, FoldCatgConfDto2 foldConf) {		
+		Map<String, Object> respObjMap = new HashMap<String, Object>();
+		String originalFileName = StringUtils.substring(fileName, 0, fileName.lastIndexOf("."));
+		String fileFormat = foldConf.getProdFileFormat();//"model=8,2|year=1,2|month=3,2|day=5,2|prodLn=14,1|seq=NA|lot=8,7";
+		if (StringUtils.isEmpty(fileFormat)) {
+			if (StringUtils.equals(foldConf.getHpl(), CommonConstants.RECORD_TYPE_ID_HPL_GTMS)) {
+				// expecting file format from child table - rel_path2
+				// currently for gtms
+				int fileNameLen = originalFileName.length();
+				int procType = 0;
+				String year = "";
+				if (fileNameLen == CommonConstants.FILENAME_LEN_GTMS_M
+						&& Pattern.compile("^[A-Z]").matcher(originalFileName).find()) {
+					// mikron all folder
+					procType = CommonConstants.PROCESS_TYPE_HPL_MIKRON;
+					year = StringUtils.substring(originalFileName, 3, 5);
+					year = year.length() == 2 ? "20" + year : year;
+				} else if (fileNameLen == CommonConstants.FILENAME_LEN_GTMS_B1
+						&& Pattern.compile("^[0-9_]").matcher(originalFileName).find()) {
+					// back-end fet2,fet3
+					// db file format len = 67
+					procType = CommonConstants.PROCESS_TYPE_HPL_BACKEND;
+					year = StringUtils.substring(originalFileName, 9, 11);
+					year = year.length() == 2 ? "20" + year : year;
+				} else if (fileNameLen == CommonConstants.FILENAME_LEN_GTMS_B2
+						&& StringUtils.isNumeric(originalFileName)) {
+					// back-end fet1
+					// db file format len = 64
+					procType = CommonConstants.PROCESS_TYPE_HPL_BACKEND;
+					year = StringUtils.substring(originalFileName, 4, 6);
+					year = year.length() == 2 ? "20" + year : year;
+				}
+
+				List<RelPathDto2> relPathList = foldCatConfServ2.searchRelPathByCriteria(foldConf.getPkCatgId(), "",
+						year, "", "", "", "", procType);
+
+				if (procType == CommonConstants.PROCESS_TYPE_HPL_MIKRON) {
+					// all folders same format
+					fileFormat = relPathList.get(0).getProdFileFormat();
+				} else if (procType == CommonConstants.PROCESS_TYPE_HPL_BACKEND) {
+					// folder fet2,fet3
+					if (fileNameLen == CommonConstants.FILENAME_LEN_GTMS_B1) {
+						relPathList = relPathList.stream().filter(arg0 -> arg0.getProdFileFormat().contains("lot=6,12"))
+								.collect(Collectors.toList());
+						fileFormat = relPathList.get(0).getProdFileFormat();
+					} else {
+						// folder fet1
+						relPathList = relPathList.stream().filter(arg0 -> arg0.getProdFileFormat().contains("lot=1,12"))
+								.collect(Collectors.toList());
+						fileFormat = relPathList.get(0).getProdFileFormat();
+					}
+				}
+
+			} else {
+				logger.info("extractFileInfo() File format empty but not from GTMS!");
+			}
+		}
+		
+		model.put("fileFormatTemp", fileFormat);
+		
+		StringTokenizer items = new StringTokenizer(fileFormat, "|");
+		while (items.hasMoreElements()) {
+			String item = (String) items.nextElement();
+			String key = item.split("=")[0];
+			String val = item.split("=")[1];
+
+			if (StringUtils.isEmpty(key))
+				continue;
+
+			if (StringUtils.isEmpty(val) || StringUtils.equalsIgnoreCase(val, "na"))
+				continue;
+
+			if (val.split(",").length < 2)
+				continue;
+
+			int post = Integer.valueOf(val.split(",")[0]);
+			int len = Integer.valueOf(val.split(",")[1]);
+
+			String result = StringUtils.substring(originalFileName, post - 1, post - 1 + len);
+
+			if (key.equalsIgnoreCase(CommonConstants.HPL_LOT_KEY_MODEL)) {
+				respObjMap.put(CommonConstants.HPL_LOT_KEY_MODEL, result);
+				logger.debug("post={}, len={}, model={}", post, len, result);
+			} else if (key.equalsIgnoreCase(CommonConstants.HPL_LOT_KEY_YEAR)) {
+				if (StringUtils.isNotEmpty(result) && result.length() == 2) {
+					result = "20" + result;
+				}
+				respObjMap.put(CommonConstants.HPL_LOT_KEY_YEAR, result);
+				logger.debug("post={}, len={}, year={}", post, len, result);
+			} else if (key.equalsIgnoreCase(CommonConstants.HPL_LOT_KEY_MONTH)) {
+				if (StringUtils.isNotEmpty(result) && result.length() == 1) {
+					result = "0" + result;
+				}
+				respObjMap.put(CommonConstants.HPL_LOT_KEY_MONTH, result);
+				logger.debug("post={}, len={}, month={}", post, len, result);
+			} else if (key.equalsIgnoreCase(CommonConstants.HPL_LOT_KEY_DAY)) {
+				if (StringUtils.isNotEmpty(result) && result.length() == 1) {
+					result = "0" + result;
+				}
+				if(StringUtils.equals(hplId, CommonConstants.RECORD_TYPE_ID_HPL_IF)) {
+					result = CommonUtil.dayConversionFromFileName(result, CommonConstants.RECORD_TYPE_ID_HPL_IF);
+				}
+				respObjMap.put(CommonConstants.HPL_LOT_KEY_DAY, result);
+				logger.debug("post={}, len={}, day={}", post, len, result);
+			} else if (key.equalsIgnoreCase(CommonConstants.HPL_LOT_KEY_PRODLN)) {				
+				if(StringUtils.equals(hplId, CommonConstants.RECORD_TYPE_ID_HPL_IF)) {
+					result = CommonUtil.prodLnConversionFromFileName(result, CommonConstants.RECORD_TYPE_ID_HPL_IF);
+				}				
+				model.put("prodLn2Temp", result);//for drop-down
+				respObjMap.put(CommonConstants.HPL_LOT_KEY_PRODLN, result);
+				logger.debug("post={}, len={}, prodLn={}", post, len, result);
+			} else if (key.equalsIgnoreCase(CommonConstants.HPL_LOT_KEY_SEQ)) {
+				model.put("seq2Temp", result);//for drop-down
+				respObjMap.put(CommonConstants.HPL_LOT_KEY_SEQ, result);
+				logger.debug("post={}, len={}, seq={}", post, len, result);
+			} else if (key.equalsIgnoreCase(CommonConstants.HPL_LOT_KEY_LOT)) {
+				model.put("g2Lot2Temp", result);//for drop-down
+				respObjMap.put(CommonConstants.HPL_LOT_KEY_LOT, result);
+				logger.debug("post={}, len={}, lot={}", post, len, result);
+			}
+		}
+		return respObjMap;
 	}
 
 	/**
@@ -760,28 +930,39 @@ public class ProdFileController {
 	private String validateFileTypeAndSize(ProdFileDto dto, String userId, String errorMsg, String fileType,
 			long fileSize) {
 		List<FileTypeSzDto> fstList = prodFileServ.findFileTypeSzList(dto.getHpl());
+		logger.debug("validateFileTypeAndSize() fstList={}", fstList.size());
+		
 		if (!fstList.isEmpty()) {
 			// TODO: need to loop as one hpl could have multiple settings
 			int ftypeCnt = 0;
+			int prdlnCnt = 0;
 			for (FileTypeSzDto fstDto : fstList) {
 				if (StringUtils.equalsIgnoreCase(fileType, fstDto.getFileType())) {
 					ftypeCnt++;
-					// check min and max file size
-					if (fileSize < fstDto.getMinSize()) {
-						errorMsg += "Minimum File size must be minimum " + fstDto.getMinSize() + " KB"+BREAKLINE;
-					} else if (fileSize > fstDto.getMaxSize()) {
-						model.put("info", "Take note that File size has exceeded the maximum file size configured.");
+					if(StringUtils.equalsIgnoreCase(dto.getProdLn(), fstDto.getProdLn())) {
+						prdlnCnt++;
+						// check min and max file size
+						if (fileSize < fstDto.getMinSize()) {
+							errorMsg += "File-type-size config >> Minimum File size must be minimum " + fstDto.getMinSize() + " KB"+BREAKLINE;
+						} else if (fileSize > fstDto.getMaxSize()) {
+							model.put("info", "File-type-size config >> Take note that File size has exceeded the maximum file size configured.");
+						}						
 					}
 				}
 			}
 
 			if (ftypeCnt == 0) {
-				errorMsg += "File type/extension=" + fileType + " for the file has not been configured for HPL="
+				errorMsg += "File-type-size config >> File type/extension=" + fileType + " for the file has not been configured for HPL="
+						+ dto.getHpl()+BREAKLINE;
+			}
+			
+			if (prdlnCnt == 0) {
+				errorMsg += "File-type-size config >> Prod line=" + dto.getProdLn() + " for the file has not been configured for HPL="
 						+ dto.getHpl()+BREAKLINE;
 			}
 
 		} else {
-			errorMsg += "No file type and size configuration found for this HPL=" + dto.getHpl()+BREAKLINE;
+			errorMsg += "File-type-size config >> No file type and size configuration found for this HPL=" + dto.getHpl()+BREAKLINE;
 		}
 		return errorMsg;
 	}
@@ -806,7 +987,7 @@ public class ProdFileController {
 				UsbConfDto usbConf = usbConfList.get(0);
 				if (!StringUtils.equals(usbConf.getHpl(), dto.getHpl())
 						|| !StringUtils.equalsIgnoreCase(usbConf.getProdLn(), dto.getProdLn())) {
-					errorMsg += "No configuration found for USB=" + usbConf.getName() + ", Serial No="
+					errorMsg += "USB-User config >> No configuration found for USB=" + usbConf.getName() + ", Serial No="
 							+ usbConf.getSerialNo() + ", HPL=" + usbConf.getHpl() + ",Prod Ln=" + usbConf.getProdLn()+BREAKLINE;
 				}
 				// check if current user is permitted
@@ -814,22 +995,22 @@ public class ProdFileController {
 				if (!usrList.isEmpty()) {
 					usrList = usrList.stream().filter(arg0 -> arg0.getUserId() == userId).collect(Collectors.toList());
 					if (usrList.isEmpty()) {
-						errorMsg += "Current user " + userId + " is not configured to be an uploader from this device"+BREAKLINE;
+						errorMsg += "USB-User config >> Current user " + userId + " is not configured to be an uploader from this device"+BREAKLINE;
 					}
 				} else {
 					// user list empty
-					errorMsg += "No user is configured to be an uploader from this device"+BREAKLINE;
+					errorMsg += "USB-User config >> No user is configured to be an uploader from this device"+BREAKLINE;
 				}
 			} else {
 				// no conf found
-				errorMsg += "No configuration found for USB=" + dev.getDeviceName() + ", Serial No=" + dev.getUuid()+BREAKLINE;
+				errorMsg += "USB-User config >> No configuration found for USB=" + dev.getDeviceName() + ", Serial No=" + dev.getUuid()+BREAKLINE;
 			}
 
 		} else {
 			// if no usb devices detected
 			// file could be coming from local drive/folder
 			//logger.debug("validateUsbUsrConf() No usb devices detected! File could be coming from local drive/folder.");
-			model.put("info", "No usb devices detected! File could be uploaded could be from local drive/folder.");
+			model.put("info", "USB-User config >> No usb devices detected! File could be uploaded could be from local drive/folder.");
 		}
 		return errorMsg;
 	}
@@ -843,7 +1024,7 @@ public class ProdFileController {
 	 * @return errorMsg
 	 */
 	private String validateFileNameAgainstG2Lot(ProdFileDto pfDto, String originalFileName, String errorMsg) {
-		logger.debug("Validating HPL={}, File={}", pfDto.getHpl(), originalFileName);
+		logger.debug("validateFileNameAgainstG2Lot HPL={}, File={}, y={}, m={}, pl={}", pfDto.getHpl(), originalFileName, pfDto.getYear(), pfDto.getMth(), pfDto.getProdLn());
 
 		if (StringUtils.isEmpty(originalFileName) || StringUtils.isEmpty(pfDto.getHpl())) {
 			errorMsg += "No file/HPL selected for upload! File={"+originalFileName+"}, HPL={"+pfDto.getHpl()+"}"+BREAKLINE;
@@ -852,20 +1033,24 @@ public class ProdFileController {
 		
 		String fileFormat = "";
 		String path = "";
-		List<FoldCatgConfDto> confList = foldCatConfServ.searchByCriteria(pfDto.getHpl(), pfDto.getHModel(), pfDto.getYear(), "", "", pfDto.getProdLn(), "", "");
+		int gtmsProcType = 0;
+		List<FoldCatgConfDto2> confList = foldCatConfServ2.searchByCriteria(pfDto.getHpl(), "");
 		if(!confList.isEmpty()) {			
 			// check first if hpl is not gtms
 			// as gtms file format will be based on the selected folder
 			
-			for (FoldCatgConfDto confDto : confList) {
+			for (FoldCatgConfDto2 confDto : confList) {
 				if (StringUtils.equalsIgnoreCase(confDto.getHpl(), CommonConstants.RECORD_TYPE_ID_HPL_GTMS)) {
 					// check format form relative path folder
-					List<RelPathDto> relPathList = foldCatConfServ.findRelPathListByParent(confDto.getPkCatgId());
+					List<RelPathDto2> relPathList = foldCatConfServ2.searchRelPathByCriteria(confDto.getPkCatgId(),
+							"", pfDto.getYear(), pfDto.getMth(), "", pfDto.getProdLn(),
+							"",null);
 					if(!relPathList.isEmpty()) {
-						for (RelPathDto pathDto : relPathList) {
+						for (RelPathDto2 pathDto : relPathList) {
 							if(pathDto.getPkRelPathId() == Integer.valueOf(pfDto.getFilePath())) {
 								path = pathDto.getFilePath();
 								fileFormat = pathDto.getProdFileFormat();
+								gtmsProcType = pathDto.getProcType();
 								if (StringUtils.isEmpty(fileFormat)) {
 									errorMsg += "File format not configured for HPL={" + pfDto.getHpl() + "} and folder={"+pathDto.getFilePath()+"}"+BREAKLINE;
 								}
@@ -892,7 +1077,16 @@ public class ProdFileController {
 			return errorMsg;
 		}
 		
-		FoldCatgConfDto currentConf = confList.get(0);
+		FoldCatgConfDto2 currentConf = confList.get(0);
+		List<RelPathDto2> relPathList = foldCatConfServ2.searchRelPathByCriteria(currentConf.getPkCatgId(),
+				"", pfDto.getYear(), pfDto.getMth(), pfDto.getDay(), pfDto.getProdLn(), pfDto.getSeq(),0);
+		RelPathDto2 relPathDto2 = null;
+		if(relPathList.isEmpty()) {
+			errorMsg += "Path configuration not found for HPL={"+pfDto.getHpl()+"}"+BREAKLINE;
+			return errorMsg;
+		} else {
+			relPathDto2 = relPathList.get(0);
+		}
 
 		// remove file extension
 		originalFileName = StringUtils.substring(originalFileName, 0, originalFileName.lastIndexOf("."));
@@ -968,24 +1162,24 @@ public class ProdFileController {
 			if(!StringUtils.equalsIgnoreCase(lotFile, pfDto.getG2Lot())) {
 				errorMsg +=CommonConstants.RECORD_TYPE_ID_HPL_IF+" File >> Lot not matched"+BREAKLINE;
 			}
-			if(StringUtils.isNotEmpty(currentConf.getHModel()) 
-					&& !StringUtils.equalsIgnoreCase(modelFile, currentConf.getHModel())) {
+			if(StringUtils.isNotEmpty(relPathDto2.getHModel()) 
+					&& !StringUtils.equalsIgnoreCase(modelFile, relPathDto2.getHModel())) {
 				errorMsg +=CommonConstants.RECORD_TYPE_ID_HPL_IF+" File >> Model not matched"+BREAKLINE;				
 			}			
-			if(!StringUtils.equalsIgnoreCase(yearFile, currentConf.getYear())) {
+			if(!StringUtils.equalsIgnoreCase(yearFile, relPathDto2.getYear())) {
 				errorMsg +=CommonConstants.RECORD_TYPE_ID_HPL_IF+" File >> Year not matched"+BREAKLINE;				
 			}			
-			if (StringUtils.isNotEmpty(currentConf.getMth()) && StringUtils.isNotEmpty(monthFile)) {
+			if (StringUtils.isNotEmpty(relPathDto2.getMth()) && StringUtils.isNotEmpty(monthFile)) {
 				// convert month from file
 				String temp = CommonUtil.monthConversionFromFileName(monthFile, currentConf.getHpl());
-				if (!StringUtils.equalsIgnoreCase(temp, currentConf.getMth())) {
+				if (!StringUtils.equalsIgnoreCase(temp, relPathDto2.getMth())) {
 					errorMsg += CommonConstants.RECORD_TYPE_ID_HPL_IF + " File >> Month not matched" + BREAKLINE;
 				}
 			}		
-			if (StringUtils.isNotEmpty(currentConf.getDay()) && StringUtils.isNotEmpty(dayFile)) {
+			if (StringUtils.isNotEmpty(relPathDto2.getDay()) && StringUtils.isNotEmpty(dayFile)) {
 				// convert month from file
 				String temp = CommonUtil.dayConversionFromFileName(dayFile, currentConf.getHpl());
-				if (!StringUtils.equalsIgnoreCase(temp, currentConf.getDay())) {
+				if (!StringUtils.equalsIgnoreCase(temp, relPathDto2.getDay())) {
 					errorMsg += CommonConstants.RECORD_TYPE_ID_HPL_IF + " File >> Day not matched" + BREAKLINE;
 				}
 			}	
@@ -1001,55 +1195,56 @@ public class ProdFileController {
 			// MGG
 			// file >> 569_2021073107480.csv -> lot KMY569210731M1 -> model=569, y=2021, m=7, d=31, prdLn=M1
 			// format >> model=1,3|year=5,4|month=9,2|day=11,2|prodLn=NA|seq=NA|lot=NA
-			if(StringUtils.isNotEmpty(currentConf.getHModel()) 
-					&& !StringUtils.equalsIgnoreCase(modelFile, currentConf.getHModel())) {
+			if(StringUtils.isNotEmpty(relPathDto2.getHModel()) 
+					&& !StringUtils.equalsIgnoreCase(modelFile, relPathDto2.getHModel())) {
 				errorMsg +=CommonConstants.RECORD_TYPE_ID_HPL_MGG+" File >> Model not matched"+BREAKLINE;				
 			}			
-			if(!StringUtils.equalsIgnoreCase(yearFile, currentConf.getYear())) {
+			if(!StringUtils.equalsIgnoreCase(yearFile, relPathDto2.getYear())) {
 				errorMsg +=CommonConstants.RECORD_TYPE_ID_HPL_MGG+" File >> Year not matched"+BREAKLINE;				
 			}			
-			if(StringUtils.isNotEmpty(currentConf.getMth()) 
-					&& !StringUtils.equalsIgnoreCase(monthFile, currentConf.getMth())) {
+			if(StringUtils.isNotEmpty(relPathDto2.getMth()) 
+					&& !StringUtils.equalsIgnoreCase(monthFile, relPathDto2.getMth())) {
 				errorMsg +=CommonConstants.RECORD_TYPE_ID_HPL_MGG+" File >> Month not matched"+BREAKLINE;				
 			}		
-			if(StringUtils.isNotEmpty(currentConf.getDay()) 
-					&& !StringUtils.equalsIgnoreCase(dayFile, currentConf.getDay())) {
-				errorMsg +=CommonConstants.RECORD_TYPE_ID_HPL_MGG+" File >> Month not matched"+BREAKLINE;				
+			if(StringUtils.isNotEmpty(relPathDto2.getDay()) 
+					&& !StringUtils.equalsIgnoreCase(dayFile, relPathDto2.getDay())) {
+				errorMsg +=CommonConstants.RECORD_TYPE_ID_HPL_MGG+" File >> Day not matched"+BREAKLINE;				
 			}
-			if(!StringUtils.equalsIgnoreCase(prodLnFile, currentConf.getProdLn())) {
+			// Note : prodln for mgg do not have in  mgg filename
+			if(StringUtils.isNotEmpty(prodLnFile) && !StringUtils.equalsIgnoreCase(prodLnFile, relPathDto2.getProdLn())) {
 				errorMsg +=CommonConstants.RECORD_TYPE_ID_HPL_MGG+" File >> Prod Line not matched"+BREAKLINE;				
 			}			
 		} else if(StringUtils.equals(pfDto.getHpl(), CommonConstants.RECORD_TYPE_ID_HPL_GTMS)) {
 			// GTMS
 			// file >> Mikron cell 1,2.1,3 KMY210104504.txt -> lot 500421403104 -> model=5004, y=2021, m=4, d=0, prdLn=3, seq=104
 			// format >> model=NA|year=4,2|month=NA|day=NA|prodLn=NA|seq=6,4|lot=NA
-			if(StringUtils.containsIgnoreCase(path, "mikron")) {
+			if(StringUtils.containsIgnoreCase(path, "mikron") || gtmsProcType == CommonConstants.PROCESS_TYPE_HPL_MIKRON) {
 				
 			}
 			
 			// GTMS
 			// file >> Back end FET2,3 5004_500421403104.csv -> lot 500421403104 -> model=5004, y=2021, m=4, d=0, prdLn=3, seq=104
 			// format >> model=6,4|year=10,2|month=12,1|day=NA|prodLn=13,2|seq=15,3|lot=NA
-			if(StringUtils.containsIgnoreCase(path, "fet#2") || StringUtils.containsIgnoreCase(path, "fet#3")) {
-				if (StringUtils.isNotEmpty(currentConf.getHModel())
-						&& !StringUtils.equalsIgnoreCase(modelFile, currentConf.getHModel())) {
+			if(StringUtils.containsIgnoreCase(path, "fet#2") || StringUtils.containsIgnoreCase(path, "fet#3") || gtmsProcType == CommonConstants.PROCESS_TYPE_HPL_BACKEND) {
+				if (StringUtils.isNotEmpty(relPathDto2.getHModel())
+						&& !StringUtils.equalsIgnoreCase(modelFile, relPathDto2.getHModel())) {
 					errorMsg += CommonConstants.RECORD_TYPE_ID_HPL_GTMS + " FET2, FET3 File >> Model not matched"
 							+ BREAKLINE;
 				}
-				if (!StringUtils.equalsIgnoreCase(yearFile, currentConf.getYear())) {
+				if (!StringUtils.equalsIgnoreCase(yearFile, relPathDto2.getYear())) {
 					errorMsg += CommonConstants.RECORD_TYPE_ID_HPL_GTMS + " FET2, FET3 File >> Year not matched"
 							+ BREAKLINE;
 				}
-				if (StringUtils.isNotEmpty(currentConf.getMth())
-						&& !StringUtils.equalsIgnoreCase(monthFile, currentConf.getMth())) {
+				if (StringUtils.isNotEmpty(relPathDto2.getMth())
+						&& !StringUtils.equalsIgnoreCase(monthFile, relPathDto2.getMth())) {
 					errorMsg += CommonConstants.RECORD_TYPE_ID_HPL_GTMS + " FET2, FET3 File >> Month not matched"
 							+ BREAKLINE;
 				}
-				if (!StringUtils.equalsIgnoreCase(prodLnFile, currentConf.getProdLn())) {
+				if (!StringUtils.equalsIgnoreCase(prodLnFile, relPathDto2.getProdLn())) {
 					errorMsg += CommonConstants.RECORD_TYPE_ID_HPL_GTMS + " FET2, FET3 File >> Prod Line not matched"
 							+ BREAKLINE;
 				}
-				if (StringUtils.isNotEmpty(currentConf.getSeq()) && !StringUtils.equalsIgnoreCase(seqFile, currentConf.getSeq())) {
+				if (StringUtils.isNotEmpty(relPathDto2.getSeq()) && !StringUtils.equalsIgnoreCase(seqFile, relPathDto2.getSeq())) {
 					errorMsg += CommonConstants.RECORD_TYPE_ID_HPL_GTMS + " FET2, FET3 File >> Sequence not matched"
 							+ BREAKLINE;
 				}
@@ -1058,23 +1253,23 @@ public class ProdFileController {
 			// GTMS
 			// file >> Back end FET1 500421403104.csv -> lot 500421403104 -> model=5004, y=2021, m=4, d=0, prdLn=3, seq=104
 			// format >> model=1,4|year=5,2|month=7,1|day=NA|prodLn=8,2|seq=10,3|lot=NA
-			if(StringUtils.containsIgnoreCase(path, "fet#1")) {
-				if (StringUtils.isNotEmpty(currentConf.getHModel())
-						&& !StringUtils.equalsIgnoreCase(modelFile, currentConf.getHModel())) {
+			if(StringUtils.containsIgnoreCase(path, "fet#1") || gtmsProcType == CommonConstants.PROCESS_TYPE_HPL_BACKEND ) {
+				if (StringUtils.isNotEmpty(relPathDto2.getHModel())
+						&& !StringUtils.equalsIgnoreCase(modelFile, relPathDto2.getHModel())) {
 					errorMsg += CommonConstants.RECORD_TYPE_ID_HPL_GTMS + " FET1 File >> Model not matched" + BREAKLINE;
 				}
-				if (!StringUtils.equalsIgnoreCase(yearFile, currentConf.getYear())) {
+				if (!StringUtils.equalsIgnoreCase(yearFile, relPathDto2.getYear())) {
 					errorMsg += CommonConstants.RECORD_TYPE_ID_HPL_GTMS + " FET1 File >> Year not matched" + BREAKLINE;
 				}
-				if (StringUtils.isNotEmpty(currentConf.getMth())
-						&& !StringUtils.equalsIgnoreCase(monthFile, currentConf.getMth())) {
+				if (StringUtils.isNotEmpty(relPathDto2.getMth())
+						&& !StringUtils.equalsIgnoreCase(monthFile, relPathDto2.getMth())) {
 					errorMsg += CommonConstants.RECORD_TYPE_ID_HPL_GTMS + " FET1 File >> Month not matched" + BREAKLINE;
 				}
-				if (!StringUtils.equalsIgnoreCase(prodLnFile, currentConf.getProdLn())) {
+				if (!StringUtils.equalsIgnoreCase(prodLnFile, relPathDto2.getProdLn())) {
 					errorMsg += CommonConstants.RECORD_TYPE_ID_HPL_GTMS + " FET1 File >> Prod Line not matched"
 							+ BREAKLINE;
 				}
-				if (StringUtils.isNotEmpty(currentConf.getSeq()) && !StringUtils.equalsIgnoreCase(seqFile, currentConf.getSeq())) {
+				if (StringUtils.isNotEmpty(relPathDto2.getSeq()) && !StringUtils.equalsIgnoreCase(seqFile, relPathDto2.getSeq())) {
 					errorMsg += CommonConstants.RECORD_TYPE_ID_HPL_GTMS + " FET1 File >> Sequence not matched"
 							+ BREAKLINE;
 				}
@@ -1117,6 +1312,16 @@ public class ProdFileController {
 		model.remove("error");
 		model.remove("success");
 		model.remove("info");
+
+		return model;
+	}
+	
+	private Map<String, Object> removeTempVal(Map<String, Object> model){
+		model.remove("hplModelId2Temp");
+		model.remove("g2Lot2Temp");
+		model.remove("filePath2Temp");
+		model.remove("prodLn2Temp");
+		model.remove("seq2Temp");
 
 		return model;
 	}
@@ -1226,6 +1431,7 @@ public class ProdFileController {
 		model.put("g2LotItems", g2LotServ.searchByCriteria(lot, hpl, hplModel, year, mth, day, prodLn, seq));
 	}
 
+	/*
 	private List<RelPathDto> generatePathsItems(String hplId, String year, String prodLn2, String mth) {
 		List<FoldCatgConfDto> foldDtoList = foldCatConfServ.searchByCriteria(hplId, "", year, mth, "", prodLn2, "", "");
 		List<RelPathDto> paths = new ArrayList<RelPathDto>();
@@ -1238,18 +1444,45 @@ public class ProdFileController {
 		}
 		return paths;
 	}
+	*/
+	
+	private List<RelPathDto2> generatePathsItems2(String hplId, String year, String prodLn2, String mth) {
+		List<RelPathDto2> paths = new ArrayList<RelPathDto2>();
+		List<FoldCatgConfDto2> foldDtoList = foldCatConfServ2.searchByCriteria(hplId, "");
+		for (FoldCatgConfDto2 foldDto : foldDtoList) {
+			// paths = foldCatConfServ.findRelPathListByParent(foldDto.getPkCatgId());
+			//for (RelPathDto2 relPathDto : foldCatConfServ2.findRelPathListByParent(foldDto.getPkCatgId())) {
+			//	logger.debug("path {}", relPathDto.getFilePath());
+			//	paths.add(relPathDto);
+			//}
+			paths.addAll(foldCatConfServ2.searchRelPathByCriteria(foldDto.getPkCatgId(), "", year, mth, "", prodLn2, "", 0));			;
+		}
+		return paths;
+	}
 
 	private List<String> generateProdLnItems(List<G2LotViewDto> itemsPrd) {
 		List<String> prodLnList = itemsPrd.stream().map(G2LotViewDto::getProdLn).distinct()
 				.collect(Collectors.toList());
 		return prodLnList;
 	}
+	
+	private List<String> generateSeqItems(List<G2LotViewDto> itemsPrd) {
+		List<String> seqList = itemsPrd.stream().map(G2LotViewDto::getSeq).distinct()
+				.collect(Collectors.toList());
+		return seqList;
+	}
 
 	private List<G2LotViewDto> generateG2LotItems(String year, String mth, String prodLn2, String hpl,
-			String hplModel) {
+			String hplModel, String seq) {
 		List<G2LotViewDto> items = new ArrayList<G2LotViewDto>();
-		items = g2LotServ.searchByCriteria("", hpl, hplModel, year, mth, "", prodLn2, "");
+		items = g2LotServ.searchByCriteria("", hpl, hplModel, year, mth, "", prodLn2, seq);
 		return items;
+	}
+	
+	private boolean checkDelete() {
+		boolean isSuperUser = (Boolean) model.get("isSuperUser");
+		boolean cannotDelete = isSuperUser ? false : true;
+		return cannotDelete;
 	}
 	
 	private boolean fileExists(int parseInt) {

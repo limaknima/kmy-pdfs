@@ -52,6 +52,9 @@ public class MenuRoleFunctionService {
 	public MenuRoleFunctionDto findDtoById(Integer id) {
 		MenuRoleFunction obj = mrfRepo.findById(id).orElse(null);
 		MenuRoleFunctionDto dto = mrfConv.entityToDto(obj);
+		dto.setMenuName(getMenuName(dto.getMenuItemId()));
+		dto.setRoleName(getRoleName(dto.getRoleId()));
+		dto.setFunctionName(getFunctionName(dto.getFunctionType()));
 		return dto;
 	}
 

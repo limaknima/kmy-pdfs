@@ -246,10 +246,10 @@ public class FuncReportController {
 
 		createCell(row, 0, "Timestamp", style);
 		createCell(row, 1, "Organization", style);
-		createCell(row, 2, "User ID", style);
-		createCell(row, 3, "Activity Description", style);
-		createCell(row, 4, "Record Identifier", style);
-		createCell(row, 5, "Function Type", style);
+		createCell(row, 2, "User Name", style);
+		createCell(row, 3, "Function Type", style);
+		createCell(row, 4, "Activity Description", style);
+		createCell(row, 5, "Record Identifier", style);
 
 	}
 
@@ -296,12 +296,16 @@ public class FuncReportController {
 
 			createCell(row, columnCount++, timestamp, style);
 			createCell(row, columnCount++, trxHis.getOrgId(), style);
-			createCell(row, columnCount++, trxHis.getUserId(), style);
+			createCell(row, columnCount++, getUserName(trxHis.getUserId()), style);
+			createCell(row, columnCount++, funcType, style);
 			createCell(row, columnCount++, trxHis.getLogDesc(), style);
 			createCell(row, columnCount++, identifier, style);
-			createCell(row, columnCount++, funcType, style);
 
 		}
+	}
+
+	private String getUserName(String userId) {
+		return logServ.searchUser(userId.trim()).getUserName();
 	}
 
 	private String getFunctionTypeDesc(int type) {
