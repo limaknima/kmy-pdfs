@@ -386,6 +386,8 @@ public class ProdFileController {
 		model.put("prodLn2", prodLn2);
 		model.put("newFileContentName", newFileContentName);
 		model.put("seq2", seq2);
+		model.put("procType", procType);
+		model.put("subProc", subProc);
 
 		model.put("prodFileItem", dto);
 
@@ -761,7 +763,12 @@ public class ProdFileController {
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
+			data = pfDto.getContentObject();
 		}
+		
+		trxHistServ.addTrxHistory(new Date(), "Download " + MODULE_NAME, request.getRemoteUser(),
+				CommonConstants.FUNCTION_TYPE_DOWNLOAD, pfDto.getHpl() +"-"+ pfDto.getG2Lot()+"-"+ pfDto.getFileName(),
+				CommonConstants.RECORD_TYPE_ID_PROD_FILE, null);
 
 		MediaType mt = MediaTypeUtils.getMediaTypeForFileName(servletContext, fileName);
 
@@ -878,30 +885,36 @@ public class ProdFileController {
 
 				List<RelPathDto2> relPathList = foldCatConfServ2.searchRelPathByCriteria(foldConf.getPkCatgId(), "",
 						year, "", "", "", "", procType, "");
-
-				if (procType == CommonConstants.PROCESS_TYPE_HPL_MIKRON) {
-					// all folders same format
-					fileFormat = relPathList.get(0).getProdFileFormat();
-				} else if (procType == CommonConstants.PROCESS_TYPE_HPL_BACKEND) {
-					// folder fet2,fet3
-					if (fileNameLen == CommonConstants.FILENAME_LEN_GTMS_B1) {
-						//relPathList = relPathList.stream().filter(arg0 -> arg0.getProdFileFormat().contains("lot=6,12"))
-						//		.collect(Collectors.toList());
-						relPathList = relPathList.stream()
-								.filter(arg0 -> arg0.getProdFileFormat().contains("lot=6,12") 
-										&& (arg0.getSubProc().equals(CommonConstants.PROCESS_SUBTYPE_GTMS_B_FET2)
-										|| arg0.getSubProc().equals(CommonConstants.PROCESS_SUBTYPE_GTMS_B_FET3)))
-								.collect(Collectors.toList());
+				
+				if(!relPathList.isEmpty()) {
+					if (procType == CommonConstants.PROCESS_TYPE_HPL_MIKRON) {
+						// all folders same format
 						fileFormat = relPathList.get(0).getProdFileFormat();
-					} else {
-						// folder fet1
-						relPathList = relPathList.stream()
-								.filter(arg0 -> arg0.getProdFileFormat().contains("lot=1,12")
-										&& arg0.getSubProc().equals(CommonConstants.PROCESS_SUBTYPE_GTMS_B_FET1))
-								.collect(Collectors.toList());
-						fileFormat = relPathList.get(0).getProdFileFormat();
+					} else if (procType == CommonConstants.PROCESS_TYPE_HPL_BACKEND) {
+						// folder fet2,fet3
+						if (fileNameLen == CommonConstants.FILENAME_LEN_GTMS_B1) {
+							//relPathList = relPathList.stream().filter(arg0 -> arg0.getProdFileFormat().contains("lot=6,12"))
+							//		.collect(Collectors.toList());
+							relPathList = relPathList.stream()
+									.filter(arg0 -> arg0.getProdFileFormat().contains("lot=6,12") 
+											&& (arg0.getSubProc().equals(CommonConstants.PROCESS_SUBTYPE_GTMS_B_FET2)
+											|| arg0.getSubProc().equals(CommonConstants.PROCESS_SUBTYPE_GTMS_B_FET3)))
+									.collect(Collectors.toList());
+							fileFormat = relPathList.get(0).getProdFileFormat();
+						} else {
+							// folder fet1
+							relPathList = relPathList.stream()
+									.filter(arg0 -> arg0.getProdFileFormat().contains("lot=1,12")
+											&& arg0.getSubProc().equals(CommonConstants.PROCESS_SUBTYPE_GTMS_B_FET1))
+									.collect(Collectors.toList());
+							fileFormat = relPathList.get(0).getProdFileFormat();
+						}
 					}
-				}
+				} else {
+					// if no configuration done yet
+					fileFormat = getSysDefaultFileformat(foldConf.getHpl(), procType, subProc);
+					model.put("fileFormatTemp", fileFormat);
+				}				
 				
 				model.put("procTypeTemp", procType);
 				model.put("subProcTemp", subProc);
