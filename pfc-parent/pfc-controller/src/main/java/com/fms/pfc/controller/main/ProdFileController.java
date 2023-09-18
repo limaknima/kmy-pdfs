@@ -468,7 +468,7 @@ public class ProdFileController {
 			} catch (Exception e) {
 				// Print DB exception
 				e.printStackTrace();
-				model.put("error", "Record failed to be added.");
+				model.put("error", "Opss.Something happened during record saving. Please check in the listing if the file exists.");
 				model.remove("success");
 			}
 
@@ -900,14 +900,28 @@ public class ProdFileController {
 											&& (arg0.getSubProc().equals(CommonConstants.PROCESS_SUBTYPE_GTMS_B_FET2)
 											|| arg0.getSubProc().equals(CommonConstants.PROCESS_SUBTYPE_GTMS_B_FET3)))
 									.collect(Collectors.toList());
-							fileFormat = relPathList.get(0).getProdFileFormat();
+							if(!relPathList.isEmpty()) {
+								fileFormat = relPathList.get(0).getProdFileFormat();
+								
+							} else {
+								// if no configuration done yet
+								fileFormat = getSysDefaultFileformat(foldConf.getHpl(), procType, subProc);
+							}
+							model.put("fileFormatTemp", fileFormat);
 						} else {
 							// folder fet1
 							relPathList = relPathList.stream()
 									.filter(arg0 -> arg0.getProdFileFormat().contains("lot=1,12")
 											&& arg0.getSubProc().equals(CommonConstants.PROCESS_SUBTYPE_GTMS_B_FET1))
 									.collect(Collectors.toList());
-							fileFormat = relPathList.get(0).getProdFileFormat();
+							if(!relPathList.isEmpty()) {
+								fileFormat = relPathList.get(0).getProdFileFormat();
+								
+							} else {
+								// if no configuration done yet
+								fileFormat = getSysDefaultFileformat(foldConf.getHpl(), procType, subProc);
+							}
+							model.put("fileFormatTemp", fileFormat);
 						}
 					}
 				} else {
@@ -934,6 +948,8 @@ public class ProdFileController {
 			fileFormat = getSysDefaultFileformat(foldConf.getHpl(), procType, subProc);
 		
 		model.put("fileFormatTemp", fileFormat);
+		
+		logger.debug("extractFileInfo() fileFormat={}",fileFormat);
 		
 		StringTokenizer items = new StringTokenizer(fileFormat, "|");
 		while (items.hasMoreElements()) {
@@ -1013,13 +1029,13 @@ public class ProdFileController {
 						|| subProc.equals(CommonConstants.PROCESS_SUBTYPE_GTMS_M_CELL2)
 						|| subProc.equals(CommonConstants.PROCESS_SUBTYPE_GTMS_M_CELL3)) {
 					result = DEF_FILE_FORMAT_MIKRON;
-				} else if (procType == CommonConstants.PROCESS_TYPE_HPL_BACKEND) {
-					if (subProc.equals(CommonConstants.PROCESS_SUBTYPE_GTMS_B_FET1)) {
-						result = DEF_FILE_FORMAT_BACKEND_FET1;
-					} else if (subProc.equals(CommonConstants.PROCESS_SUBTYPE_GTMS_M_CELL2)
-							|| subProc.equals(CommonConstants.PROCESS_SUBTYPE_GTMS_M_CELL3)) {
-						result = DEF_FILE_FORMAT_BACKEND_FET2_FET3;
-					}
+				} 
+			} else if (procType == CommonConstants.PROCESS_TYPE_HPL_BACKEND) {
+				if (subProc.equals(CommonConstants.PROCESS_SUBTYPE_GTMS_B_FET1)) {
+					result = DEF_FILE_FORMAT_BACKEND_FET1;
+				} else if (subProc.equals(CommonConstants.PROCESS_SUBTYPE_GTMS_B_FET2)
+						|| subProc.equals(CommonConstants.PROCESS_SUBTYPE_GTMS_B_FET3)) {
+					result = DEF_FILE_FORMAT_BACKEND_FET2_FET3;
 				}
 			}
 		}
