@@ -2,6 +2,7 @@ package com.fms.pfc.service.api.main;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Objects;
@@ -14,11 +15,13 @@ import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.fms.pfc.domain.converter.main.ProdFileConverter;
 import com.fms.pfc.domain.dto.main.FileTypeSzDto;
+import com.fms.pfc.domain.dto.main.FoldCatgConfDto2;
 import com.fms.pfc.domain.dto.main.HplModelDto;
 import com.fms.pfc.domain.dto.main.ProdFileDto;
 import com.fms.pfc.domain.dto.main.RelPathDto2;
@@ -41,11 +44,15 @@ public class ProdFileService {
 	private UsbConfService usbConfServ;
 	private FileTypeSzService ftSzServ;
 	private RelPathService2 pathServ;
+	private FoldCatgConfService2 foldConfServ;
+	
+	@Value("${data.root.dir}")
+	private String DEFAULT_DATA_PATH;
 
 	@Autowired
 	public ProdFileService(ProdFileRepository prodFileRepo, ProdFileConverter prodFileConv,
 			ProdFileSearchRepository prodFileSearchRepo, HplModelService hplModelServ, UsbConfService usbConfServ,
-			FileTypeSzService ftSzServ, RelPathService2 pathServ) {
+			FileTypeSzService ftSzServ, RelPathService2 pathServ, FoldCatgConfService2 foldConfServ) {
 		super();
 		this.prodFileRepo = prodFileRepo;
 		this.prodFileConv = prodFileConv;
@@ -54,6 +61,7 @@ public class ProdFileService {
 		this.usbConfServ = usbConfServ;
 		this.ftSzServ = ftSzServ;
 		this.pathServ = pathServ;
+		this.foldConfServ = foldConfServ;
 	}
 
 	/**
@@ -123,7 +131,7 @@ public class ProdFileService {
 	 */
 	@Transactional
 	public Integer save(ProdFileDto dto, String userId, boolean isFileChanged, MultipartFile finalFileContent)
-			throws Exception {
+			throws Exception {		
 		RelPathDto2 path = pathServ.findDtoById(Integer.valueOf(dto.getFilePath()));
 		Date currentDate = new Date();
 		boolean isCreate = false;
@@ -150,6 +158,79 @@ public class ProdFileService {
 				dto.setFileSize(existing.getFileSize());
 				dto.setFileType(existing.getFileType());
 				dto.setCrcValue(existing.getCrcValue());
+				dto.setContentObject(existing.getContentObject());
+			} else {
+				// if file change
+				// if (!StringUtils.equals(existing.getFilePath(), dto.getFilePath())) {
+				RelPathDto2 oldPath = pathServ.findDtoById(Integer.valueOf(existing.getFilePath()));
+				oldDir = oldPath.getFilePath();
+				deleteDir = (StringUtils.isEmpty(oldDir) ? dir : oldDir) + File.separator + existing.getFileName();
+
+				logger.debug("save() isFileChanged?={}, deleteDir={}", isFileChanged, deleteDir);
+				// }
+			}
+		}
+
+		ProdFile entity = prodFileConv.dtoToEntity(dto);
+		prodFileRepo.saveAndFlush(entity);
+
+		// need to do something to files
+		manageFile(isFileChanged, finalFileContent, isCreate, dir, deleteDir);
+
+		return entity.getPkPfileId();
+	}
+	
+	/**
+	 * Save record into DB
+	 * Save file into Disk
+	 * @param dto
+	 * @param userId
+	 * @param isFileChanged
+	 * @param finalFileContent
+	 * @return
+	 * @throws Exception
+	 */
+	@Transactional
+	public Integer save2(ProdFileDto dto, String userId, boolean isFileChanged, MultipartFile finalFileContent, String defFormat, Integer procType, String subProc)
+			throws Exception {
+		
+		int pathId = 0;
+		// check if there isn't FoldCatConf and RelPath created yet, then create one
+		if(dto.getFilePath().isEmpty() || dto.getFilePath().equals("0")) {
+			pathId = generateFoldConfPath(userId, dto.getHpl(), dto.getYear(), dto.getMth(), dto.getProdLn(), defFormat, procType, subProc);
+			// set back pathid to ProdFile path
+			dto.setFilePath(String.valueOf(pathId));
+		} else {
+			pathId = Integer.valueOf(dto.getFilePath());
+		}		
+		
+		RelPathDto2 path = pathServ.findDtoById(pathId);
+		Date currentDate = new Date();
+		boolean isCreate = false;
+		String dir = "";
+		String oldDir = "";
+		String deleteDir = "";
+		// save parent
+		if (Objects.isNull(dto.getPkPfileId()) || 0 == dto.getPkPfileId()) {
+			dto.setCreatorId(userId);
+			dto.setCreatedDatetime(currentDate);
+			dir = path.getFilePath();
+			isCreate = true;
+		} else {
+			ProdFileDto existing = findDtoById(dto.getPkPfileId());
+			dto.setCreatorId(existing.getCreatorId());
+			dto.setCreatedDatetime(existing.getCreatedDatetime());
+			dto.setModifierId(userId);
+			dto.setModifiedDatetime(currentDate);
+			dir = path.getFilePath();
+			isCreate = false;
+
+			if (!isFileChanged) {
+				dto.setFileName(existing.getFileName());
+				dto.setFileSize(existing.getFileSize());
+				dto.setFileType(existing.getFileType());
+				dto.setCrcValue(existing.getCrcValue());
+				dto.setContentObject(existing.getContentObject());
 			} else {
 				// if file change
 				// if (!StringUtils.equals(existing.getFilePath(), dto.getFilePath())) {
@@ -205,6 +286,18 @@ public class ProdFileService {
 	}
 	
 	/**
+	 * Find USB Conf by multiple criteria
+	 * @param serialNo
+	 * @param name
+	 * @param prodLn
+	 * @param hpl
+	 * @return list
+	 */
+	public List<UsbConfDto> findAllByCriteria(String serialNo, String name, String prodLn, String hpl){
+		return usbConfServ.findAllByCriteria(serialNo, name, prodLn, hpl);
+	}
+	
+	/**
 	 * Find file type, size list
 	 * @param hplId
 	 * @return
@@ -250,6 +343,117 @@ public class ProdFileService {
 	public List<ProdFileSearch> searchTop5ByCriteria(String searchHplId, String searchHplModelId, String searchYear,
 			String searchMth, String g2LotNo, String g2LotNoExp, String path, String pathExp){
 		return prodFileSearchRepo.searchTop5ByCriteria(searchHplId, searchHplModelId, searchYear, searchMth, g2LotNo, g2LotNoExp, path, pathExp);
+	}
+	
+	/**
+	 * Delete file from disk
+	 * @param pfDto
+	 */
+	public void deleteFileFromDisk(ProdFileDto pfDto) {
+		RelPathDto2 rel = pathServ.findDtoById(Integer.parseInt(pfDto.getFilePath()));
+		String deleteDir = rel.getFilePath()  + File.separator +  pfDto.getFileName();
+		FileUtils.deleteQuietly(new File(deleteDir));
+	}
+	
+	/**
+	 * If Folder-Catg-Conf not yet create, create one during file upload save
+	 * @param userId
+	 */
+	public Integer generateFoldConfPath(String userId, String hpl, String year, String mth, String prodLn,
+			String defFormat, Integer procType, String subProc) {
+
+		FoldCatgConfDto2 foldDto = new FoldCatgConfDto2();
+		foldDto.setHpl(hpl);
+		foldDto.setProdFileFormat(!hpl.equals("GTMS") ? defFormat : "");
+		String filePath = "";
+		{
+			filePath = DEFAULT_DATA_PATH + hpl + "/";
+			if (hpl.equals("GTMS")) {
+				String procTypeDesc = procType == 1 ? "Mikron" : procType == 2 ? "Back End" : "";
+				if (procType != 0)
+					filePath = filePath + procTypeDesc + "/";
+				if (prodLn != "")
+					filePath = filePath + procTypeDesc + "#" + prodLn + "/";
+				if (subProc != "")
+					filePath = filePath + subProc + "/";
+			} else {
+				if (prodLn != "")
+					filePath = filePath + hpl + "#" + prodLn + "/";
+			}
+
+			if (year != "")
+				filePath = filePath + year + "/";
+			if (mth != "")
+				filePath = filePath + mth + "/";
+		}
+
+		List<RelPathDto2> relList = new ArrayList<RelPathDto2>();
+		if (!hpl.equals("GTMS")) {
+			RelPathDto2 relDto = new RelPathDto2();
+			relDto.setYear(year);
+			relDto.setMth(mth);
+			relDto.setProdLn(prodLn);
+			relDto.setFilePath(filePath);
+			relDto.setHModel("");
+			relDto.setDay("");
+			relDto.setSeq("");
+			relList.add(relDto);
+		} else {
+			// for IF, MGG
+			RelPathDto2 relDto = new RelPathDto2();
+			relDto.setYear(year);
+			relDto.setMth(mth);
+			relDto.setProdLn(prodLn);
+			relDto.setFilePath(filePath);
+			relDto.setProdFileFormat(defFormat);
+			relDto.setProcType(procType);
+			relDto.setSubProc(subProc);
+			relDto.setHModel("");
+			relDto.setDay("");
+			relDto.setSeq("");
+			relList.add(relDto);
+		}
+
+		// check existence of FoldCatgConf first in db
+		// if not exists then create FoldCatgConf and its RelPath
+		List<FoldCatgConfDto2> currDtos = foldConfServ.searchByCriteria(hpl, "");
+		int parentId = 0;
+		int result = 0;
+		if (currDtos.isEmpty()) {
+			parentId = foldConfServ.save(foldDto, userId, relList, null);
+		} else {
+			// if FoldCatgConf exists, check RelPath first
+			parentId = currDtos.get(0).getPkCatgId();
+			List<RelPathDto2> rels = new ArrayList<RelPathDto2>();
+			if (!hpl.equals("GTMS")) {
+				rels = foldConfServ.searchRelPathByCriteria(parentId, "", year, mth, "", prodLn, "", 0, "");
+			} else {
+				// for IF, MGG
+				rels = foldConfServ.searchRelPathByCriteria(parentId, "", year, mth, "", prodLn, "", procType, subProc);
+			}
+
+			// if RelPath not exists, create RelPath
+			if (rels.isEmpty()) {
+				result = foldConfServ.saveRelPath(relList.get(0), parentId, new Date(), userId);
+			}
+		}
+
+		logger.debug(
+				"generateFoldConfPath() userId={},hpl={},year={},mth={},prodLn={},defFormat={},procType={},subProc={},filePath,={},result={}",
+				userId, hpl, year, mth, prodLn, defFormat, procType, subProc, filePath, result);
+
+		return result;
+	}
+	
+	/**
+	 * Find duplicate file - for validation
+	 * @param fileName
+	 * @param lotNo
+	 * @param hpl
+	 * @return
+	 */
+	public Integer countDuplicateFile(String fileName, String lotNo, String hpl) {
+		return prodFileRepo.countDuplicateFile(fileName, lotNo, hpl);
 	}
 
 	/**
@@ -314,9 +518,4 @@ public class ProdFileService {
 		}
 	}
 	
-	public void deleteFileFromDisk(ProdFileDto pfDto) {
-		RelPathDto2 rel = pathServ.findDtoById(Integer.parseInt(pfDto.getFilePath()));
-		String deleteDir = rel.getFilePath()  + File.separator +  pfDto.getFileName();
-		FileUtils.deleteQuietly(new File(deleteDir));
-	}
 }

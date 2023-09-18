@@ -71,6 +71,7 @@ public class FoldCatgConfController2 {
 	private static String DAY_LBL = "";
 	private static String PROD_LN_LBL = "";
 	private static String PROC_TYPE_LBL = "";
+	private static String SUB_PROC_LBL = "";
 	private static String FILE_FORMAT_LBL = "";
 	private static String FILE_PATH_LBL = "";
 	private static String MODULE_NAME = "";
@@ -81,6 +82,16 @@ public class FoldCatgConfController2 {
 
 	@Value("${data.root.dir}")
 	private String DEFAULT_DATA_PATH;
+	@Value("${def.file.format.if}")
+	private String DEF_FILE_FORMAT_IF;
+	@Value("${def.file.format.mgg}")
+	private String DEF_FILE_FORMAT_MGG;
+	@Value("${def.file.format.gtms.mikron}")
+	private String DEF_FILE_FORMAT_MIKRON;
+	@Value("${def.file.format.gtms.backend.fet2.fet3}")
+	private String DEF_FILE_FORMAT_BACKEND_FET2_FET3;
+	@Value("${def.file.format.gtms.backend.fet1}")
+	private String DEF_FILE_FORMAT_BACKEND_FET1;
 
 	@Autowired
 	public FoldCatgConfController2(Authority auth, CommonValidation commonValServ, MessageSource msgSource,
@@ -201,6 +212,7 @@ public class FoldCatgConfController2 {
 			model.put("monthItems", CommonUtil.monthDropdownItems());
 			model.put("dayItems", CommonUtil.dayDropdownItems());
 			model.put("procTypeItems", CommonUtil.hplProcTypeDropdownItems());
+			model.put("subProcItems", CommonUtil.gtmsSubFoldDropdownItems(0));
 			
 			List<String> prodLnList = g2LotServ.prodLnList(dto.getHpl(), "", "", "", "");			
 			logger.debug("view prodLnList size={}", prodLnList.size());
@@ -267,7 +279,9 @@ public class FoldCatgConfController2 {
 		model.put("dayItems", CommonUtil.dayDropdownItems());
 		model.put("defaultDataPath", DEFAULT_DATA_PATH);
 		model.put("procTypeItems", CommonUtil.hplProcTypeDropdownItems());
-
+		model.put("subProcItems", CommonUtil.gtmsSubFoldDropdownItems(0));
+		loadDefaultFormat();
+		
 		manageListButton(false, true, true, model);
 
 		return new ModelAndView("/main/pfc/foldCatgConfForm2", model);
@@ -561,7 +575,8 @@ public class FoldCatgConfController2 {
 			@RequestParam(name = "mth2", required = false) String mth,
 			@RequestParam(name = "day", required = false) String day,
 			@RequestParam(name = "seq", required = false) String seq,
-			@RequestParam(name = "procType", required = false) int procType,
+			@RequestParam(name = "procType", required = false, defaultValue = "0") int procType,
+			@RequestParam(name = "subProc", required = false, defaultValue = "") String subProc,
 			HttpSession session) {
 
 		String errorMsg = "";
@@ -569,7 +584,7 @@ public class FoldCatgConfController2 {
 		List<RelPathDto2> relPathList = (List<RelPathDto2>) model.get("relPathList");
 		
 		holdValue(foldDto, model, screenMode, relPathFilePath, relPathFileFormat, hplModelId2, prodLn2, year, mth,
-				day, seq);
+				day, seq, procType, subProc);
 		
 		logger.debug("addToList() hplid={}, year={}, prodLn={}, hplModelId2={}, prodLn2={}", foldDto.getHpl(),year,prodLn2, hplModelId2, prodLn2);
 
@@ -592,13 +607,15 @@ public class FoldCatgConfController2 {
 						|| StringUtils.isEmpty(year)
 						|| StringUtils.isEmpty(mth)
 						|| StringUtils.isEmpty(prodLn2)
-						|| procType <= 0) {
+						|| procType <= 0
+						|| StringUtils.isEmpty(subProc)) {
 					errorMsg += "Please key in " + FILE_PATH_LBL 
 							+ ", " + FILE_FORMAT_LBL 
 							+ ", " + YEAR_LBL 
 							+ ", " + MONTH_LBL 
 							+ ", " + PROD_LN_LBL 
 							+ ", " + PROC_TYPE_LBL
+							+ ", " + SUB_PROC_LBL
 							+ BREAKLINE;
 					model.put("error", errorMsg);
 					return new ModelAndView("/main/pfc/foldCatgConfForm2", model);
@@ -633,6 +650,7 @@ public class FoldCatgConfController2 {
 					+ ";filePath=" + relPathFilePath
 					+ ";prodFileFormat=" + relPathFileFormat
 					+ ";procType=" + procType
+					+ ";subProc=" + subProc
 					;
 
 			// if relPath duplicate
@@ -659,6 +677,7 @@ public class FoldCatgConfController2 {
 		dto.setSeq(seq);
 		dto.setProdLn(prodLn2);
 		dto.setProcType(procType);
+		dto.setSubProc(subProc);
 		dto.setRowNo(row);
 		dto.setIndicator("new");
 		relPathList.add(dto);
@@ -682,12 +701,13 @@ public class FoldCatgConfController2 {
 			@RequestParam(name = "day", required = false) String day,
 			@RequestParam(name = "seq", required = false) String seq,
 			@RequestParam(name = "procType", required = false) int procType,
+			@RequestParam(name = "subProc", required = false) String subProc,
 			HttpSession session) {
 
 		logger.debug("deleteFromRelPathList() ... ");
 
 		holdValue(foldDto, model, screenMode, relPathFilePath, relPathFileFormat, hplModelId2, prodLn2, year, mth,
-				day, seq);
+				day, seq, procType, subProc);
 		
 		List<RelPathDto2> relPathList = (List<RelPathDto2>) model.get("relPathList");
 		
@@ -760,6 +780,7 @@ public class FoldCatgConfController2 {
 				model.put("day", obj.getDay());
 				model.put("seq", obj.getSeq());
 				model.put("procType", obj.getProcType());
+				model.put("subProc", obj.getSubProc());
 				model.put("rowNo", obj.getRowNo());
 				
 				if (!StringUtils.equals(mode, CommonConstants.SCREEN_MODE_VIEW)) {
@@ -795,11 +816,12 @@ public class FoldCatgConfController2 {
 			@RequestParam(name = "day", required = false) String day,
 			@RequestParam(name = "seq", required = false) String seq,
 			@RequestParam(name = "procType", required = false) int procType,
+			@RequestParam(name = "subProc", required = false) String subProc,
 			HttpSession session) {
 
 		model.remove("error");
 		holdValue(foldDto, model, screenMode, relPathFilePath, relPathFileFormat, hplModelId2, prodLn2, year, mth,
-				day, seq);
+				day, seq, procType, subProc);
 		List<RelPathDto2> relPathList = (List<RelPathDto2>) model.get("relPathList");
 		
 		/*if(StringUtils.equalsIgnoreCase(screenMode, CommonConstants.SCREEN_MODE_EDIT)) {
@@ -828,6 +850,7 @@ public class FoldCatgConfController2 {
 					+ ";filePath=" + relPathFilePath
 					+ ";prodFileFormat=" + relPathFileFormat
 					+ ";procType=" + procType
+					+ ";subProc=" + subProc
 					;
 			
 			String errorMsg = "";
@@ -854,6 +877,7 @@ public class FoldCatgConfController2 {
 				obj.setSeq(seq);
 				obj.setProdLn(prodLn2);
 				obj.setProcType(procType);
+				obj.setSubProc(subProc);
 			}
 		}
 
@@ -918,6 +942,8 @@ public class FoldCatgConfController2 {
 		//model.remove("mth");
 		model.remove("day");
 		model.remove("seq");
+		model.remove("procType");
+		model.remove("subProc");
 		model.remove("hplModelId2Temp");
 		model.remove("prodLn2Temp");
 		model.remove("year2Temp");
@@ -931,7 +957,9 @@ public class FoldCatgConfController2 {
 			, String year
 			, String mth
 			, String day
-			, String seq) {
+			, String seq
+			, int procType
+			, String subProc) {
 
 		model.put("mode", screenMode);
 		model.put("foldCatgConfItem", foldDto);
@@ -941,6 +969,8 @@ public class FoldCatgConfController2 {
 		//model.put("mth", mth);
 		model.put("day", day);
 		model.put("seq", seq);
+		model.put("procType", procType);
+		model.put("subProc", subProc);
 
 		if (StringUtils.equals(screenMode, CommonConstants.SCREEN_MODE_ADD)) {
 			model.put("hplModelId2Temp", hplModelId2);
@@ -955,6 +985,14 @@ public class FoldCatgConfController2 {
 		return model;
 	}
 	
+	private void loadDefaultFormat() {
+		model.put("defaultIF", DEF_FILE_FORMAT_IF);
+		model.put("defaultMGG", DEF_FILE_FORMAT_MGG);
+		model.put("defaultGTMSM", DEF_FILE_FORMAT_MIKRON);
+		model.put("defaultGTMSF1", DEF_FILE_FORMAT_BACKEND_FET1);
+		model.put("defaultGTMSF23", DEF_FILE_FORMAT_BACKEND_FET2_FET3);
+	}
+	
 	private void getAllLabels() {
 		HPL_LBL = msgSource.getMessage("lblHpl", null, Locale.getDefault());
 		MODEL_LBL = msgSource.getMessage("lblHplModel", null, Locale.getDefault());
@@ -963,6 +1001,7 @@ public class FoldCatgConfController2 {
 		DAY_LBL = msgSource.getMessage("lblDay", null, Locale.getDefault());
 		PROD_LN_LBL = msgSource.getMessage("lblProdLn", null, Locale.getDefault());
 		PROC_TYPE_LBL = msgSource.getMessage("lblProcType", null, Locale.getDefault());
+		SUB_PROC_LBL = msgSource.getMessage("lblSubProc", null, Locale.getDefault());
 		FILE_FORMAT_LBL = msgSource.getMessage("lblFileFormat", null, Locale.getDefault());
 		FILE_PATH_LBL = msgSource.getMessage("lblFilePath", null, Locale.getDefault());
 		MODULE_NAME = msgSource.getMessage("moduleFoldCatgConf", null, Locale.getDefault());
