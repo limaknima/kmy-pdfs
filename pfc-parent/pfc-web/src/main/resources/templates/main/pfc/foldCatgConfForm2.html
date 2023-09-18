@@ -198,12 +198,32 @@
 												<label class="col-form-label">:</label>
 												<div class="col">
 													<select id="procType" class="custom-select" name="procType" th:value="${procType}" disabled 
-														onchange="reloadPathSuggestion();">
+														onchange="reloadPathSuggestion(); loadGtmsFileForm();">
 														<option value="" selected hidden="true">Please Select</option>
 														<option th:each="procTypeItem: ${procTypeItems}"
 															th:value="${procTypeItem.value}"
 															th:text="${procTypeItem.label}"
 															th:selected="${procTypeItem.value} == ${procType}"/>
+													</select>
+												</div>
+											</div>
+										</div>	
+										
+										<div id="subProcDiv" class="form-group row"  hidden="true">
+											<label class="col-sm-2 col-form-label control-label"><span th:text="#{lblSubProc}"></span>
+												<a name="asterisk" style="color: red;" hidden="true">*</a>
+											</label>
+		
+											<div class="row col-sm-5">
+												<label class="col-form-label">:</label>
+												<div class="col">
+													<select id="subProc" class="custom-select" name="subProc" th:value="${subProc}" disabled 
+														onchange="reloadPathSuggestion(); loadGtmsFileForm();">
+														<option value="" selected hidden="true">Please Select</option>
+														<option th:each="subProcItem: ${subProcItems}"
+															th:value="${subProcItem}"
+															th:text="${subProcItem}"
+															th:selected="${subProcItem} == ${subProc}"/>
 													</select>
 												</div>
 											</div>
@@ -578,6 +598,7 @@
 			document.getElementById("day").disabled = false;
 			//document.getElementById("hplModelId").disabled = false;
 			document.getElementById("procType").disabled = false;
+			document.getElementById("subProc").disabled = false;
 
 			//$("#hplDiv").addClass("required");
 			
@@ -619,6 +640,10 @@
 			$("#procType").addClass("form-control");
 			$("#procType").removeClass("form-control-plaintext");
 			document.getElementById("procType").removeAttribute("readonly");
+			
+			$("#subProc").addClass("form-control");
+			$("#subProc").removeClass("form-control-plaintext");
+			document.getElementById("subProc").removeAttribute("readonly");
 			
 			$("#prodLn").addClass("form-control");
 			$("#prodLn").removeClass("form-control-plaintext");
@@ -717,12 +742,57 @@
 				//document.getElementById('fileForm1').required = false;
 				document.getElementById('relPathFormatDiv').hidden = false;
 				document.getElementById('procTypeDiv').hidden = false;
+				document.getElementById('subProcDiv').hidden = false;
 			} else {
 				document.getElementById('fileForm1Div').hidden = false;
 				//document.getElementById('fileForm1').required = true;
 				document.getElementById('relPathFormatDiv').hidden = true;
 				document.getElementById('procTypeDiv').hidden = true;
+				document.getElementById('subProcDiv').hidden = true;
 			}
+			
+			var mode = document.getElementById("formMode").text;
+			if(mode === 'add'){
+				var defIf = "[(${defaultIF})]";
+				var defMGG = "[(${defaultMGG})]";
+				if(id === 'IF') {
+					document.getElementById("fileForm1").value = defIf;
+				} else if (id === 'MGG') {
+					document.getElementById("fileForm1").value = defMGG;
+				}
+			}			
+		}
+		
+		function loadGtmsFileForm(){
+			var id = document.getElementById("hplId").value;
+			var defaultGTMSM = "[(${defaultGTMSM})]";
+			var defaultGTMSF1 = "[(${defaultGTMSF1})]";
+			var defaultGTMSF23 = "[(${defaultGTMSF23})]";
+			var proc = document.getElementById("procType").value;	
+			var subProc = document.getElementById("subProc").value;	
+			
+			//alert("proc = "+proc+"; sub = "+ subProc);
+			
+			var mode = document.getElementById("formMode").text;
+			if(mode === 'add'){
+				if(proc === '1') {
+					if (subProc === 'CELL1' || subProc === 'CELL2' || subProc === 'CELL3'){
+						document.getElementById("relPathFileFormat").value = defaultGTMSM;
+					} else {
+						document.getElementById("relPathFileFormat").value = '';
+					}
+					
+				} else if(proc === '2') {
+					if(subProc === 'FET1'){
+						document.getElementById("relPathFileFormat").value = defaultGTMSF1;
+					} else if (subProc === 'FET2' || subProc === 'FET3'){
+						document.getElementById("relPathFileFormat").value = defaultGTMSF23;
+					} else {
+						document.getElementById("relPathFileFormat").value = '';
+					}
+				}
+			}
+			
 		}
 		
 		function loadYear(){
@@ -796,6 +866,7 @@
 			var prodLn2 = document.getElementById("prodLn2").value;	
 			var proc = document.getElementById("procType").value;	
 			var procType = $("#procType option:selected").text();
+			var subProc = document.getElementById("subProc").value;	
 			
 			if(hplId !== '')
 				result = result +  hpl + "/";
@@ -803,7 +874,9 @@
 				if(procType !== '' && proc !== 0)
 					result = result +  procType + "/";	
 				if(prodLn2 !=='')
-					result = result + procType + "#" +prodLn2 + "/";	
+					result = result + procType + "#" +prodLn2 + "/";
+				if(subProc !== '')
+					result = result +  subProc + "/";		
 			} else {
 				if(prodLn2 !=='')
 					result = result + hplId + "#" +prodLn2 + "/";						
@@ -811,9 +884,7 @@
 			if(year !== '')
 				result = result + year + "/";			
 			if(month !=='')
-				result = result + month + "/";
-			
-			
+				result = result + month + "/";			
 			
 			
 			//alert("result="+result);

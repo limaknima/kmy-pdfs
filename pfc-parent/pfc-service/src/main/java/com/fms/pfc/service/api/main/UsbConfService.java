@@ -74,12 +74,17 @@ public class UsbConfService {
 		List<UsbConfDto> lsDto = usbConfConv.entityToDtoList(ls);
 		return lsDto;
 	}
+	
+	List<UsbConfDto> findAllByCriteria(String serialNo, String name, String prodLn, String hpl){
+		List<UsbConf> ls = usbConfRepo.findAllByCriteria(serialNo, name, prodLn, hpl);
+		List<UsbConfDto> lsDto = usbConfConv.entityToDtoList(ls);
+		return lsDto;
+	}
 
 	public List<UsbConfSearch> searchByCriteria(String serialNo, String serialNoExp, String usbName, String usbNameExp,
 			String group, String assignTo, String assignToExp) {
 		List<UsbConfSearch> ls = usbConfSearchRepo.searchByCriteria(serialNo, serialNoExp, usbName, usbNameExp, group,
 				assignTo, assignToExp);
-		// List<UsbConfDto> lsDto = usbConfConv.entityToDtoList(ls);
 		return ls;
 	}
 

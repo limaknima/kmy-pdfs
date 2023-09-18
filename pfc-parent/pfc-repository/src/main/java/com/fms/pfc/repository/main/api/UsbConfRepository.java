@@ -16,4 +16,12 @@ public interface UsbConfRepository extends JpaRepository<UsbConf, Integer> {
 
 	@Query(value = "select * from USB_CONF where SERIAL_NO = ?1", nativeQuery = true)
 	List<UsbConf> findAllBySerialNo(String serialNo);
+	
+	@Query(value = "select * from USB_CONF "
+			+ "where 1=1 "
+			+ "and ('' = ?1 or SERIAL_NO = ?1) "
+			+ "and ('' = ?2 or NAME = ?2) "
+			+ "and ('' = ?3 or PROD_LN = ?3) "
+			+ "and ('' = ?4 or HPL = ?4) ", nativeQuery = true)
+	List<UsbConf> findAllByCriteria(String serialNo, String name, String prodLn, String hpl);
 }

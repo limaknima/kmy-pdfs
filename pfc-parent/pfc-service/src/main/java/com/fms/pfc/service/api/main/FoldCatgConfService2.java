@@ -64,13 +64,14 @@ public class FoldCatgConfService2 {
 	}
 	
 	public List<RelPathDto2> searchRelPathByCriteria(Integer catgId, String hmodel, String year, String mth, String day,
-			String prodLn, String seq, Integer procType) {
-		logger.debug("searchRelPathByCriteria() catgId={}, hmodel={}, year={}, mth={}, day={}, prodLn={}, seq={}",
-				catgId, hmodel, year, mth, day, prodLn, seq);
+			String prodLn, String seq, Integer procType, String subProc) {
+		logger.debug("searchRelPathByCriteria() catgId={}, hmodel={}, year={}, mth={}, day={}, prodLn={}, seq={}"
+				+ ", procType={}, subProc={}",
+				catgId, hmodel, year, mth, day, prodLn, seq, procType, subProc);
 		return relPathServ.searchByCriteria(catgId, Objects.isNull(hmodel) ? "" : hmodel,
 				Objects.isNull(year) ? "" : year, Objects.isNull(mth) ? "" : mth, Objects.isNull(day) ? "" : day,
 				Objects.isNull(prodLn) ? "" : prodLn, Objects.isNull(seq) ? "" : seq,
-				Objects.isNull(procType) ? 0 : procType);
+				Objects.isNull(procType) ? 0 : procType, Objects.isNull(subProc) ? "" : subProc);
 	}
 
 	@Transactional
@@ -109,6 +110,10 @@ public class FoldCatgConfService2 {
 		List<RelPathDto2> paths = findRelPathListByParent(id);
 		paths.forEach(arg0 -> relPathServ.delete(arg0.getPkRelPathId()));
 		foldCatgRepo.deleteById(id);
+	}
+	
+	public Integer saveRelPath(RelPathDto2 dto, Integer parentId, Date currentDate, String userId) {
+		return relPathServ.save(dto, parentId, currentDate, userId);
 	}
 
 	private void saveRelPath(List<RelPathDto2> relList, Integer parentId, boolean isCreate, Date currentDate,

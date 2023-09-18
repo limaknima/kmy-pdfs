@@ -286,29 +286,10 @@ function checkExt(filePath) {
 	var allow = true;
 
 	switch (ext) {
-		case 'zip':
-		case 'rar':
-		case 'pdf':
 		case 'xls':
 		case 'xlsx':
-		case 'doc':
-		case 'docx':
-		case 'ppt':
-		case 'pptx':
-		case 'pps':
 		case 'txt':
-		case 'bmp':
-		case 'jpg':
-		case 'jpe':
-		case 'jpeg':
-		case 'png':
-		case 'tif':
-		case 'tiff':
-		case 'wmv':
-		case 'avi':
-		case 'mp3':
-		case 'mp4':
-		case 'msg': allow = true; break;
+		case 'csv': allow = true; break;
 		default: allow = false;
 	}
 

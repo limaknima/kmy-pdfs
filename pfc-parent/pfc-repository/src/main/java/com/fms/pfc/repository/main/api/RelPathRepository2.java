@@ -21,7 +21,8 @@ public interface RelPathRepository2 extends JpaRepository<RelPath2, Integer> {
 			+ "and ('' = ?6 or rp.PROD_LN = ?6) "
 			+ "and ('' = ?7 or rp.SEQ = ?7) "
 			+ "and (0 = ?8 or rp.PROC_TYPE = ?8) "
+			+ "and ('' = ?9 or rp.SUB_PROC = ?9) "
 			, nativeQuery = true)
 	List<RelPath2> searchByCriteria(Integer catgId, String hmodel, String year, String mth, String day, String prodLn,
-			String seq, Integer procType);
+			String seq, Integer procType, String subProc);
 }

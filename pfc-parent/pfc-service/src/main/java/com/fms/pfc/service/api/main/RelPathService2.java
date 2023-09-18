@@ -68,9 +68,9 @@ public class RelPathService2 {
 	}
 	
 	public List<RelPathDto2> searchByCriteria(Integer catgId, String hmodel, String year, String mth, String day, String prodLn,
-			String seq, Integer procType){
+			String seq, Integer procType, String subProc){
 		List<RelPathDto2> result = new ArrayList<RelPathDto2>();
-		List<RelPath2> rels = relPathRepo.searchByCriteria(catgId, hmodel, year, mth, day, prodLn, seq, procType);
+		List<RelPath2> rels = relPathRepo.searchByCriteria(catgId, hmodel, year, mth, day, prodLn, seq, procType, subProc);
 		result = relPathConv.entityToDtoList(rels);
 		
 		int rowNo = 0;
@@ -84,14 +84,15 @@ public class RelPathService2 {
 	}
 
 	@Transactional
-	public void save(Integer parentId, String filePath, String prodFileFormat) {
-		RelPathDto2 dto = new RelPathDto2();
+	public Integer save(RelPathDto2 dto, Integer parentId, Date currentDate, String userId) {
 		dto.setFkCatgId(parentId);
-		dto.setFilePath(filePath);
-		dto.setProdFileFormat(prodFileFormat);
+		dto.setCreatorId(userId);
+		dto.setCreatedDatetime(currentDate);
 
 		RelPath2 rel = relPathConv.dtoToEntity(dto);
 		relPathRepo.saveAndFlush(rel);
+		
+		return rel.getPkRelPathId();
 	}
 
 	@Transactional

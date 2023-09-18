@@ -30,6 +30,7 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import java.util.StringTokenizer;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
@@ -46,6 +47,7 @@ import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.multipart.commons.CommonsMultipartFile;
 
+import com.fms.pfc.common.CommonUtil;
 import com.fms.pfc.domain.dto.LabelAndValueDto;
 
 import net.samuelcampos.usbdrivedetector.USBDeviceDetectorManager;
@@ -139,8 +141,13 @@ public class Testing {
 		//fileSizeConvert();
 		
 		//localDate();
+		String s = "KMY210104504";
+		System.out.println("----> pattern " + Pattern.compile("^[0-9_]").matcher(s).find());
+		String year = StringUtils.substring(s, 3, 5);
+		year = year.length() == 2? "20"+year : year;
+		System.out.println("----> year " + year);
 		
-		//segregateFileName();
+		segregateFileName();
 		//createDirectories();
 		
 		int cnt=0;
@@ -161,6 +168,8 @@ public class Testing {
 		} else {
 			System.out.println("fileExists?no");
 		}
+		
+		System.out.println("prdln="+CommonUtil.prodLnConversionFromFileName("A", "IF"));
 		
 	}
 
@@ -538,16 +547,17 @@ public class Testing {
 		
 //		String originalFileName = "220517_KX225HD.csv";// IF
 //		String originalFileName = "569_2021073107480.csv";// MGG
-//		String originalFileName = "KMY210104504.txt";// GTMS mikron ??
+		String originalFileName = "KMY210104504.txt";// GTMS mikron ??
 //		String originalFileName = "5004_500421403104.csv";// GTMS Back end FET2,3
-		String originalFileName = "500421403104.csv";// GTMS Back end FET1
+//		String originalFileName = "500421403104.csv";// GTMS Back end FET1
 		
 //		String format = "model=8,2|year=1,2|month=3,2|day=5,2|prodLn=14,1|seq=NA|lot=8,7"; //IF
 //		String format = "model=1,3|year=5,4|month=9,2|day=11,2|prodLn=NA|seq=NA|lot=NA"; //MGG
-//		String format = "model=NA|year=4,2|month=NA|day=NA|prodLn=NA|seq=6,4|lot=NA"; //GTMS mikron ??
-//		String format = "model=6,4|year=10,2|month=12,1|day=NA|prodLn=13,2|seq=15,3|lot=NA"; //GTMS Back end FET2,3
-		String format = "model=1,4|year=5,2|month=7,1|day=NA|prodLn=8,2|seq=10,3|lot=NA"; //GTMS Back end FET1
+		String format = "model=NA|year=4,2|month=NA|day=NA|prodLn=NA|seq=7,3|lot=NA"; //GTMS mikron ??
+//		String format = "model=6,4|year=10,2|month=12,1|day=NA|prodLn=13,2|seq=15,3|lot=6,12"; //GTMS Back end FET2,3
+//		String format = "model=1,4|year=5,2|month=7,1|day=NA|prodLn=8,2|seq=10,3|lot=1,12"; //GTMS Back end FET1
 		
+		System.out.println("name ok? "+Pattern.compile("^[A-Z]").matcher(originalFileName).find());
 		// remove file extension
 		originalFileName = StringUtils.substring(originalFileName, 0, originalFileName.lastIndexOf("."));
 		int nameLength = originalFileName.length();

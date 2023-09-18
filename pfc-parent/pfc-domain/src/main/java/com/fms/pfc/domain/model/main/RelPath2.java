@@ -64,6 +64,9 @@ public class RelPath2 implements Serializable {
 	
 	@Column(name = "PROC_TYPE")
 	private Integer procType;
+	
+	@Column(name = "SUB_PROC")
+	private String subProc;
 
 	@Column(name = "CREATOR_ID")
 	private String creatorId;

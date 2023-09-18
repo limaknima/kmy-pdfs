@@ -63,7 +63,7 @@
 										<label class="col-form-label">:</label>
 										<div class="col">
 											<select id="hplId" class="custom-select" name="hplId" th:field="*{hpl}" disabled required
-												onchange="onHplChange();reloadG2LotNumbers();">
+												onchange="onHplChange();reloadG2LotNumbers();reloadPathSuggestion();">
 												<option value="" selected hidden="true">Please Select</option>
 												<option th:each="hplItem: ${hplItems}"
 													th:value="${hplItem}"
@@ -98,6 +98,8 @@
 											</div>
 										</div>
 									</div>
+									<input id="procTypeTemp" th:value="${procTypeTemp}" hidden="true">
+									<input id="subProcTemp" th:value="${subProcTemp}" hidden="true">
 								</div>
 								
 								<div class="form-group row" id="viewFileNameDiv"
@@ -110,9 +112,12 @@
 											<textarea disabled class="form-control-plaintext" name="viewFileName" id="viewFileName" 
 												th:field="*{fileName}" maxlength="100" rows="2"
 												style="resize: none;"></textarea>
-												<a th:href="@{/main/pfc/prodFileDownload(pkPfileId=*{pkPfileId})}" th:hidden="${hidFunctionType_7}">
-													<i class="fas fa-download"></i>
-												</a>
+												
+										</div>
+										<div class="col">
+											<a th:href="@{/main/pfc/prodFileDownload(pkPfileId=*{pkPfileId})}" th:hidden="${hidFunctionType_7}">
+												<i class="fas fa-download"></i>
+											</a>
 										</div>
 									</div>
 								</div>
@@ -141,6 +146,46 @@
 										</div>
 									</div>
 								</div>
+								
+								<div id="procTypeDiv" class="form-group row"  hidden="true">
+									<label class="col-sm-2 col-form-label control-label"><span th:text="#{lblProcType}"></span>
+										<a name="asterisk" style="color: red;" hidden="true">*</a>
+									</label>
+
+									<div class="row col-sm-5">
+										<label class="col-form-label">:</label>
+										<div class="col">
+											<select id="procType" class="custom-select" name="procType" th:value="${procType}" disabled 
+												onchange="loadFilePathOnly(); reloadPathSuggestion();">
+												<option value="" selected hidden="true">Please Select</option>
+												<option th:each="procTypeItem: ${procTypeItems}"
+													th:value="${procTypeItem.value}"
+													th:text="${procTypeItem.label}"
+													th:selected="${procTypeItem.value} == ${procType}"/>
+											</select>
+										</div>
+									</div>
+								</div>	
+								
+								<div id="subProcDiv" class="form-group row"  hidden="true">
+									<label class="col-sm-2 col-form-label control-label"><span th:text="#{lblSubProc}"></span>
+										<a name="asterisk" style="color: red;" hidden="true">*</a>
+									</label>
+
+									<div class="row col-sm-5">
+										<label class="col-form-label">:</label>
+										<div class="col">
+											<select id="subProc" class="custom-select" name="subProc" th:value="${subProc}" disabled 
+												onchange="loadFilePathOnly(); reloadPathSuggestion();">
+												<option value="" selected hidden="true">Please Select</option>
+												<option th:each="subProcItem: ${subProcItems}"
+													th:value="${subProcItem}"
+													th:text="${subProcItem}"
+													th:selected="${subProcItem} == ${subProc}"/>
+											</select>
+										</div>
+									</div>
+								</div>	
 								
 								<div id="hplModelDiv" class="form-group row">
 									<label class="col-sm-2 col-form-label control-label" >
@@ -175,7 +220,7 @@
 										<label class="col-form-label">:</label>
 										<div class="col">
 											<select id="year" class="custom-select" name="year" th:field="*{year}" disabled required
-												onchange="reloadG2LotNumbers();">
+												onchange="reloadG2LotNumbers();reloadPathSuggestion();">
 												<option value="" selected hidden="true">Please Select</option>
 												<option th:each="yearItem: ${yearItems}"
 													th:value="${yearItem}"
@@ -195,7 +240,7 @@
 										<label class="col-form-label">:</label>
 										<div class="col">
 											<select id="mth" class="custom-select" name="mth" th:field="*{mth}" disabled 
-												onchange="reloadG2LotNumbers();">
+												onchange="reloadG2LotNumbers();reloadPathSuggestion();">
 												<option value="" selected hidden="true">Please Select</option>
 												<option th:each="monthItem: ${monthItems}"
 													th:value="${monthItem.strValue}"
@@ -205,6 +250,24 @@
 										</div>
 									</div>
 								</div>
+								
+								<div id="dayDiv" class="form-group row" >
+									<label class="col-sm-2 col-form-label control-label"><span th:text="#{lblDay}"></span>
+									</label>
+
+									<div class="row col-sm-5">
+										<label class="col-form-label">:</label>
+										<div class="col">
+											<select id="day" class="custom-select" name="day" th:value="${day}" disabled >
+												<option value="" selected hidden="true">Please Select</option>
+												<option th:each="dayItem: ${dayItems}"
+													th:value="${dayItem.strValue}"
+													th:text="${dayItem.label}"
+													th:selected="${dayItem.strValue} == ${day}"/>
+											</select>
+										</div>
+									</div>
+								</div>		
 								
 								<div id="prodLnDiv" class="form-group row">
 									<label class="col-sm-2 col-form-label control-label">
@@ -228,7 +291,7 @@
 													th:text="${prodLnItem}"
 													th:selected="${prodLnItem} == ${prodLn}"/>
 											</select>
-											<select class="custom-select" name="prodLn2" id="prodLn2" disabled hidden="true" onchange="onProdLnChange();">
+											<select class="custom-select" name="prodLn2" id="prodLn2" disabled hidden="true" onchange="onProdLnChange();reloadPathSuggestion();">
 												<option value="" selected hidden="true">Please Select</option>
 											</select>
 											
@@ -245,7 +308,8 @@
 									<div class="row col-sm-5">
 										<label class="col-form-label">:</label>
 										<div class="col">
-											<select id="seq" class="custom-select" name="seq" th:field="*{seq}" disabled >
+											<select id="seq" class="custom-select" name="seq" th:field="*{seq}" disabled 
+												onchange="loadCompletedG2LotOnly();">
 												<option value="" selected hidden="true">Please Select</option>
 												<option th:each="seqItem: ${seqItems}"
 													th:value="${seqItem}"
@@ -275,7 +339,8 @@
 													th:text="${g2LotItem.lot}"
 													th:selected="${g2LotItem.lot} == ${g2Lot}"/>
 											</select>
-											<select class="custom-select" name="g2Lot2" id="g2Lot2" disabled hidden="true" >
+											<select class="custom-select" name="g2Lot2" id="g2Lot2" disabled hidden="true" 
+												onchange="loadModelMonthProdLnFilePath(); ">
 												<option value="" selected hidden="true">Please Select</option>
 											</select>
 										</div>
@@ -306,7 +371,13 @@
 											<select class="custom-select" name="filePath2" id="filePath2" disabled hidden="true" >
 												<option value="" selected hidden="true">Please Select</option>
 											</select>
-											
+											<div id="pathSuggestDiv" hidden="true">											
+												<label><span id="remarkPathLbl" style="font-style: italic;font-size: 14px">Note: System default path suggestion if it's not exist in the selection above:</span></label>
+												<textarea name="relPathFilePath"
+															id="relPathFilePath" readonly th:text="${relPathFilePath}"
+															class="form-control-plaintext"
+															maxlength="250" rows="2" style="resize: none;font-style: italic;font-size: 14px"></textarea>
+											</div>
 										</div>
 									</div>
 								</div>
@@ -386,7 +457,8 @@
 								th:text="${btnSave}"
 								data-toggle="modal" data-target="#saveConfirmDialog"></button>
 							<a class="dropdown-item btn" type="button"
-								th:hidden="${btnResetForm}" th:href="prodFileForm" style="width: 90px;" th:text="#{btnResetForm}"></a>
+								th:hidden="${btnResetForm}" style="width: 90px;" th:text="#{btnResetForm}"
+								data-toggle="modal" data-target="#resetConfirmDialog"></a>
 						</div>
 
 						<button class="btn btn-primary" style="width: 90px;" type="button"
@@ -494,6 +566,30 @@
 								</div>
 							</div>
 						</div>
+						
+						<!-- Confirmation reset form-->
+						<div class="modal fade" id="resetConfirmDialog" tabindex="-1"
+							role="dialog" aria-hidden="true">
+							<div class="modal-dialog modal-dialog-centered" role="document">
+								<div class="modal-content">
+									<div class="modal-header">
+										<h5 class="modal-title">Reset Confirmation</h5>
+										<button type="button" class="close" data-dismiss="modal"
+											aria-label="Close">
+											<span aria-hidden="true">&times;</span>
+										</button>
+									</div>
+									<div class="modal-body">Do you want to reset this form?</div>
+									<div class="modal-footer">
+										<a class="btn btn-primary" style="width: 90px;" type="button"
+											id="btnAddCancel" th:href="prodFileForm">Confirm</a>
+
+										<button type="button" class="btn btn-secondary"
+											data-dismiss="modal">Cancel</button>
+									</div>
+								</div>
+							</div>
+						</div>
 
 
 
@@ -547,7 +643,18 @@
 				document.getElementById("seq").hidden = true;
 
 				document.getElementById("seq2").disabled = false;
-				document.getElementById("seq2").hidden = false;
+				document.getElementById("seq2").hidden = false;				
+
+				document.getElementById("procType").disabled = false;
+				document.getElementById("subProc").disabled = false;
+				
+				$("#procType").addClass("form-control");
+				$("#procType").removeClass("form-control-plaintext");
+				document.getElementById("procType").removeAttribute("readonly");
+				
+				$("#subProc").addClass("form-control");
+				$("#subProc").removeClass("form-control-plaintext");
+				document.getElementById("subProc").removeAttribute("readonly");
 
 				document.getElementById("btnAddCancel").hidden = false;
 				document.getElementById("btnViewCancel").hidden = true;
@@ -623,6 +730,7 @@
 			document.getElementById("hplId").disabled = false;
 			document.getElementById("year").disabled = false;
 			document.getElementById("mth").disabled = false;
+			document.getElementById("day").disabled = false;
 			document.getElementById("g2Lot").disabled = false;
 			document.getElementById("filePath").disabled = false;
 			document.getElementById("prodLn").disabled = false;
@@ -646,6 +754,10 @@
 			$("#mth").addClass("form-control");
 			$("#mth").removeClass("form-control-plaintext");
 			document.getElementById("mth").removeAttribute("readonly");
+			
+			$("#day").addClass("form-control");
+			$("#day").removeClass("form-control-plaintext");
+			document.getElementById("day").removeAttribute("readonly");
 			
 			$("#g2Lot").addClass("form-control");
 			$("#g2Lot").removeClass("form-control-plaintext");
@@ -710,10 +822,23 @@
 				}
 			});		
 			
+			var mode = document.getElementById("formMode").text;			
+			
 			if(id === 'GTMS'){
 				document.getElementById("seqDiv").hidden = false;
+				document.getElementById("dayDiv").hidden = true;
+				if (mode == "add") {
+					document.getElementById('procTypeDiv').hidden = false;
+					document.getElementById('subProcDiv').hidden = false;
+				}
+				
 			} else {
 				document.getElementById("seqDiv").hidden = true;
+				document.getElementById("dayDiv").hidden = false;
+				if (mode == "add") {
+					document.getElementById('procTypeDiv').hidden = true;
+					document.getElementById('subProcDiv').hidden = true;
+				}
 			}
 			
 		}
@@ -722,7 +847,8 @@
 			var hplId = document.getElementById("hplId").value;		
 			var hplModelId2 = document.getElementById("hplModelId2").value;		
 			var year = document.getElementById("year").value;				
-			var mth = document.getElementById("mth").value;					
+			var mth = document.getElementById("mth").value;						
+			var day = document.getElementById("day").value;					
 			var prodLn2 = document.getElementById("prodLn2").value;		
 			var seq = document.getElementById("seq2").value;		
 			
@@ -738,7 +864,7 @@
 			var seq2Temp = "[(${seq2Temp})]";
 			
 			$.ajax({
-				url : ctx+"main/pfc/loadCompletedG2Lot?hplId="+ hplId+"&hplModelId2="+hplModelId2+"&year="+year+"&mth="+mth+"&prodLn2="+prodLn2+"&seq"+seq,
+				url : ctx+"main/pfc/loadCompletedG2Lot?hplId="+ hplId+"&hplModelId2="+hplModelId2+"&year="+year+"&mth="+mth+"&day="+day+"&prodLn2="+prodLn2+"&seq2="+seq,
 				type : "GET",
 				success : function(data) {
 					var items = data.items;
@@ -773,6 +899,12 @@
 							$("#filePath2").append(pathOption);
 						}												
 					}	 	
+					
+					if(paths === undefined || paths.length === 0) {
+						document.getElementById("pathSuggestDiv").hidden = false;
+					} else {
+						document.getElementById("pathSuggestDiv").hidden = true;						
+					}
 					
 					// ProdLn ddropdown
 					$("#prodLn2").empty();
@@ -812,16 +944,19 @@
 			var hplId = document.getElementById("hplId").value;		
 			var hplModelId2 = document.getElementById("hplModelId2").value;		
 			var year = document.getElementById("year").value;				
-			var mth = document.getElementById("mth").value;					
+			var mth = document.getElementById("mth").value;							
+			var day = document.getElementById("day").value;				
 			var prodLn2 = document.getElementById("prodLn2").value;			
 			var seq = document.getElementById("seq2").value;		
+			
+			//alert("year="+year+"; seq="+seq);
 			
 			var ctx = "[[@{/}]]"; 
 			var g2Lot2Temp = "[(${g2Lot2Temp})]";
 			var filePath2Temp = "[(${filePath2Temp})]";
 			
 			$.ajax({
-				url : ctx+"main/pfc/loadCompletedG2Lot?hplId="+ hplId+"&hplModelId2="+hplModelId2+"&year="+year+"&mth="+mth+"&prodLn2="+prodLn2+"&seq"+seq,
+				url : ctx+"main/pfc/loadCompletedG2Lot?hplId="+ hplId+"&hplModelId2="+hplModelId2+"&year="+year+"&mth="+mth+"&day="+day+"&prodLn2="+prodLn2+"&seq2="+seq,
 				type : "GET",
 				success : function(data) {
 					var items = data.items;
@@ -853,7 +988,13 @@
 							pathOption = "<option value = " + paths[dt1].pkRelPathId + ">" + paths[dt1].filePath +  "</option>";
 							$("#filePath2").append(pathOption);
 						}												
-					}	 						
+					}	 	
+					
+					if(paths === undefined || paths.length === 0) {
+						document.getElementById("pathSuggestDiv").hidden = false;
+					} else {
+						document.getElementById("pathSuggestDiv").hidden = true;						
+					}
 				}
 			});
 		}
@@ -884,7 +1025,7 @@
 		});
 		
 		function loadInfoByFile(hpl,fileName){			
-			alert(hpl + " >> " + fileName);
+			//alert(hpl + " >> " + fileName);
 			var ctx = "[[@{/}]]"; 
 			$.ajax({
 				url : ctx+"main/pfc/loadInfoByFile?hpl="+hpl+"&file="+fileName,
@@ -893,17 +1034,171 @@
 					document.getElementById("hplModelId2").value = data.model;
 					document.getElementById("year").value = data.year;
 					document.getElementById("mth").value = data.month;
-					//document.getElementById("day").value = data.day;
 					document.getElementById("prodLn2").value = data.prodLn;	
 					document.getElementById("g2Lot2").value = data.lot;
 					
 					if(hpl === 'GTMS'){						
 						document.getElementById("seq2").value = data.seq;
+						document.getElementById("procTypeTemp").value = data.procTypeTemp ;
+						document.getElementById("subProcTemp").value = data.subProcTemp ;
+						document.getElementById("procType").value = data.procTypeTemp ; //dropdown
+						document.getElementById("subProc").value = data.subProcTemp ; //dropdown
+					} else {
+						document.getElementById("day").value = data.day;
 					}
 					
 					//reloadG2LotNumbers();
+					// load back g2 lot
+					//load back file path
+					onProdLnChange();
+					//loadCompletedG2LotOnly();
 				}				
 			});
+		}
+		
+		function loadCompletedG2LotOnly(){
+			var hplId = document.getElementById("hplId").value;		
+			var hplModelId2 = document.getElementById("hplModelId2").value;		
+			var year = document.getElementById("year").value;				
+			var mth = document.getElementById("mth").value;					
+			var prodLn2 = document.getElementById("prodLn2").value;			
+			var seq2 = document.getElementById("seq2").value;	
+			
+			alert("year="+year+"; seq="+seq2);
+			
+			var ctx = "[[@{/}]]"; 
+			var g2Lot2Temp = "[(${g2Lot2Temp})]";
+			$.ajax({
+				url : ctx+"main/pfc/loadCompletedG2LotOnly?hplId="+ hplId+"&hplModelId2="+hplModelId2+"&year="+year+"&mth="+mth+"&prodLn2="+prodLn2+"&seq2="+seq2,
+				type : "GET",
+				success : function (data) {		
+					var items = data.items;				
+					// G2 lot dropdown
+					$("#g2Lot2").empty();
+					var g2lotOption = "<option value = ''>Please Select</option>";
+					$("#g2Lot2").append(g2lotOption);
+					for(var dt in items){						
+						if(g2Lot2Temp == items[dt].lot){
+							g2lotOption = "<option value = " + items[dt].lot + " selected>" + items[dt].lot +  "</option>";
+							$("#g2Lot2").append(g2lotOption);
+						} else {
+							g2lotOption = "<option value = " + items[dt].lot + ">" + items[dt].lot +  "</option>";
+							$("#g2Lot2").append(g2lotOption);
+						}												
+					}	 	
+				}				
+			});
+		}
+		
+		function loadFilePathOnly(){
+			var hplId = document.getElementById("hplId").value;			
+			var year = document.getElementById("year").value;				
+			var mth = document.getElementById("mth").value;				
+			var prodLn2 = document.getElementById("prodLn2").value;			
+			var seq = "";		
+			var proc = document.getElementById("procType").value;	
+			var subProc = document.getElementById("subProc").value;	
+						
+			var ctx = "[[@{/}]]"; 
+			var filePath2Temp = "[(${filePath2Temp})]";
+			
+			$.ajax({
+				url : ctx+"main/pfc/loadFilePathOnly?hplId="+ hplId+"&year="+year+"&mth="+mth+"&prodLn2="+prodLn2+"&seq2="+seq
+						+"&procType="+proc+"&subProc="+subProc,
+				type : "GET",
+				success : function(data) {
+					var paths = data.pathsItems;
+					
+					// Path ddropdown
+					$("#filePath2").empty();
+					var pathOption = "<option value = ''>Please Select</option>";
+					$("#filePath2").append(pathOption);
+					for(var dt1 in paths){						
+						if(filePath2Temp == paths[dt1].filePath){
+							pathOption = "<option value = " + paths[dt1].pkRelPathId + " selected>" + paths[dt1].filePath +  "</option>";
+							$("#filePath2").append(pathOption);
+						} else {
+							pathOption = "<option value = " + paths[dt1].pkRelPathId + ">" + paths[dt1].filePath +  "</option>";
+							$("#filePath2").append(pathOption);
+						}												
+					}	 	
+					
+					if(paths === undefined || paths.length === 0) {
+						document.getElementById("pathSuggestDiv").hidden = false;
+					} else {
+						document.getElementById("pathSuggestDiv").hidden = true;						
+					}
+				}
+			});
+			
+		}
+		
+		function loadModelMonthProdLnFilePath(){
+			// for gtms - mikron only
+			var hpl = document.getElementById("hplId").value;	
+			var procType = document.getElementById("procType").value;	
+			var lot = document.getElementById("g2Lot2").value;
+			var subProc = document.getElementById("subProc").value;	
+			
+			if(hpl === 'GTMS' && procType === '1'){
+				console.log("loadModelMonthProdLnFilePath() hpl="+hpl+"; procType="+procType+"; lot="+lot);	
+				var ctx = "[[@{/}]]"; 
+				$.ajax({
+					url : ctx+"main/pfc/loadInfoByLotNo?hpl="+hpl+"&lot="+lot,
+					type : "GET",
+					success : function (data) {		
+						document.getElementById("hplModelId2").value = data.model;
+						document.getElementById("mth").value = data.mth;
+						document.getElementById("prodLn2").value = data.prodLn;		
+						loadFilePathOnly();
+						reloadPathSuggestion();
+					}				
+				});
+				
+				//loadFilePathOnly();
+				
+			} else {
+				console.log("loadModelMonthProdLnFilePath() not");
+			}			
+			
+			//reloadPathSuggestion();
+		}
+		
+		function reloadPathSuggestion(){
+			var mode = document.getElementById("formMode").text;
+			var result = "[(${defaultDataPath})]";
+			var hpl = $("#hplId option:selected").text();
+			var hplId = document.getElementById("hplId").value;	
+			var year = document.getElementById("year").value;	
+			var month = document.getElementById("mth").value;	
+			var prodLn2 = document.getElementById("prodLn2").value;	
+			var proc = document.getElementById("procType").value;	
+			var procType = $("#procType option:selected").text();
+			var subProc = document.getElementById("subProc").value;	
+			
+			if(mode == "add"){
+				if(hplId !== '')
+					result = result +  hpl + "/";
+				if(hplId !== '' && hplId === 'GTMS'){
+					if(procType !== '' && proc !== 0)
+						result = result +  procType + "/";	
+					if(prodLn2 !=='')
+						result = result + procType + "#" +prodLn2 + "/";
+					if(subProc !== '')
+						result = result +  subProc + "/";		
+				} else {
+					if(prodLn2 !=='')
+						result = result + hplId + "#" +prodLn2 + "/";						
+				}
+				if(year !== '')
+					result = result + year + "/";			
+				if(month !=='')
+					result = result + month + "/";			
+				
+				//alert("result="+result);
+				document.getElementById("relPathFilePath").value = result;		
+			}
+			
 		}
 		
 		var fileContent = document.getElementById("fileContent");
@@ -949,6 +1244,10 @@
 		    
 		    if(!$("#prodLn2").val()) {
 		    	reloadG2LotNumbers();
+		    };
+		    
+		    if(!$("#filePath2").val()) {
+		    	//alert("hello");
 		    };
 		});
 		

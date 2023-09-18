@@ -205,6 +205,30 @@ public class CommonUtil implements Serializable {
 		result.add(new LabelAndValueDto("Back End", CommonConstants.PROCESS_TYPE_HPL_BACKEND));
 		return result;		
 	}
+	
+	public static List<String> gtmsSubFoldDropdownItems(int procType) {
+		List<String> result = new ArrayList<String>();
+		if(procType == CommonConstants.PROCESS_TYPE_HPL_MIKRON) {
+			result.add(CommonConstants.PROCESS_SUBTYPE_GTMS_M_CELL1);
+			result.add(CommonConstants.PROCESS_SUBTYPE_GTMS_M_CELL2);
+			result.add(CommonConstants.PROCESS_SUBTYPE_GTMS_M_CELL3);
+			
+		} else if (procType == CommonConstants.PROCESS_TYPE_HPL_BACKEND) {
+			result.add(CommonConstants.PROCESS_SUBTYPE_GTMS_B_FET1);
+			result.add(CommonConstants.PROCESS_SUBTYPE_GTMS_B_FET2);
+			result.add(CommonConstants.PROCESS_SUBTYPE_GTMS_B_FET3);
+			
+		} else {
+			result.add(CommonConstants.PROCESS_SUBTYPE_GTMS_M_CELL1);
+			result.add(CommonConstants.PROCESS_SUBTYPE_GTMS_M_CELL2);
+			result.add(CommonConstants.PROCESS_SUBTYPE_GTMS_M_CELL3);
+			result.add(CommonConstants.PROCESS_SUBTYPE_GTMS_B_FET1);
+			result.add(CommonConstants.PROCESS_SUBTYPE_GTMS_B_FET2);
+			result.add(CommonConstants.PROCESS_SUBTYPE_GTMS_B_FET3);
+		}
+		
+		return result;		
+	}
 
 	public static boolean isPathValid(String path) {
 
@@ -362,7 +386,7 @@ public class CommonUtil implements Serializable {
 			}
 
 		} catch (Exception ex) {
-			if (StringUtils.equalsIgnoreCase(hplName, CommonConstants.RECORD_TYPE_ID_HPL_IF)) {
+		//	if (StringUtils.equalsIgnoreCase(hplName, CommonConstants.RECORD_TYPE_ID_HPL_IF)) {
 				switch (month) {
 				case "X":
 					result = "10";
@@ -376,7 +400,7 @@ public class CommonUtil implements Serializable {
 				default:
 					result = "";
 				}
-			}
+			//}
 		}
 
 		return result;

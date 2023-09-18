@@ -28,6 +28,7 @@ public class RelPathDto2 {
 	private String indicator;
 	private int rowNo;
 	private Integer procType;
+	private String subProc;
 	
 	@Override
 	public String toString() {
@@ -40,6 +41,7 @@ public class RelPathDto2 {
 		+ ";filePath=" + filePath
 		+ ";prodFileFormat=" + prodFileFormat
 		+ ";procType=" + procType
+		+ ";subProc=" + subProc
 		;
 	}
 }
