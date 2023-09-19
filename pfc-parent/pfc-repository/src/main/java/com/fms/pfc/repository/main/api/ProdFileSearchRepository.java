@@ -74,6 +74,7 @@ public interface ProdFileSearchRepository extends JpaRepository<ProdFileSearch, 
 			+ "	 ) "
 			+ " ) "
 			+ ") tbl "
+			+ "order by tbl.CREATED_DATETIME desc"
 			, nativeQuery = true)
 	public List<ProdFileSearch> searchTop5ByCriteria(String searchHplId, String searchHplModelId, String searchYear,
 			String searchMth, String g2LotNo, String g2LotNoExp, String path, String pathExp);

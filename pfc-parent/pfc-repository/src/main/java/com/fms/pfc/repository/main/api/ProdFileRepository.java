@@ -1,5 +1,7 @@
 package com.fms.pfc.repository.main.api;
 
+import java.util.List;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
@@ -23,4 +25,7 @@ public interface ProdFileRepository extends JpaRepository<ProdFile, Integer> {
 			+ "and G2_LOT_NO = ?2 "
 			+ "and HPL = ?3 ", nativeQuery = true)
 	Integer countDuplicateFile(String fileName, String lotNo, String hpl);
+	
+	@Query(value = "select HPL, count(*) as CNT from PROD_FILE where 1=1 group by HPL", nativeQuery = true)
+	List<Object[]> fileCountByHpl();
 }

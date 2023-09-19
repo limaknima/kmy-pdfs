@@ -109,16 +109,26 @@ public class MenuController {
 		model.put("cols", String.join(",", cols));
 		// model.put("data", String.join(",", data));
 
-		PieChartJs pc = new PieChartJs();
+		PieChartJs pcLot = new PieChartJs();
 		List<String> bg = new ArrayList<String>();
-		pc.setData(result.stream().map(arg0 -> (Integer) arg0[1]).collect(Collectors.toList()));
+		pcLot.setData(result.stream().map(arg0 -> (Integer) arg0[1]).collect(Collectors.toList()));
 		for (int idx = 0; idx < result.size(); idx++) {
 			bg.add(CommonUtil.randomHexColor());
 		}
-		pc.setBackgroundColor(bg);
+		pcLot.setBackgroundColor(bg);		
+
+		List<Object[]> result2 = pfServ.fileCountByHpl();
+		PieChartJs pcFile = new PieChartJs();
+		List<String> bg2 = new ArrayList<String>();
+		pcFile.setData(result2.stream().map(arg0 -> (Integer) arg0[1]).collect(Collectors.toList()));
+		for (int idx = 0; idx < result.size(); idx++) {
+			bg2.add(CommonUtil.randomHexColor());
+		}
+		pcFile.setBackgroundColor(bg2);
 
 		List<PieChartJs> pcList = new ArrayList<MenuController.PieChartJs>();
-		pcList.add(pc);
+		pcList.add(pcLot);
+		pcList.add(pcFile);
 
 		logger.debug("pcjs ={}", pcList);
 		model.put("pcList", pcList);

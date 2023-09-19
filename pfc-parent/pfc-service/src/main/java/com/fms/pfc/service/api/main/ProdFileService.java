@@ -455,6 +455,14 @@ public class ProdFileService {
 	public Integer countDuplicateFile(String fileName, String lotNo, String hpl) {
 		return prodFileRepo.countDuplicateFile(fileName, lotNo, hpl);
 	}
+	
+	/**
+	 * Count file by HPL
+	 * @return List<Object[]>
+	 */
+	public List<Object[]> fileCountByHpl(){
+		return prodFileRepo.fileCountByHpl();
+	}
 
 	/**
 	 * Save file to disk

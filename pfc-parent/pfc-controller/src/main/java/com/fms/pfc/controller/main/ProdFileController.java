@@ -1066,6 +1066,7 @@ public class ProdFileController {
 		
 		if ((Integer) model.get("pathsItemsSize") != 0) {
 			errorMsg += commonValServ.validateMandatoryInput(dto.getFilePath(), FILE_PATH_LBL);
+			model.put("autoCreateIndicator", false);
 		} else {
 			// if no path found from FoldCatConf, notify user through info
 			String info = commonValServ.validateMandatoryInput(dto.getFilePath(), FILE_PATH_LBL);
