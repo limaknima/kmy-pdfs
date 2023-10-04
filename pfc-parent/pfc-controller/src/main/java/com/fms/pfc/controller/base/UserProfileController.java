@@ -413,7 +413,7 @@ public class UserProfileController {
 			model.put("creator", usr.getCreatorId());
 			model.put("modifier", usr.getModifierId());
 			
-			//getAuthLevel(request);
+			getAuthLevel(request);
 			//if ((Boolean) model.get("authLvl2")) {
 				model.put("btnEditHid", (Boolean) model.get("hidFunctionType_2"));
 				model.put("btnResetPassHid", (Boolean) model.get("hidFunctionType_2"));
@@ -426,16 +426,19 @@ public class UserProfileController {
 
 			DateFormat formatter = new SimpleDateFormat("dd/MM/yyy hh:mm:ss a");
 			// Get current login user
-			String loginUsr = request.getRemoteUser();
+			//String loginUsr = request.getRemoteUser();
 			// Search current login user's role
-			List<UsrRole> usrRoleList = userRoleServ.searchUserRole(loginUsr).stream()
-					.filter(arg0 -> arg0.getUserId().equals(loginUsr)).collect(Collectors.toList());
+		//	List<UsrRole> usrRoleList = userRoleServ.searchUserRole(loginUsr).stream()
+		//			.filter(arg0 -> arg0.getUserId().equals(loginUsr)).collect(Collectors.toList());
 
 			// If role equals SUSR enable checkbox
-			for (UsrRole usrList : usrRoleList) {
+			/*for (UsrRole usrList : usrRoleList) {
 				if (usrList.getRoleId().equals(CommonConstants.ROLE_ID_ADM)) {
 					model.put("enableChk", "enable");
 				}
+			}*/
+			if ((Boolean) model.get("authLvl2")) {
+				model.put("enableChk", "enable");
 			}
 
 			try {
@@ -455,7 +458,7 @@ public class UserProfileController {
 				model.put("checkbox", false);
 				model.remove("unlockChk");
 				
-				for (UsrRole usrList : usrRoleList) {
+				/*for (UsrRole usrList : usrRoleList) {
 
 					if (usrList.getRoleId().equals(CommonConstants.ROLE_ID_ADM)) {
 						model.put("lockChk", "lock");
@@ -464,13 +467,20 @@ public class UserProfileController {
 						model.put("lockMsg",
 								msgSource.getMessage("lockConfirmMsg", new Object[] { userId }, Locale.getDefault()));
 					}
+				}*/
+				if ((Boolean) model.get("authLvl2")) {
+					model.put("lockChk", "lock");
+					model.put("lockHeader",
+							msgSource.getMessage("lockConfirmHeader", new Object[] {}, Locale.getDefault()));
+					model.put("lockMsg",
+							msgSource.getMessage("lockConfirmMsg", new Object[] { userId }, Locale.getDefault()));
 				}
 
 			} else {
 				model.put("checkbox", true);
 				model.remove("lockChk");
 
-				for (UsrRole usrList : usrRoleList) {
+				/*for (UsrRole usrList : usrRoleList) {
 
 					if (usrList.getRoleId().equals(CommonConstants.ROLE_ID_ADM)) {
 						model.put("unlockChk", "unlock");
@@ -479,6 +489,14 @@ public class UserProfileController {
 						model.put("unlockMsg",
 								msgSource.getMessage("unlockConfirmMsg", new Object[] { userId }, Locale.getDefault()));
 					}
+				}*/
+				
+				if ((Boolean) model.get("authLvl2")) {
+					model.put("unlockChk", "unlock");
+					model.put("unlockHeader",
+							msgSource.getMessage("unlockConfirmHeader", new Object[] {}, Locale.getDefault()));
+					model.put("unlockMsg",
+							msgSource.getMessage("unlockConfirmMsg", new Object[] { userId }, Locale.getDefault()));
 				}
 			}
 
@@ -520,13 +538,15 @@ public class UserProfileController {
 	}
 
 	private void sendEmail(String email, String userId, String password) {
-		String content = "User password for " + userId + " .\n" + "Kindly use this password to login pfc\n" + password
-				+ "\n" + "Thank you.";
+		//String content = "User password for " + userId + " .\n" + "Kindly use this password to login pfc\n" + password
+		//		+ "\n" + "Thank you.";
+		
+		AlertMessage alertMsg = alertMsgServ.searchAlertById(AlertDefEnum.PWD_LOGIN.strValue());
 
 		SimpleMailMessage msg = new SimpleMailMessage();
 		msg.setTo(email);
-		msg.setSubject("pfc User Password");
-		msg.setText(content);
+		msg.setSubject(alertMsg.getSubject().replace("@UserName", userId));
+		msg.setText(alertMsg.getDescription().replace("[@Pwd]", password));
 
 		javaMailSender.send(msg);
 	}
@@ -687,7 +707,8 @@ public class UserProfileController {
 		for (UsrRole usrRole : usrRoleList) {
 			if (usrRole.getRoleId().equals(CommonConstants.ROLE_ID_CHECKER)
 					|| usrRole.getRoleId().equals(CommonConstants.ROLE_ID_SUPERUSER)
-					|| usrRole.getRoleId().equals(CommonConstants.ROLE_ID_HOD)) {
+					|| usrRole.getRoleId().equals(CommonConstants.ROLE_ID_HOD)
+					|| usrRole.getRoleId().equals(CommonConstants.ROLE_ID_ADM)) {
 				authLvl2 = true;
 			}
 

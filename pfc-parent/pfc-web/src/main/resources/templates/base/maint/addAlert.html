@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
-<title>PFC - Add Alert Panel</title>
+<title th:text="#{pageTitle('Alert Message Form')}"></title>
 <link rel="icon" type="image/ico" th:href="@{/static/favicon.ico}">
 <link rel="stylesheet" type="text/css" th:href="@{/css/styles.css}" />
 <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css">
@@ -26,7 +26,7 @@
 					<ol class="breadcrumb mb-4">
 						<li class="breadcrumb-item active" ><a th:href="@{/}"><i class="fa fa-home"></i></a></li>
 						<li class="breadcrumb-item active" ><a th:href="@{/menu/maintenanceMenu}"><span th:text="#{menuMaint}"></span></a></li>
-						<li class="breadcrumb-item active" >Alert Message</li>
+						<li class="breadcrumb-item active" >Alert Message Form</li>
 					</ol>
 					<div class="alert alert-danger alert-dismissible" th:if="${error}">
 						<a class="close" data-dismiss="alert" aria-label="close">&times;</a>

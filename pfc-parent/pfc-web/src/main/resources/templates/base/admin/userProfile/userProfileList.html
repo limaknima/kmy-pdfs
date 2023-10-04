@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
-<title>PFC - User Profile List</title>
+<title th:text="#{pageTitle('User Profile List')}"></title>
 <link rel="icon" type="image/ico" th:href="@{/static/favicon.ico}">
 <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.0/css/all.css">
 <link rel="stylesheet" type="text/css" th:href="@{/css/styles.css}" />
@@ -211,16 +211,17 @@
 										</div>
 									</div>
 								</div>
-								<table class="table table-bordered table-responsive" id="idTable">
+								<table class="table table-bordered" id="idTable">
 									<thead>
 										<tr>
 											<th scope="col" width="40px"><input type="checkbox"
 												id="checkAll"></th>
-											<th scope="col" width="200px">Organization Name</th>
-											<th scope="col" width="100px">User ID</th>
-											<th scope="col" width="100px">User Name</th>
-											<th scope="col" width="150px">Email Address</th>
-											<th scope="col" width="150px">User Group</th>
+											<th scope="col">Organization Name</th>
+											<th scope="col">User ID</th>
+											<th scope="col">User Name</th>
+											<th scope="col">Email Address</th>
+											<th scope="col">User Group</th>
+											<th scope="col">Account Disabled?</th>
 										</tr>
 									</thead>
 									<tbody>
@@ -235,6 +236,7 @@
 											<td th:text="${upItem.userName}"></td>
 											<td th:text="${upItem.email}"></td>
 											<td th:text="${upItem.groupName}"></td>
+											<td th:text="${upItem.disabledFlag} == 'N' ? 'No' : 'Yes'"></td>
 										</tr>
 									</tbody>
 								</table>

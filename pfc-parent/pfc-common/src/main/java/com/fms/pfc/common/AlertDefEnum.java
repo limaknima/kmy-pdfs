@@ -32,7 +32,8 @@ public enum AlertDefEnum implements Serializable{
 	PR_CHG_BYMTL("PR_CHG_BYMTL"),
 	RM_AMEND_FS("RM_AMEND_FS"),
 	RM_AMEND_FS_APPR("RM_AMEND_FS_APPR"),
-	FILE_COMPARE("FILE-COMPARE")	
+	FILE_COMPARE("FILE-COMPARE"),
+	PWD_LOGIN("PWD-LOGIN")
 	;
 
 	private String alertDefKey;

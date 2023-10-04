@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
-<title>PFC - Scheduler Activity Log</title>
+<title th:text="#{pageTitle('Scheduler Activity Log	List')}"></title>
 <link rel="icon" type="image/ico" th:href="@{/static/favicon.ico}">
 <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.0/css/all.css">
 <link rel="stylesheet" type="text/css" th:href="@{/css/styles.css}" />
@@ -36,7 +36,7 @@
 					<div id="accordionExample">
 						<div class="card">
 							<div class="card-header" id="headingTwo">Scheduler Activity Log
-								Listing</div>
+								List</div>
 							<div class="card-body">
 								<form action="#" th:action="@{/base/maint/deleteSchedulerActLog}"
 									method="post">
