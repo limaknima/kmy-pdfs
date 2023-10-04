@@ -74,12 +74,14 @@ public interface G2LotViewRepository extends JpaRepository<G2LotView, String> {
 	List<String> hplModelList (String hpl);
 	
 	@Query(value = "select distinct YEAR from CV22PDF where 1=1 "
+			+ "and ISNUMERIC(YEAR) = 1 "
 			+ "and ('' = ?1 or HPL = ?1) "
 			+ "and ('' = ?2 or MODEL = ?2) "
 			+ "order by YEAR ", nativeQuery = true)
 	List<String> yearList (String hpl, String model);
 	
 	@Query(value = "select distinct MTH from CV22PDF where 1=1 "
+			+ "and ISNUMERIC(MTH) = 1 "
 			+ "and ('' = ?1 or HPL = ?1) "
 			+ "and ('' = ?2 or MODEL = ?2) "
 			+ "and ('' = ?3 or YEAR = ?3) "
@@ -87,6 +89,7 @@ public interface G2LotViewRepository extends JpaRepository<G2LotView, String> {
 	List<String> monthList (String hpl, String model, String year);
 	
 	@Query(value = "select distinct DDAY from CV22PDF where 1=1 "
+			+ "and ISNUMERIC(DDAY) = 1 "
 			+ "and ('' = ?1 or HPL = ?1) "
 			+ "and ('' = ?2 or MODEL = ?2) "
 			+ "and ('' = ?3 or YEAR = ?3) "
