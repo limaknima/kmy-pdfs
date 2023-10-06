@@ -15,6 +15,7 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import javax.validation.Valid;
 
+import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -107,11 +108,8 @@ public class UserProfileController {
 		auth.isAuthUrl(request, response);
 		mrfServ.menuRoleFunction(model, MENU_ITEM_ID, (String) model.get("loggedUser"));
 		
-		model.put("userProfileItem", userProfileServ.searchUserProfile("", "", "", "", "", "", "", "", "")
-				.stream().filter(arg0 -> arg0.getOrgId().equals((String) model.get("loggedUserOrg")))
-				.collect(Collectors.toList()));
-		model.put("groupItem", groupServ.searchGroup((String) model.get("loggedUserOrg"), ""));// FSGS) Azmeer 01/03/2021 - Add data for User Group dropdown
-
+		filter(true);		
+		
 		// FSGS) Faiz 01/03/2021 - change field value to model START
 		model.put("para1", 1);
 		model.put("para2", 1);
@@ -128,6 +126,45 @@ public class UserProfileController {
 		return new ModelAndView("/base/admin/userProfile/userProfileList", model);
 	}
 	
+	/**
+	 * Record and criteria filtering
+	 * @param init
+	 */
+	private void filter(boolean init) {
+		boolean isSuperUser = (Boolean) model.get("isSuperUser");
+		String grp = (String) model.get("loggedUserGrp");
+		logger.debug("filter() grp={},isSuperUser={}",grp,isSuperUser);
+		
+		if (init) {
+			// check if user is not super user, do filtering
+			if (!isSuperUser) {
+				model.put("userProfileItem", userProfileServ.searchUserProfile("", "", "", "", grp, "", "", "", "")
+						.stream().filter(arg0 -> arg0.getOrgId().equals((String) model.get("loggedUserOrg")))
+						.collect(Collectors.toList()));
+				model.put("groupItem", groupServ.searchGroup((String) model.get("loggedUserOrg"), grp));// FSGS) Azmeer 01/03/2021 - Add data for User Group dropdown
+
+			} else {
+				model.put("userProfileItem", userProfileServ.searchUserProfile("", "", "", "", "", "", "", "", "")
+					.stream().filter(arg0 -> arg0.getOrgId().equals((String) model.get("loggedUserOrg")))
+					.collect(Collectors.toList()));
+				model.put("groupItem", groupServ.searchGroup((String) model.get("loggedUserOrg"), ""));// FSGS) Azmeer 01/03/2021 - Add data for User Group dropdown
+
+			}
+		} else {
+			// check if user is not super user, do filtering
+			if (!isSuperUser) {
+				model.put("groupItem", groupServ.searchGroup((String) model.get("loggedUserOrg"), grp));// FSGS) Azmeer 01/03/2021 - Add data for User Group dropdown
+			} else {
+				model.put("groupItem", groupServ.searchGroup((String) model.get("loggedUserOrg"), ""));
+			}
+		}
+		
+		// for search
+		if (!isSuperUser) {
+			model.put("filterGrp", grp);
+		}
+	}
+	
 	// Display search results
 	@PostMapping("/base/admin/userProfile/userProfileSearch")
 	public ModelAndView getSearchResult(HttpServletRequest request, @RequestParam(name = "orgName") String orgName,
@@ -138,6 +175,9 @@ public class UserProfileController {
 			HttpSession session) {
 
 		boolean hasError = false;
+		
+		if (StringUtils.isNotEmpty((String) model.get("filterGrp")))
+			gpName = (String) model.get("filterGrp");
 
 		// FSGS) Faiz 01/03/2021 - change field value to model START
 		model.put("orgName", orgName);
@@ -211,14 +251,14 @@ public class UserProfileController {
 	@GetMapping("/base/admin/userProfile/userProfileForm")
 	public ModelAndView getUserProfileForm(HttpServletRequest request) {
 
-		model = auth.onPageLoad(model, request);
+		//model = auth.onPageLoad(model, request);
 		model.remove("success");
 		model.remove("error");
 		model.put("mode", "add");
 		model.put("header", "Add User Profile");
 		model.put("confirmHeader", msgSource.getMessage("cancelConfirmHeader", new Object[] {}, Locale.getDefault()));
 		model.put("confirmMsg", msgSource.getMessage("cancelConfirmMsg", new Object[] {}, Locale.getDefault()));
-		model.put("groupItem", groupServ.searchGroup((String) model.get("loggedUserOrg"), ""));
+		filter(false);
 		model.put("roleItem", roleServ.searchUserRole("", "", "", "").stream()
 				.filter(arg0 -> arg0.getOrgId().equals((String) model.get("loggedUserOrg")))
 				.collect(Collectors.toList()));
@@ -374,7 +414,11 @@ public class UserProfileController {
 			}
 		}
 
-		model.put("userProfileItem", userProfileServ.searchUserProfile("", "", "", "", "", "", "", "", "")
+		String grp = "";
+		if (StringUtils.isNotEmpty((String) model.get("filterGrp")))
+			grp = (String) model.get("filterGrp");
+		
+		model.put("userProfileItem", userProfileServ.searchUserProfile("", "", "", "", grp, "", "", "", "")
 				.stream().filter(arg0 -> arg0.getOrgId().equals((String) model.get("loggedUserOrg")))
 				.collect(Collectors.toList()));
 		return new ModelAndView("/base/admin/userProfile/userProfileList", model);
@@ -397,7 +441,7 @@ public class UserProfileController {
 			model.remove("checkbox");
 			model.put("confirmHeader", msgSource.getMessage("editConfirmHeader", new Object[] {}, Locale.getDefault()));
 			model.put("confirmMsg", msgSource.getMessage("editConfirmMsg", new Object[] {}, Locale.getDefault()));
-			model.put("groupItem", groupServ.searchGroup((String) model.get("loggedUserOrg"), ""));
+			filter(false);
 			model.put("userRoleItem", userRoleServ.searchUserRole(userId).stream()
 					.filter(arg0 -> arg0.getUserId().equals(userId)).collect(Collectors.toList()));
 			model.put("roleItem", roleServ.searchListBoxUserRole(userId).stream()
@@ -528,6 +572,10 @@ public class UserProfileController {
 		} catch (Exception e) {
 			model.put("error", msgSource.getMessage("msgFailDelete", new Object[] {}, Locale.getDefault()));
 		}
+		
+		String grp = "";
+		if (StringUtils.isNotEmpty((String) model.get("filterGrp")))
+			grp = (String) model.get("filterGrp");
 
 		model.put("userProfileItem", userProfileServ.searchUserProfile("", "", "", "", "", "", "", "", "")
 				.stream().filter(arg0 -> arg0.getOrgId().equals((String) model.get("loggedUserOrg")))
@@ -545,7 +593,7 @@ public class UserProfileController {
 
 		SimpleMailMessage msg = new SimpleMailMessage();
 		msg.setTo(email);
-		msg.setSubject(alertMsg.getSubject().replace("@UserName", userId));
+		msg.setSubject(alertMsg.getSubject().replace("[@UserName]", userId));
 		msg.setText(alertMsg.getDescription().replace("[@Pwd]", password));
 
 		javaMailSender.send(msg);

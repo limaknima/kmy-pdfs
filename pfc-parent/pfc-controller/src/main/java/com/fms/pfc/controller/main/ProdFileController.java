@@ -106,6 +106,7 @@ public class ProdFileController {
 	private static String FILE_NAME_LBL = "";
 	private static String FILE_PATH_LBL = "";
 	private static String G2_LOT_LBL = "";
+	private static String SEQ_LBL = "";
 	private static String MODULE_NAME = "";
 	private static final int YEAR_COUNT = 20;
 	private static final int MENU_ITEM_ID = 1201;
@@ -1065,6 +1066,11 @@ public class ProdFileController {
 		errorMsg += commonValServ.validateMandatoryInput(dto.getYear(), YEAR_LBL);
 		errorMsg += commonValServ.validateMandatoryInput(dto.getG2Lot(), G2_LOT_LBL);
 		
+		if (StringUtils.isNotEmpty(dto.getHpl())
+				&& StringUtils.equals(dto.getHpl(), CommonConstants.RECORD_TYPE_ID_HPL_GTMS)) {
+			errorMsg += commonValServ.validateMandatoryInput(dto.getSeq(), SEQ_LBL);
+		}
+		
 		if ((Integer) model.get("pathsItemsSize") != 0) {
 			errorMsg += commonValServ.validateMandatoryInput(dto.getFilePath(), FILE_PATH_LBL);
 			model.put("autoCreateIndicator", false);
@@ -1614,6 +1620,7 @@ public class ProdFileController {
 		FILE_NAME_LBL = msgSource.getMessage("lblFileName", null, Locale.getDefault());
 		FILE_PATH_LBL = msgSource.getMessage("lblFilePath", null, Locale.getDefault());
 		G2_LOT_LBL = msgSource.getMessage("lblG2LotNo", null, Locale.getDefault());
+		SEQ_LBL = msgSource.getMessage("lblSeq", null, Locale.getDefault());
 		MODULE_NAME = msgSource.getMessage("menuProdFile", null, Locale.getDefault());
 	}
 

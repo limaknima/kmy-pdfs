@@ -150,8 +150,8 @@
 															Select</option>
 														<!-- <option hidden="true">Please Select</option> -->
 														<option th:each="gItem : ${groupItem}"
-															th:value="${gItem.groupName}" th:utext="${gItem.groupName}"
-															th:selected="${gpName == gItem.groupName}">
+															th:value="${gItem.groupId}" th:utext="${gItem.groupName}"
+															th:selected="${gpName == gItem.groupId}">
 														</option>
 													</select>
 													<!-- FSGS) Azmeer 02/03/2021 - Add dropdown for User GroupEND -->

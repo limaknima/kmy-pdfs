@@ -37,7 +37,7 @@ public interface UserProfileRepository extends JpaRepository<UsrProfile, String>
 			+ "					     			   when ?9 = '2' then concat('%', ?4) "
 			+ "        				 			   when ?9 = '3' then ?4 "
 			+ "        				 		  	   when ?9 = '4' then concat(?4, '%') end))"
-			+ " and (?5 = '' or grp.group_name = ?5) ", nativeQuery = true)
+			+ " and (?5 = '' or usr.group_ID = ?5) ", nativeQuery = true)
 
 	//Parameters for search query
 	List<UsrProfile> searchUserProfile(String orgName, String userID, String userName, String email, 
