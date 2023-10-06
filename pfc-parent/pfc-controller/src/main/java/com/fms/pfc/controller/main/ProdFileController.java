@@ -1063,6 +1063,7 @@ public class ProdFileController {
 		errorMsg += commonValServ.validateMandatoryInput(dto.getHpl(), HPL_LBL);
 		errorMsg += commonValServ.validateMandatoryInput(dto.getProdLn(), PROD_LN_LBL);
 		errorMsg += commonValServ.validateMandatoryInput(dto.getYear(), YEAR_LBL);
+		errorMsg += commonValServ.validateMandatoryInput(dto.getG2Lot(), G2_LOT_LBL);
 		
 		if ((Integer) model.get("pathsItemsSize") != 0) {
 			errorMsg += commonValServ.validateMandatoryInput(dto.getFilePath(), FILE_PATH_LBL);
@@ -1071,8 +1072,11 @@ public class ProdFileController {
 			// if no path found from FoldCatConf, notify user through info
 			String info = commonValServ.validateMandatoryInput(dto.getFilePath(), FILE_PATH_LBL);
 			if (!info.isEmpty()) {
-				info += "Path automatically created" + BREAKLINE;
-				model.put("info", info);
+				info += FILE_PATH_LBL + " will automatically be created" + BREAKLINE;
+				if (StringUtils.isEmpty(errorMsg)) {
+					// only display if no error message
+					model.put("info", info);
+				}
 				model.put("autoCreateIndicator", true);
 			} else {
 				model.put("autoCreateIndicator", false);

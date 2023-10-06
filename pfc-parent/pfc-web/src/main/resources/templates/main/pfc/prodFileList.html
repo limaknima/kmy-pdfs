@@ -230,7 +230,8 @@
 											<th scope="col" th:text="#{lblHpl}"></th>
 											<th scope="col" th:text="#{lblG2LotNo}"></th>
 											<th scope="col" th:text="#{lblFilePath}"></th>											
-											<th scope="col" th:text="#{lblFileName}"></th>
+											<th scope="col" th:text="#{lblFileName}"></th>									
+											<th scope="col" th:text="#{lblCreator}"></th>
 										</tr>
 									</thead>
 									<tbody>
@@ -244,6 +245,7 @@
 											<td th:text="${prodFileItem.g2Lot}"></td>
 											<td th:text="${prodFileItem.filePath}"></td>
 											<td th:text="${prodFileItem.fileName}"></td>
+											<td th:text="${prodFileItem.creatorId}"></td>
 										</tr>
 									</tbody>
 								</table>

@@ -258,7 +258,7 @@
 									<div class="row col-sm-5">
 										<label class="col-form-label">:</label>
 										<div class="col">
-											<select id="day" class="custom-select" name="day" th:value="${day}" disabled >
+											<select id="day" class="custom-select" name="day" th:field="*{day}" disabled >
 												<option value="" selected hidden="true">Please Select</option>
 												<option th:each="dayItem: ${dayItems}"
 													th:value="${dayItem.strValue}"
@@ -372,7 +372,7 @@
 												<option value="" selected hidden="true">Please Select</option>
 											</select>
 											<div id="pathSuggestDiv" hidden="true">											
-												<label><span id="remarkPathLbl" style="font-style: italic;font-size: 14px">Note: System default path suggestion if it's not exist in the selection above:</span></label>
+												<label><span id="remarkPathLbl" style="font-style: italic;font-size: 14px">Note: System default path suggestion if it's not exist in the selection above (Only applicable if there is G2 Lot No available to be selected):</span></label>
 												<textarea name="relPathFilePath"
 															id="relPathFilePath" readonly th:text="${relPathFilePath}"
 															class="form-control-plaintext"
@@ -795,6 +795,7 @@
 		}
 		
 		function onHplChange() {
+			console.log("onHplChange() ... ");
 			var id = document.getElementById("hplId").value;			
 			var ctx = "[[@{/}]]"; 
 			var hplModelId2Temp = "[(${hplModelId2Temp})]";
@@ -844,6 +845,7 @@
 		}
 		
 		function reloadG2LotNumbers() {
+			console.log("reloadG2LotNumbers() ... ");
 			var hplId = document.getElementById("hplId").value;		
 			var hplModelId2 = document.getElementById("hplModelId2").value;		
 			var year = document.getElementById("year").value;				
@@ -891,7 +893,7 @@
 					var pathOption = "<option value = ''>Please Select</option>";
 					$("#filePath2").append(pathOption);
 					for(var dt1 in paths){						
-						if(filePath2Temp == paths[dt1].filePath){
+						if(filePath2Temp == paths[dt1].pkRelPathId){
 							pathOption = "<option value = " + paths[dt1].pkRelPathId + " selected>" + paths[dt1].filePath +  "</option>";
 							$("#filePath2").append(pathOption);
 						} else {
@@ -941,6 +943,7 @@
 		}
 		
 		function onProdLnChange() {
+			console.log("onProdLnChange() ... ");
 			var hplId = document.getElementById("hplId").value;		
 			var hplModelId2 = document.getElementById("hplModelId2").value;		
 			var year = document.getElementById("year").value;				
@@ -981,7 +984,7 @@
 					var pathOption = "<option value = ''>Please Select</option>";
 					$("#filePath2").append(pathOption);
 					for(var dt1 in paths){						
-						if(filePath2Temp == paths[dt1].filePath){
+						if(filePath2Temp == paths[dt1].pkRelPathId){
 							pathOption = "<option value = " + paths[dt1].pkRelPathId + " selected>" + paths[dt1].filePath +  "</option>";
 							$("#filePath2").append(pathOption);
 						} else {
@@ -1024,7 +1027,8 @@
 				
 		});
 		
-		function loadInfoByFile(hpl,fileName){			
+		function loadInfoByFile(hpl,fileName){	
+			console.log("loadInfoByFile() ... ");		
 			//alert(hpl + " >> " + fileName);
 			var ctx = "[[@{/}]]"; 
 			$.ajax({
@@ -1057,6 +1061,7 @@
 		}
 		
 		function loadCompletedG2LotOnly(){
+			console.log("loadCompletedG2LotOnly() ... ");	
 			var hplId = document.getElementById("hplId").value;		
 			var hplModelId2 = document.getElementById("hplModelId2").value;		
 			var year = document.getElementById("year").value;				
@@ -1091,6 +1096,7 @@
 		}
 		
 		function loadFilePathOnly(){
+			console.log("loadFilePathOnly() ... ");	
 			var hplId = document.getElementById("hplId").value;			
 			var year = document.getElementById("year").value;				
 			var mth = document.getElementById("mth").value;				
@@ -1114,7 +1120,7 @@
 					var pathOption = "<option value = ''>Please Select</option>";
 					$("#filePath2").append(pathOption);
 					for(var dt1 in paths){						
-						if(filePath2Temp == paths[dt1].filePath){
+						if(filePath2Temp == paths[dt1].pkRelPathId){
 							pathOption = "<option value = " + paths[dt1].pkRelPathId + " selected>" + paths[dt1].filePath +  "</option>";
 							$("#filePath2").append(pathOption);
 						} else {
@@ -1134,6 +1140,7 @@
 		}
 		
 		function loadModelMonthProdLnFilePath(){
+			console.log("loadModelMonthProdLnFilePath() ... ");	
 			// for gtms - mikron only
 			var hpl = document.getElementById("hplId").value;	
 			var procType = document.getElementById("procType").value;	
@@ -1166,6 +1173,7 @@
 		}
 		
 		function reloadPathSuggestion(){
+			console.log("reloadPathSuggestion() ... ");	
 			var mode = document.getElementById("formMode").text;
 			var result = "[(${defaultDataPath})]";
 			var hpl = $("#hplId option:selected").text();
@@ -1177,7 +1185,7 @@
 			var procType = $("#procType option:selected").text();
 			var subProc = document.getElementById("subProc").value;	
 			
-			if(mode == "add"){
+		//	if(mode == "add"){
 				if(hplId !== '')
 					result = result +  hpl + "/";
 				if(hplId !== '' && hplId === 'GTMS'){
@@ -1198,7 +1206,7 @@
 				
 				//alert("result="+result);
 				document.getElementById("relPathFilePath").value = result;		
-			}
+			//}
 			
 		}
 		
