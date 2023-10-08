@@ -318,7 +318,7 @@ public class CommonConstants implements Serializable {
 
 	public static final int FILENAME_LEN_IF = 14;
 	public static final int FILENAME_LEN_MGG = 17;
-	public static final int FILENAME_LEN_GTMS_M = 12;
+	public static final int FILENAME_LEN_GTMS_M = 13;
 	public static final int FILENAME_LEN_GTMS_B1 = 17;
 	public static final int FILENAME_LEN_GTMS_B2 = 12;	
 
