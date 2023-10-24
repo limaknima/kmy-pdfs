@@ -61,4 +61,12 @@ public interface LoginRepository extends JpaRepository<Usr, String> {
 	@Transactional
 	@Query(value = "UPDATE USR SET DISABLED_FLAG = 'Y' WHERE USER_ID = ?1", nativeQuery = true)
 	void lockUser(String user_id);
+	
+	@Query(value = "select "
+			+ "USR.* "
+			+ "from USR "
+			+ "left join USR_ROLE on USR.USER_ID = USR_ROLE.USER_ID "
+			+ "where 1=1 "
+			+ "and ('' = ?1 or USR_ROLE.ROLE_ID = ?1) ", nativeQuery = true)
+	List<Usr> searchUserByRole(String roleId);
 }

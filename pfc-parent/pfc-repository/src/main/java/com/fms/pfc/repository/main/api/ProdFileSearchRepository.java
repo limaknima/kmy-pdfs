@@ -40,10 +40,17 @@ public interface ProdFileSearchRepository extends JpaRepository<ProdFileSearch, 
 			+ "	 when ?8 = '4' then concat(?7, '%') end "
 			+ "	 ) "
 			+ " ) "
+			+ "	and (?9 = '' OR ( "
+			+ "		pf.FILE_NAME like case when ?10 = '1' then concat('%', ?9, '%') "
+			+ "		when ?10 = '2' then concat('%', ?9) "
+			+ "		when ?10 = '3' then ?9 "
+			+ "		when ?10 = '4' then concat(?9, '%') end "
+			+ "	 ) "
+			+ " ) "
 			+ ") tbl "
 			, nativeQuery = true)
 	public List<ProdFileSearch> searchByCriteria(String searchHplId, String searchHplModelId, String searchYear,
-			String searchMth, String g2LotNo, String g2LotNoExp, String path, String pathExp);
+			String searchMth, String g2LotNo, String g2LotNoExp, String path, String pathExp, String fn, String fnExp);
 	
 	@Query(value = "select top 5 * from ( "
 			+ " select "

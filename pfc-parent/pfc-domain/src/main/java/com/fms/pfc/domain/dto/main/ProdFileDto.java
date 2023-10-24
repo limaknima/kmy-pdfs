@@ -2,8 +2,6 @@ package com.fms.pfc.domain.dto.main;
 
 import java.util.Date;
 
-import javax.persistence.Column;
-
 import org.springframework.web.multipart.MultipartFile;
 
 import lombok.AllArgsConstructor;

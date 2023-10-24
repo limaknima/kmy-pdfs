@@ -171,6 +171,10 @@ public class Testing {
 		
 		System.out.println("prdln="+CommonUtil.prodLnConversionFromFileName("A", "IF"));
 		
+		if(StringUtils.startsWith(s, "KMY")) {
+			System.out.println("file starts with kmy " + s);
+		}
+		
 	}
 
 	private static void zipFolder(Path sourceFolderPath, Path zipPath) throws Exception {
@@ -547,15 +551,16 @@ public class Testing {
 		
 //		String originalFileName = "220517_KX225HD.csv";// IF
 //		String originalFileName = "569_2021073107480.csv";// MGG
-		String originalFileName = "KMY210104504.txt";// GTMS mikron ??
+//		String originalFileName = "KMY 210104504.txt";// GTMS mikron ??
 //		String originalFileName = "5004_500421403104.csv";// GTMS Back end FET2,3
-//		String originalFileName = "500421403104.csv";// GTMS Back end FET1
+		String originalFileName = "500421403104.csv";// GTMS Back end FET1
+//		String originalFileName= "500421Y02210.xlsx";
 		
 //		String format = "model=8,2|year=1,2|month=3,2|day=5,2|prodLn=14,1|seq=NA|lot=8,7"; //IF
 //		String format = "model=1,3|year=5,4|month=9,2|day=11,2|prodLn=NA|seq=NA|lot=NA"; //MGG
-		String format = "model=NA|year=4,2|month=NA|day=NA|prodLn=NA|seq=7,3|lot=NA"; //GTMS mikron ??
+//		String format = "model=NA|year=5,2|month=NA|day=NA|prodLn=NA|seq=8,3|lot=NA"; //GTMS mikron ??
 //		String format = "model=6,4|year=10,2|month=12,1|day=NA|prodLn=13,2|seq=15,3|lot=6,12"; //GTMS Back end FET2,3
-//		String format = "model=1,4|year=5,2|month=7,1|day=NA|prodLn=8,2|seq=10,3|lot=1,12"; //GTMS Back end FET1
+		String format = "model=1,4|year=5,2|month=7,1|day=NA|prodLn=8,2|seq=10,3|lot=1,12"; //GTMS Back end FET1
 		
 		System.out.println("name ok? "+Pattern.compile("^[A-Z]").matcher(originalFileName).find());
 		// remove file extension
@@ -596,9 +601,10 @@ public class Testing {
 				System.out.println("file="+originalFileName+"; post="+post+" len="+len+"; year => "+year);
 			} else if (key.equalsIgnoreCase("month")) {
 				month = result;
-				if (StringUtils.isNotEmpty(month) && month.length() == 1) {
-					month = "0" + month;
-				}
+				//if (StringUtils.isNotEmpty(month) && month.length() == 1) {
+				//	month = "0" + month;
+				//}
+				month = CommonUtil.monthConversionFromFileName(month, "");
 				System.out.println("file="+originalFileName+"; post="+post+" len="+len+"; month => "+month);
 			} else if (key.equalsIgnoreCase("day")) {
 				day = result;

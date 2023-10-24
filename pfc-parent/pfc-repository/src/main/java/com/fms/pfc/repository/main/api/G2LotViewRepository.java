@@ -30,7 +30,7 @@ public interface G2LotViewRepository extends JpaRepository<G2LotView, String> {
 			+ "and ('' = ?6 or DDAY = ?6) "
 			+ "and ('' = ?7 or PROD_LN = ?7) "
 			+ "and ('' = ?8 or SEQ = ?8) "
-			+ "order by YEAR, MTH, DDAY DESC", nativeQuery = true)
+			+ "order by try_cast(YEAR as int) DESC, try_cast(MTH as int) DESC, try_cast(DDAY as int) DESC", nativeQuery = true)
 	List<G2LotView> searchTopXByCriteria(String lot, String hpl, String model, String year, String mth,
 				String day, String prodLn, String seq);
 	
@@ -60,7 +60,8 @@ public interface G2LotViewRepository extends JpaRepository<G2LotView, String> {
 			+ "		when ?10 = '3' then ?8 "
 			+ "		when ?10 = '4' then concat(?8, '%') end "
 			+ "	 ) "
-			+ " ) ", nativeQuery = true)
+			+ " ) "
+			+ "order by try_cast(YEAR as int) DESC, try_cast(MTH as int) DESC, try_cast(DDAY as int) DESC", nativeQuery = true)
 	List<G2LotView> searchByCriteria2(String lot, String hpl, String model, String year, String mth,
 				String day, String prodLn, String seq, String prodLnExp, String seqExp, String lotExp);
 	
@@ -132,7 +133,7 @@ public interface G2LotViewRepository extends JpaRepository<G2LotView, String> {
 			+ "and ('' = ?6 or DDAY = ?6) "
 			+ "and ('' = ?7 or PROD_LN = ?7) "
 			+ "and ('' = ?8 or SEQ = ?8) "
-			+ "order by YEAR, MTH, DDAY DESC", nativeQuery = true)
+			+ "order by try_cast(YEAR as int) DESC, try_cast(MTH as int) DESC, try_cast(DDAY as int) DESC", nativeQuery = true)
 	List<G2LotView> searchTop5ByCriteria(String lot, String hpl, String model, String year, String mth,
 				String day, String prodLn, String seq);
 }

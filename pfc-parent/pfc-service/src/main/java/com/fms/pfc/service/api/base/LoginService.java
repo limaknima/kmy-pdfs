@@ -69,5 +69,9 @@ public class LoginService {
 	public void lockUser(Usr user) {
 		loginRepository.lockUser(user.getUserId());
 	}
+	
+	public List<Usr> searchUserByRole(String roleId) {
+		return loginRepository.searchUserByRole(roleId);
+	}
 
 }

@@ -102,6 +102,10 @@ public class UsbConfService {
 	public List<Usr> getAllActiveUsr() {
 		return loginServ.searchAllActiveUser();
 	}
+	
+	public List<Usr> searchUserByRole(String roleId) {
+		return loginServ.searchUserByRole(roleId);
+	}
 
 	@Transactional
 	public void save(UsbConfDto dto, String userId, List<UsbUsrDto> usrList) {

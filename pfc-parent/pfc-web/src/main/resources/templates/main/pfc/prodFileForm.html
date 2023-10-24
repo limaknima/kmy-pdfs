@@ -75,312 +75,316 @@
 									</div>
 								</div>
 								
-								<div class="form-group row" id="fileNameDiv"
-									th:hidden="${fileNameDiv}">
-									<label class="col-sm-2 col-form-label">
-										<span th:text="#{lblFileName}"></span>
-										<a name="asterisk" style="color: red;" hidden="true">*</a>
-									</label><label class="col-form-label">:</label>
-									<div class="row col-sm-5">
-										<div class="col">
-											<div class="custom-file" id="inputFileName">
-												<input type="file" class="custom-file-input btn"
-													hidden="true" disabled name="fileContent"
-													id="fileContent" th:field="*{fileContent}"> 
-													<label class="custom-file-label" for="customFileLang" 
-														id="fileContentLabel" th:text="#{btnChooseFile}">
-													</label>
-													<input 
-														id="fileContentName" 
-														name="fileContentName" 
-														th:value="${fileContentName}" 
-														hidden="true">
-											</div>
-										</div>
-									</div>
-									<input id="procTypeTemp" th:value="${procTypeTemp}" hidden="true">
-									<input id="subProcTemp" th:value="${subProcTemp}" hidden="true">
-								</div>
-								
-								<div class="form-group row" id="viewFileNameDiv"
-									th:hidden="${viewFileNameDiv}">
-									<label class="col-sm-2 col-form-label">									
-										<span th:text="#{lblFileName}"></span></label> <label
-										class="col-form-label">:</label>
-									<div class="row col-sm-5">
-										<div class="col">
-											<textarea disabled class="form-control-plaintext" name="viewFileName" id="viewFileName" 
-												th:field="*{fileName}" maxlength="100" rows="2"
-												style="resize: none;"></textarea>
-												
-										</div>
-										<div class="col">
-											<a th:href="@{/main/pfc/prodFileDownload(pkPfileId=*{pkPfileId})}" th:hidden="${hidFunctionType_7}">
-												<i class="fas fa-download"></i>
-											</a>
-										</div>
-									</div>
-								</div>
-								
-								<div id="editFileDiv" th:hidden="${editDiv}">
-									<div class="form-group row">
-										<label class="col-sm-2 col-form-label">								
-											<span th:text="#{lblNewFileIfReq}"></span>
+								<div id="otherFields" hidden="true">
+									<div class="form-group row" id="fileNameDiv"
+										th:hidden="${fileNameDiv}">
+										<label class="col-sm-2 col-form-label">
+											<span th:text="#{lblFileName}"></span>
+											<a name="asterisk" style="color: red;" hidden="true">*</a>
 										</label><label class="col-form-label">:</label>
 										<div class="row col-sm-5">
 											<div class="col">
-												<div class="custom-file" id="inputNewFileName">
+												<div class="custom-file" id="inputFileName">
 													<input type="file" class="custom-file-input btn"
-														hidden="true" disabled name="newFileContent"
-														id="newFileContent">
+														hidden="true" disabled name="fileContent"
+														id="fileContent" th:field="*{fileContent}"> 
 														<label class="custom-file-label" for="customFileLang" 
 															id="fileContentLabel" th:text="#{btnChooseFile}">
 														</label>
 														<input 
-															id="newFileContentName" 
-															name="newFileContentName" 
-															th:value="${newFileContentName}" 
+															id="fileContentName" 
+															name="fileContentName" 
+															th:value="${fileContentName}" 
 															hidden="true">
 												</div>
 											</div>
 										</div>
+										<input id="procTypeTemp" th:value="${procTypeTemp}" hidden="true">
+										<input id="subProcTemp" th:value="${subProcTemp}" hidden="true">
 									</div>
-								</div>
-								
-								<div id="procTypeDiv" class="form-group row"  hidden="true">
-									<label class="col-sm-2 col-form-label control-label"><span th:text="#{lblProcType}"></span>
-										<a name="asterisk" style="color: red;" hidden="true">*</a>
-									</label>
-
-									<div class="row col-sm-5">
-										<label class="col-form-label">:</label>
-										<div class="col">
-											<select id="procType" class="custom-select" name="procType" th:value="${procType}" disabled 
-												onchange="loadFilePathOnly(); reloadPathSuggestion();">
-												<option value="" selected hidden="true">Please Select</option>
-												<option th:each="procTypeItem: ${procTypeItems}"
-													th:value="${procTypeItem.value}"
-													th:text="${procTypeItem.label}"
-													th:selected="${procTypeItem.value} == ${procType}"/>
-											</select>
-										</div>
-									</div>
-								</div>	
-								
-								<div id="subProcDiv" class="form-group row"  hidden="true">
-									<label class="col-sm-2 col-form-label control-label"><span th:text="#{lblSubProc}"></span>
-										<a name="asterisk" style="color: red;" hidden="true">*</a>
-									</label>
-
-									<div class="row col-sm-5">
-										<label class="col-form-label">:</label>
-										<div class="col">
-											<select id="subProc" class="custom-select" name="subProc" th:value="${subProc}" disabled 
-												onchange="loadFilePathOnly(); reloadPathSuggestion();">
-												<option value="" selected hidden="true">Please Select</option>
-												<option th:each="subProcItem: ${subProcItems}"
-													th:value="${subProcItem}"
-													th:text="${subProcItem}"
-													th:selected="${subProcItem} == ${subProc}"/>
-											</select>
-										</div>
-									</div>
-								</div>	
-								
-								<div id="hplModelDiv" class="form-group row">
-									<label class="col-sm-2 col-form-label control-label" >
-										<span th:text="#{lblHplModel}"></span>
-									</label>
-
-									<div id="hplModelFrag" class="row col-sm-5">
-										<label class="col-form-label">:</label>
-										<div class="col">
-											<select id="hplModelId" class="custom-select" name="hplModelId" th:field="*{hModel}" disabled
-												onchange="reloadG2LotNumbers();">
-												<option value="" selected hidden="true">Please Select</option>
-												<option th:each="hplModelItem: ${hplModelItems}"
-													th:value="${hplModelItem}"
-													th:text="${hplModelItem}"
-													th:selected="${hplModelItem} == ${hModel}"/>
-											</select>
-											<select class="custom-select" name="hplModelId2" id="hplModelId2" disabled hidden="true" onchange="reloadG2LotNumbers();">
-												<option value="" selected hidden="true">Please Select</option>
-											</select>
-										</div>
-									</div>
-								</div>
-								
-								<div id="yearDiv" class="form-group row">
-									<label class="col-sm-2 col-form-label control-label">
-										<span th:text="#{lblYear}"></span>
-										<a name="asterisk" style="color: red;" hidden="true">*</a>
-									</label>
-
-									<div class="row col-sm-5">
-										<label class="col-form-label">:</label>
-										<div class="col">
-											<select id="year" class="custom-select" name="year" th:field="*{year}" disabled required
-												onchange="reloadG2LotNumbers();reloadPathSuggestion();">
-												<option value="" selected hidden="true">Please Select</option>
-												<option th:each="yearItem: ${yearItems}"
-													th:value="${yearItem}"
-													th:text="${yearItem}"
-													th:selected="${yearItem} == ${year}"/>
-											</select>
-										</div>
-									</div>
-								</div>
-								
-								<div id="mthDiv" class="form-group row">
-									<label class="col-sm-2 col-form-label control-label">
-										<span th:text="#{lblMonth}"></span>
-									</label>
-
-									<div class="row col-sm-5">
-										<label class="col-form-label">:</label>
-										<div class="col">
-											<select id="mth" class="custom-select" name="mth" th:field="*{mth}" disabled 
-												onchange="reloadG2LotNumbers();reloadPathSuggestion();">
-												<option value="" selected hidden="true">Please Select</option>
-												<option th:each="monthItem: ${monthItems}"
-													th:value="${monthItem.strValue}"
-													th:text="${monthItem.label}"
-													th:selected="${monthItem.strValue} == ${mth}"/>
-											</select>
-										</div>
-									</div>
-								</div>
-								
-								<div id="dayDiv" class="form-group row" >
-									<label class="col-sm-2 col-form-label control-label"><span th:text="#{lblDay}"></span>
-									</label>
-
-									<div class="row col-sm-5">
-										<label class="col-form-label">:</label>
-										<div class="col">
-											<select id="day" class="custom-select" name="day" th:field="*{day}" disabled >
-												<option value="" selected hidden="true">Please Select</option>
-												<option th:each="dayItem: ${dayItems}"
-													th:value="${dayItem.strValue}"
-													th:text="${dayItem.label}"
-													th:selected="${dayItem.strValue} == ${day}"/>
-											</select>
-										</div>
-									</div>
-								</div>		
-								
-								<div id="prodLnDiv" class="form-group row">
-									<label class="col-sm-2 col-form-label control-label">
-										<span th:text="#{lblProdLn}"></span>
-										<a name="asterisk" style="color: red;" hidden="true">*</a>
-									</label>
-
-									<div class="row col-sm-5">
-										<label class="col-form-label">:</label>
-										<div class="col">
-											<!-- <input type="text" id="prodLn" readonly name="prodLn"
-												class="form-control-plaintext" th:field="*{prodLn}"
-												required maxlength="20"
-												onchange="reloadG2LotNumbers();"> -->
-												
-											<select id="prodLn" class="custom-select" name="prodLn" th:field="*{prodLn}" disabled 
-												onchange="reloadG2LotNumbers();">
-												<option value="" selected hidden="true">Please Select</option>
-												<option th:each="prodLnItem: ${prodLnItems}"
-													th:value="${prodLnItem}"
-													th:text="${prodLnItem}"
-													th:selected="${prodLnItem} == ${prodLn}"/>
-											</select>
-											<select class="custom-select" name="prodLn2" id="prodLn2" disabled hidden="true" onchange="onProdLnChange();reloadPathSuggestion();">
-												<option value="" selected hidden="true">Please Select</option>
-											</select>
-											
-										</div>
-									</div>
-								</div>
-								
-								<div id="seqDiv" class="form-group row" hidden = "true">
-									<label class="col-sm-2 col-form-label control-label">
-										<span th:text="#{lblSeq}"></span>
-										<a name="asterisk" style="color: red;" hidden="true">*</a>
-									</label>
-
-									<div class="row col-sm-5">
-										<label class="col-form-label">:</label>
-										<div class="col">
-											<select id="seq" class="custom-select" name="seq" th:field="*{seq}" disabled 
-												onchange="loadCompletedG2LotOnly();">
-												<option value="" selected hidden="true">Please Select</option>
-												<option th:each="seqItem: ${seqItems}"
-													th:value="${seqItem}"
-													th:text="${seqItem}"
-													th:selected="${seqItem} == ${seq}"/>
-											</select>
-											<select class="custom-select" name="seq2" id="seq2" disabled hidden="true" >
-												<option value="" selected hidden="true">Please Select</option>
-											</select>
-										</div>
-									</div>
-								</div>
-								
-								<div id="g2LotDiv" class="form-group row">
-									<label class="col-sm-2 col-form-label control-label">
-										<span th:text="#{lblG2LotNo}"></span>
-										<a name="asterisk" style="color: red;" hidden="true">*</a>
-									</label>
-
-									<div class="row col-sm-5">
-										<label class="col-form-label">:</label>
-										<div class="col">
-											<select id="g2Lot" class="custom-select" name="g2Lot" th:field="*{g2Lot}" disabled >
-												<option value="" selected hidden="true">Please Select</option>
-												<option th:each="g2LotItem: ${g2LotItems}"
-													th:value="${g2LotItem.lot}"
-													th:text="${g2LotItem.lot}"
-													th:selected="${g2LotItem.lot} == ${g2Lot}"/>
-											</select>
-											<select class="custom-select" name="g2Lot2" id="g2Lot2" disabled hidden="true" 
-												onchange="loadModelMonthProdLnFilePath(); ">
-												<option value="" selected hidden="true">Please Select</option>
-											</select>
-										</div>
-									</div>
-								</div>
-								
-								<div id="pathDiv" class="form-group row">
-									<label class="col-sm-2 col-form-label control-label">
-										<span th:text="#{lblFilePath}"></span>
-										<a name="asterisk" style="color: red;" hidden="true">*</a>
-									</label>
-
-									<div class="row col-sm-5">
-										<label class="col-form-label">:</label>
-										<div class="col">
-											<!-- <input type="text" id="filePath" readonly name="filePath"
-												class="form-control-plaintext" th:field="*{filePath}"
-												required maxlength="100">
-												<label><span th:text="#{lblFilePathFormatEg}"></span></label> -->
-												
-											<select id="filePath" class="custom-select" name="filePath" th:field="*{filePath}" disabled >
-												<option value="" selected hidden="true">Please Select</option>
-												<option th:each="filePathItem: ${filePathItems}"
-													th:value="${filePathItem.pkRelPathId}"
-													th:text="${filePathItem.filePath}"
-													th:selected="${filePathItem.pkRelPathId} == ${filePath}"/>
-											</select>
-											<select class="custom-select" name="filePath2" id="filePath2" disabled hidden="true" >
-												<option value="" selected hidden="true">Please Select</option>
-											</select>
-											<div id="pathSuggestDiv" hidden="true">											
-												<label><span id="remarkPathLbl" style="font-style: italic;font-size: 14px">Note: System default path suggestion if it's not exist in the selection above (Only applicable if there is G2 Lot No available to be selected):</span></label>
-												<textarea name="relPathFilePath"
-															id="relPathFilePath" readonly th:text="${relPathFilePath}"
-															class="form-control-plaintext"
-															maxlength="250" rows="2" style="resize: none;font-style: italic;font-size: 14px"></textarea>
+									
+									<div class="form-group row" id="viewFileNameDiv"
+										th:hidden="${viewFileNameDiv}">
+										<label class="col-sm-2 col-form-label">									
+											<span th:text="#{lblFileName}"></span></label> <label
+											class="col-form-label">:</label>
+										<div class="row col-sm-5">
+											<div class="col">
+												<textarea disabled class="form-control-plaintext" name="viewFileName" id="viewFileName" 
+													th:field="*{fileName}" maxlength="100" rows="2"
+													style="resize: none;"></textarea>
+													
+											</div>
+											<div class="col">
+												<a th:href="@{/main/pfc/prodFileDownload(pkPfileId=*{pkPfileId})}" th:hidden="${hidFunctionType_7}">
+													<i class="fas fa-download"></i>
+												</a>
 											</div>
 										</div>
 									</div>
+									
+									<div id="editFileDiv" th:hidden="${editDiv}">
+										<div class="form-group row">
+											<label class="col-sm-2 col-form-label">								
+												<span th:text="#{lblNewFileIfReq}"></span>
+											</label><label class="col-form-label">:</label>
+											<div class="row col-sm-5">
+												<div class="col">
+													<div class="custom-file" id="inputNewFileName">
+														<input type="file" class="custom-file-input btn"
+															hidden="true" disabled name="newFileContent"
+															id="newFileContent">
+															<label class="custom-file-label" for="customFileLang" 
+																id="fileContentLabel" th:text="#{btnChooseFile}">
+															</label>
+															<input 
+																id="newFileContentName" 
+																name="newFileContentName" 
+																th:value="${newFileContentName}" 
+																hidden="true">
+													</div>
+												</div>
+											</div>
+										</div>
+									</div>
+									
+									<div id="procTypeDiv" class="form-group row"  hidden="true">
+										<label class="col-sm-2 col-form-label control-label"><span th:text="#{lblProcType}"></span>
+											<a name="asterisk" style="color: red;" hidden="true">*</a>
+										</label>
+	
+										<div class="row col-sm-5">
+											<label class="col-form-label">:</label>
+											<div class="col">
+												<select id="procType" class="custom-select" name="procType" th:value="${procType}" disabled 
+													onchange="loadFilePathOnly(); reloadPathSuggestion();">
+													<option value="" selected hidden="true">Please Select</option>
+													<option th:each="procTypeItem: ${procTypeItems}"
+														th:value="${procTypeItem.value}"
+														th:text="${procTypeItem.label}"
+														th:selected="${procTypeItem.value} == ${procType}"/>
+												</select>
+											</div>
+										</div>
+									</div>	
+									
+									<div id="subProcDiv" class="form-group row"  hidden="true">
+										<label class="col-sm-2 col-form-label control-label"><span th:text="#{lblSubProc}"></span>
+											<a name="asterisk" style="color: red;" hidden="true">*</a>
+										</label>
+	
+										<div class="row col-sm-5">
+											<label class="col-form-label">:</label>
+											<div class="col">
+												<select id="subProc" class="custom-select" name="subProc" th:value="${subProc}" disabled 
+													onchange="loadFilePathOnly(); reloadPathSuggestion();">
+													<option value="" selected hidden="true">Please Select</option>
+													<option th:each="subProcItem: ${subProcItems}"
+														th:value="${subProcItem}"
+														th:text="${subProcItem}"
+														th:selected="${subProcItem} == ${subProc}"/>
+												</select>
+											</div>
+										</div>
+									</div>	
+									
+									<div id="hplModelDiv" class="form-group row">
+										<label class="col-sm-2 col-form-label control-label" >
+											<span th:text="#{lblHplModel}"></span>
+										</label>
+	
+										<div id="hplModelFrag" class="row col-sm-5">
+											<label class="col-form-label">:</label>
+											<div class="col">
+												<select id="hplModelId" class="custom-select" name="hplModelId" th:field="*{hModel}" disabled
+													onchange="reloadG2LotNumbers();">
+													<option value="" selected hidden="true">Please Select</option>
+													<option th:each="hplModelItem: ${hplModelItems}"
+														th:value="${hplModelItem}"
+														th:text="${hplModelItem}"
+														th:selected="${hplModelItem} == ${hModel}"/>
+												</select>
+												<select class="custom-select" name="hplModelId2" id="hplModelId2" disabled hidden="true" onchange="reloadG2LotNumbers();">
+													<option value="" selected hidden="true">Please Select</option>
+												</select>
+											</div>
+										</div>
+									</div>
+									
+									<div id="yearDiv" class="form-group row">
+										<label class="col-sm-2 col-form-label control-label">
+											<span th:text="#{lblYear}"></span>
+											<a name="asterisk" style="color: red;" hidden="true">*</a>
+										</label>
+	
+										<div class="row col-sm-5">
+											<label class="col-form-label">:</label>
+											<div class="col">
+												<select id="year" class="custom-select" name="year" th:field="*{year}" disabled required
+													onchange="reloadG2LotNumbers();reloadPathSuggestion();">
+													<option value="" selected hidden="true">Please Select</option>
+													<option th:each="yearItem: ${yearItems}"
+														th:value="${yearItem}"
+														th:text="${yearItem}"
+														th:selected="${yearItem} == ${year}"/>
+												</select>
+											</div>
+										</div>
+									</div>
+									
+									<div id="mthDiv" class="form-group row">
+										<label class="col-sm-2 col-form-label control-label">
+											<span th:text="#{lblMonth}"></span>
+										</label>
+	
+										<div class="row col-sm-5">
+											<label class="col-form-label">:</label>
+											<div class="col">
+												<select id="mth" class="custom-select" name="mth" th:field="*{mth}" disabled 
+													onchange="reloadG2LotNumbers();reloadPathSuggestion();">
+													<option value="" selected hidden="true">Please Select</option>
+													<option th:each="monthItem: ${monthItems}"
+														th:value="${monthItem.strValue}"
+														th:text="${monthItem.label}"
+														th:selected="${monthItem.strValue} == ${mth}"/>
+												</select>
+											</div>
+										</div>
+									</div>
+									
+									<div id="dayDiv" class="form-group row" >
+										<label class="col-sm-2 col-form-label control-label"><span th:text="#{lblDay}"></span>
+										</label>
+	
+										<div class="row col-sm-5">
+											<label class="col-form-label">:</label>
+											<div class="col">
+												<select id="day" class="custom-select" name="day" th:field="*{day}" disabled >
+													<option value="" selected hidden="true">Please Select</option>
+													<option th:each="dayItem: ${dayItems}"
+														th:value="${dayItem.strValue}"
+														th:text="${dayItem.label}"
+														th:selected="${dayItem.strValue} == ${day}"/>
+												</select>
+											</div>
+										</div>
+									</div>		
+									
+									<div id="prodLnDiv" class="form-group row">
+										<label class="col-sm-2 col-form-label control-label">
+											<span th:text="#{lblProdLn}"></span>
+											<a name="asterisk" style="color: red;" hidden="true">*</a>
+										</label>
+	
+										<div class="row col-sm-5">
+											<label class="col-form-label">:</label>
+											<div class="col">
+												<!-- <input type="text" id="prodLn" readonly name="prodLn"
+													class="form-control-plaintext" th:field="*{prodLn}"
+													required maxlength="20"
+													onchange="reloadG2LotNumbers();"> -->
+													
+												<select id="prodLn" class="custom-select" name="prodLn" th:field="*{prodLn}" disabled 
+													onchange="reloadG2LotNumbers();">
+													<option value="" selected hidden="true">Please Select</option>
+													<option th:each="prodLnItem: ${prodLnItems}"
+														th:value="${prodLnItem}"
+														th:text="${prodLnItem}"
+														th:selected="${prodLnItem} == ${prodLn}"/>
+												</select>
+												<select class="custom-select" name="prodLn2" id="prodLn2" disabled hidden="true" onchange="onProdLnChange();reloadPathSuggestion();">
+													<option value="" selected hidden="true">Please Select</option>
+												</select>
+												
+											</div>
+										</div>
+									</div>
+									
+									<div id="seqDiv" class="form-group row" hidden = "true">
+										<label class="col-sm-2 col-form-label control-label">
+											<span th:text="#{lblSeq}"></span>
+											<a name="asterisk" style="color: red;" hidden="true">*</a>
+										</label>
+	
+										<div class="row col-sm-5">
+											<label class="col-form-label">:</label>
+											<div class="col">
+												<select id="seq" class="custom-select" name="seq" th:field="*{seq}" disabled 
+													onchange="loadCompletedG2LotOnly();">
+													<option value="" selected hidden="true">Please Select</option>
+													<option th:each="seqItem: ${seqItems}"
+														th:value="${seqItem}"
+														th:text="${seqItem}"
+														th:selected="${seqItem} == ${seq}"/>
+												</select>
+												<select class="custom-select" name="seq2" id="seq2" disabled hidden="true" >
+													<option value="" selected hidden="true">Please Select</option>
+												</select>
+											</div>
+										</div>
+									</div>
+									
+									<div id="g2LotDiv" class="form-group row">
+										<label class="col-sm-2 col-form-label control-label">
+											<span th:text="#{lblG2LotNo}"></span>
+											<a name="asterisk" style="color: red;" hidden="true">*</a>
+										</label>
+	
+										<div class="row col-sm-5">
+											<label class="col-form-label">:</label>
+											<div class="col">
+												<select id="g2Lot" class="custom-select" name="g2Lot" th:field="*{g2Lot}" disabled >
+													<option value="" selected hidden="true">Please Select</option>
+													<option th:each="g2LotItem: ${g2LotItems}"
+														th:value="${g2LotItem.lot}"
+														th:text="${g2LotItem.lot}"
+														th:selected="${g2LotItem.lot} == ${g2Lot}"/>
+												</select>
+												<select class="custom-select" name="g2Lot2" id="g2Lot2" disabled hidden="true" 
+													onchange="loadModelMonthProdLnFilePath(); ">
+													<option value="" selected hidden="true">Please Select</option>
+												</select>
+											</div>
+										</div>
+									</div>
+									
+									<div id="pathDiv" class="form-group row">
+										<label class="col-sm-2 col-form-label control-label">
+											<span th:text="#{lblFilePath}"></span>
+											<a name="asterisk" style="color: red;" hidden="true">*</a>
+										</label>
+	
+										<div class="row col-sm-5">
+											<label class="col-form-label">:</label>
+											<div class="col">
+												<!-- <input type="text" id="filePath" readonly name="filePath"
+													class="form-control-plaintext" th:field="*{filePath}"
+													required maxlength="100">
+													<label><span th:text="#{lblFilePathFormatEg}"></span></label> -->
+													
+												<select id="filePath" class="custom-select" name="filePath" th:field="*{filePath}" disabled >
+													<option value="" selected hidden="true">Please Select</option>
+													<option th:each="filePathItem: ${filePathItems}"
+														th:value="${filePathItem.pkRelPathId}"
+														th:text="${filePathItem.filePath}"
+														th:selected="${filePathItem.pkRelPathId} == ${filePath}"/>
+												</select>
+												<select class="custom-select" name="filePath2" id="filePath2" disabled hidden="true" >
+													<option value="" selected hidden="true">Please Select</option>
+												</select>
+												<div id="pathSuggestDiv" hidden="true">											
+													<label><span id="remarkPathLbl" style="font-style: italic;font-size: 14px">Note: System default path suggestion if it's not exist in the selection above (Only applicable if there is G2 Lot No available to be selected):</span></label>
+													<textarea name="relPathFilePath"
+																id="relPathFilePath" readonly th:text="${relPathFilePath}"
+																class="form-control-plaintext"
+																maxlength="250" rows="2" style="resize: none;font-style: italic;font-size: 14px"></textarea>
+												</div>
+											</div>
+										</div>
+									</div>
+									
 								</div>
+								
 																				
 								</br>
 
@@ -796,6 +800,12 @@
 		
 		function onHplChange() {
 			console.log("onHplChange() ... ");
+			var hplInitLoad = "[(${hpl})]";
+			
+			if (hplInitLoad !== "") {
+				document.getElementById("hplId").value = hplInitLoad;
+			}
+			
 			var id = document.getElementById("hplId").value;			
 			var ctx = "[[@{/}]]"; 
 			var hplModelId2Temp = "[(${hplModelId2Temp})]";
@@ -840,6 +850,10 @@
 					document.getElementById('procTypeDiv').hidden = true;
 					document.getElementById('subProcDiv').hidden = true;
 				}
+			}
+			
+			if (id !== "") {
+				document.getElementById('otherFields').hidden = false;
 			}
 			
 		}

@@ -188,14 +188,16 @@ public class ProdFileController {
 		if (init) {
 			// check if user is not super user, do filtering
 			if (!isSuperUser) {
-				model.put("prodFileAllItems", prodFileServ.searchByCriteria(grp, "", "", "", "", "", "", ""));
+				//model.put("prodFileAllItems", prodFileServ.searchByCriteria(grp, "", "", "", "", "", "", ""));
+				model.put("prodFileAllItems", new ArrayList<>());
 				model.put("searchHplItems",
 						defaultHpl.stream().filter(arg0 -> arg0.equals(grp)).collect(Collectors.toList()));
 				model.put("searchHplModelItems", g2LotServ.hplModelList(grp));
 
 			} else {
 				// if user is super user, remove filter
-				model.put("prodFileAllItems", prodFileServ.searchByCriteria("", "", "", "", "", "", "", ""));
+				//model.put("prodFileAllItems", prodFileServ.searchByCriteria("", "", "", "", "", "", "", ""));
+				model.put("prodFileAllItems", new ArrayList<>());
 				model.put("searchHplItems", defaultHpl);
 				model.put("searchHplModelItems", g2LotServ.hplModelList(""));
 			}
@@ -323,6 +325,11 @@ public class ProdFileController {
 		
 		filter(false);
 		
+		String searchHplId = "";
+		if (StringUtils.isNotEmpty((String) model.get("filterHpl"))) {
+			searchHplId = (String) model.get("filterHpl");			
+		}
+		model.put("hpl", searchHplId);
 		model.put("yearItems", g2LotServ.yearList("", ""));
 		model.put("monthItems", CommonUtil.monthDropdownItems());
 		model.put("dayItems", CommonUtil.dayDropdownItems());
@@ -410,7 +417,7 @@ public class ProdFileController {
 		// If finalFileContent still null, suspect come from usb drive
 		finalFileContent = setMultipartfileIfFromUSB(fileContentName, newFileContentName, mode, finalFileContent);
 
-		String errorMsg = validateForm(dto, finalFileContent, mode, request.getRemoteUser());
+		String errorMsg = validateForm(dto, finalFileContent, mode, request.getRemoteUser(), procType, subProc);
 
 		if (errorMsg.length() != 0) {
 			model.put("error", errorMsg);
@@ -437,7 +444,8 @@ public class ProdFileController {
 		if (Objects.nonNull(finalFileContent)) {
 			logger.debug("saveForm() set file details, editFileUpdate={}, mode={}", editFileUpdate, mode);
 			dto.setFileName(finalFileContent.getOriginalFilename());
-			dto.setFileType(finalFileContent.getContentType());
+			// dto.setFileType(finalFileContent.getContentType());
+			dto.setFileType(FilenameUtils.getExtension(finalFileContent.getOriginalFilename()));
 			dto.setFileSize(finalFileContent.getSize());
 			dto.setContentObject(finalFileContent.getBytes());
 		}
@@ -502,9 +510,10 @@ public class ProdFileController {
 		model.put("btnEdit", false);
 		
 		String searchHplId = "";
-		if (StringUtils.isNotEmpty((String) model.get("filterHpl")))
-			searchHplId = (String) model.get("filterHpl");
-		model.put("prodFileAllItems", prodFileServ.searchByCriteria(searchHplId, "", "", "", "", "", "", ""));
+		if (StringUtils.isNotEmpty((String) model.get("filterHpl"))) {
+			searchHplId = (String) model.get("filterHpl");			
+		}
+		model.put("prodFileAllItems", prodFileServ.searchByCriteria(searchHplId, "", dto.getYear(), dto.getMth(), dto.getG2Lot(), "", "", "", "", ""));
 
 		return new ModelAndView("/main/pfc/prodFileList", model);
 	}
@@ -573,7 +582,7 @@ public class ProdFileController {
 		if (StringUtils.isNotEmpty((String) model.get("filterHpl")))
 			searchHplId = (String) model.get("filterHpl");
 		
-		model.put("prodFileAllItems", prodFileServ.searchByCriteria(searchHplId, "", "", "", "", "", "", ""));
+		model.put("prodFileAllItems", prodFileServ.searchByCriteria(searchHplId, "", "", "", "", "", "", "", "", ""));
 
 		return new ModelAndView(("/main/pfc/prodFileList"), model);
 	}
@@ -594,7 +603,10 @@ public class ProdFileController {
 			@RequestParam(name = "searchG2Lot") String searchG2Lot,
 			@RequestParam(name = "searchG2LotExp") String searchG2LotExp,
 			@RequestParam(name = "searchPath") String searchPath,
-			@RequestParam(name = "searchPathExp") String searchPathExp, HttpSession session) {
+			@RequestParam(name = "searchPathExp") String searchPathExp, 
+			@RequestParam(name = "searchFN") String searchFN,
+			@RequestParam(name = "searchFnExp") String searchFnExp,
+			HttpSession session) {
 
 		boolean hasError = false;
 
@@ -612,6 +624,8 @@ public class ProdFileController {
 		model.put("searchG2LotExp", searchG2LotExp);
 		model.put("searchPath", searchPath);
 		model.put("searchPathExp", searchPathExp);
+		model.put("searchFN", searchFN);
+		model.put("searchFnExp", searchFnExp);
 		
 		model.put("tempHplModel", searchHplModelId);
 		model.put("tempYear", searchYear);
@@ -621,7 +635,7 @@ public class ProdFileController {
 			if (errorMsg.length() == 0) {
 
 				List<ProdFileSearch> items = prodFileServ.searchByCriteria(searchHplId, searchHplModelId, searchYear,
-						searchMth, searchG2Lot, searchG2LotExp, searchPath, searchPathExp);
+						searchMth, searchG2Lot, searchG2LotExp, searchPath, searchPathExp, searchFN, searchFnExp);
 				model.put("prodFileAllItems", items);
 
 				StringBuffer sb = new StringBuffer();
@@ -652,7 +666,8 @@ public class ProdFileController {
 			if (hasError == true) {
 				model.put("error", errorMsg);
 				// return back user input
-				model.put("prodFileAllItems", prodFileServ.searchByCriteria(searchHplId, "", "", "", "", "", "", ""));
+				model.put("prodFileAllItems", prodFileServ.searchByCriteria(searchHplId, searchHplModelId, searchYear,
+						searchMth, searchG2Lot, searchG2LotExp, searchPath, searchPathExp, searchFN, searchFnExp));
 			}
 		}
 
@@ -875,7 +890,7 @@ public class ProdFileController {
 					year = StringUtils.substring(originalFileName, 9, 11);
 					year = year.length() == 2 ? "20" + year : year;
 				} else if (fileNameLen == CommonConstants.FILENAME_LEN_GTMS_B2
-						&& StringUtils.isNumeric(originalFileName)) {
+						&& !StringUtils.startsWith(originalFileName,"KMY")) {
 					// back-end fet1
 					// db file format len = 64
 					procType = CommonConstants.PROCESS_TYPE_HPL_BACKEND;
@@ -982,9 +997,9 @@ public class ProdFileController {
 				respObjMap.put(CommonConstants.HPL_LOT_KEY_YEAR, result);
 				logger.debug("post={}, len={}, year={}", post, len, result);
 			} else if (key.equalsIgnoreCase(CommonConstants.HPL_LOT_KEY_MONTH)) {
-				if (StringUtils.isNotEmpty(result) && result.length() == 1) {
+				/*if (StringUtils.isNotEmpty(result) && result.length() == 1) {
 					result = "0" + result;
-				}
+				}*/
 				result = CommonUtil.monthConversionFromFileName(result, "");
 				respObjMap.put(CommonConstants.HPL_LOT_KEY_MONTH, result);
 				logger.debug("post={}, len={}, month={}", post, len, result);
@@ -1049,7 +1064,8 @@ public class ProdFileController {
 	 * @param dto
 	 * @return
 	 */
-	private String validateForm(ProdFileDto dto, MultipartFile fileContent, String mode, String userId) {
+	private String validateForm(ProdFileDto dto, MultipartFile fileContent, String mode, String userId,
+			Integer procType, String subProc) {
 		String errorMsg = "";
 		if (StringUtils.equals(mode, CommonConstants.SCREEN_MODE_ADD)) {
 			if (Objects.isNull(fileContent) || StringUtils.isEmpty(fileContent.getOriginalFilename())) {
@@ -1116,7 +1132,7 @@ public class ProdFileController {
 			// GTMS -> file name can be duplicate across multiple folders
 			{
 				if (screenMode == CommonConstants.SCREEN_MODE_ADD) {
-					return validateDuplicateFile(fileName, dto.getG2Lot(), dto.getHpl());
+					errorMsg += validateDuplicateFile(fileName, dto, procType, subProc);
 				} else {
 					if (Objects.nonNull(model.get("prodFileItemCurrItem"))) {
 						ProdFileDto fromDB = (ProdFileDto) model.get("prodFileItemCurrItem");
@@ -1124,19 +1140,19 @@ public class ProdFileController {
 						logger.debug("validateForm fromDB name=" + fromDB.getFileName() + "; new name=" + fileName);
 						if (!StringUtils.equalsIgnoreCase(fromDB.getFileName(), fileName)) {
 							// check if current name value modified
-							return validateDuplicateFile(fileName, dto.getG2Lot(), dto.getHpl());
+							errorMsg += validateDuplicateFile(fileName, dto, procType, subProc);
 						}
 					}
 				}
 			}
 
-			{
+			if (StringUtils.isEmpty(errorMsg)) {
 				// 1
-				errorMsg += validateUsbUsrConf(dto, userId, errorMsg);
+				errorMsg += validateUsbUsrConf(dto, userId);
 				// 2
-				errorMsg += validateFileTypeAndSize(dto, userId, errorMsg, fileExt, fileSize);
+				errorMsg += validateFileTypeAndSize(dto, userId, fileExt, fileSize);
 				// 3
-				// errorMsg += validateFileNameAgainstG2Lot(dto, fileName, errorMsg);
+				// errorMsg += validateFileNameAgainstG2Lot(dto, fileName);
 			}
 		}
 
@@ -1150,14 +1166,31 @@ public class ProdFileController {
 	 * @param hpl
 	 * @return errorMsg
 	 */
-	private String validateDuplicateFile(String fileName, String lotNo, String hpl) {
+	private String validateDuplicateFile(String fileName, ProdFileDto dto, Integer procType, String subProc) {
+		logger.debug("validateDuplicateFile() ... fileName={}, lotNo={}, hpl={}", fileName, dto.getG2Lot(),
+				dto.getHpl());
 		String errorMsg = "";
-		Integer count = prodFileServ.countDuplicateFile(fileName, lotNo, hpl);
-		if (count > 0) {
-			errorMsg = "File already exists in database - File name=" + fileName + "; Lot no=" + lotNo + "; HPL=" + hpl;
+		if (!StringUtils.equals(dto.getHpl(), CommonConstants.RECORD_TYPE_ID_HPL_GTMS)) {
+			Integer count = prodFileServ.countDuplicateFile(fileName, dto.getG2Lot(), dto.getHpl());
+			if (count > 0) {
+				errorMsg = "File already exists in database - File name=" + fileName + "; Lot no="
+						+ dto.getG2Lot() + "; HPL=" + dto.getHpl();
+			}
+		} else {
+			logger.debug("validateDuplicateFile() ... procType={},subProc={}", procType, subProc);
+			// for gtms, it can has the same file name in multiple folders
+			// 1) mikron - cell 1, cell 2.1, cell 3 -  file name (KMY 210104504.txt) should repeat in cell 2.1 and cell 3
+			if(procType == CommonConstants.PROCESS_TYPE_HPL_MIKRON) {
+				
+			} else if (procType == CommonConstants.PROCESS_TYPE_HPL_BACKEND) {				
+			// 2) backend fet 2, fet 3 - file name (5004_500421403104.csv) if exists in fet 2, should repeat in fet 3, 
+			// otherwise in fet 1
+			// 3) backend fet 1 - file name (500421403104.csv) should either in fet 1 or in fet 2 and fet 3 
+
+			}
 		}
 		return errorMsg;
-	}	
+	}
 
 	/**
 	 * Validate file type and size
@@ -1167,8 +1200,9 @@ public class ProdFileController {
 	 * @param errorMsg
 	 * @return errorMsg
 	 */
-	private String validateFileTypeAndSize(ProdFileDto dto, String userId, String errorMsg, String fileType,
+	private String validateFileTypeAndSize(ProdFileDto dto, String userId, String fileType,
 			long fileSize) {
+		String errorMsg = "";
 		List<FileTypeSzDto> fstList = prodFileServ.findFileTypeSzList(dto.getHpl());
 		logger.debug("validateFileTypeAndSize() fstList={}", fstList.size());
 		
@@ -1215,7 +1249,8 @@ public class ProdFileController {
 	 * @param errorMsg
 	 * @return errorMsg
 	 */
-	private String validateUsbUsrConf(ProdFileDto dto, String userId, String errorMsg) {
+	private String validateUsbUsrConf(ProdFileDto dto, String userId) {
+		String errorMsg = "";
 		if (!usbDet.getUsbDevices().isEmpty()) {
 			// if device detected
 			USBStorageDevice dev = usbDet.getOneDeviceInfo();
@@ -1251,9 +1286,9 @@ public class ProdFileController {
 			// if no usb devices detected
 			// file could be coming from local drive/folder
 			//logger.debug("validateUsbUsrConf() No usb devices detected! File could be coming from local drive/folder.");
-			model.put("info", "USB-User config >> No usb devices detected! File could be uploaded could be from local drive/folder"+BREAKLINE);
+			model.put("info", "USB-User config >> No usb devices detected! However, file can be uploaded from local drive/folder"+BREAKLINE);
 			
-			//TODO: allow user to continue upload from folder
+			//allow user to continue upload from folder
 			// do further checking if user is eligible to upload
 			// based on grp/hpl, prod ln - check against UsbConf
 			// check conf from db
@@ -1287,9 +1322,9 @@ public class ProdFileController {
 	 * @param errorMsg
 	 * @return errorMsg
 	 */
-	private String validateFileNameAgainstG2Lot(ProdFileDto pfDto, String originalFileName, String errorMsg) {
+	private String validateFileNameAgainstG2Lot(ProdFileDto pfDto, String originalFileName) {
 		logger.debug("validateFileNameAgainstG2Lot HPL={}, File={}, y={}, m={}, pl={}", pfDto.getHpl(), originalFileName, pfDto.getYear(), pfDto.getMth(), pfDto.getProdLn());
-
+		String errorMsg = "";
 		if (StringUtils.isEmpty(originalFileName) || StringUtils.isEmpty(pfDto.getHpl())) {
 			errorMsg += "No file/HPL selected for upload! File={"+originalFileName+"}, HPL={"+pfDto.getHpl()+"}"+BREAKLINE;
 			return errorMsg;
@@ -1633,12 +1668,12 @@ public class ProdFileController {
 
 		// det.getUsbDevices().forEach(System.out::println);
 		if (usbDet.getUsbDevices().isEmpty()) {
-			model.put("info", "No usb connected!");
+			model.put("info", "No usb connected! However, file can be uploaded from local drive/folder" + BREAKLINE);
 		} else {
-			String usbDetails = "USB connected. <br/>";
+			String usbDetails = "USB connected" + BREAKLINE;
 			for (USBStorageDevice usb : usbDet.getUsbDevices()) {
 				usbDetails = usbDetails + "Drive :" + usb.getDevice() + ", Serial No :" + usb.getUuid() + ", USB Name :"
-						+ usb.getDeviceName() + ".<br/>";
+						+ usb.getDeviceName() + BREAKLINE;
 
 				Path p = Paths.get(usb.getDevice());
 				if (Files.notExists(p))

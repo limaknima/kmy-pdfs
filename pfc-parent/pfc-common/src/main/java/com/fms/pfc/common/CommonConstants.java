@@ -322,10 +322,4 @@ public class CommonConstants implements Serializable {
 	public static final int FILENAME_LEN_GTMS_B1 = 17;
 	public static final int FILENAME_LEN_GTMS_B2 = 12;	
 
-	public static final String DEF_FILE_FORMAT_IF = "model=8,2|year=1,2|month=3,2|day=5,2|prodLn=14,1|seq=NA|lot=8,7";	
-	public static final String DEF_FILE_FORMAT_MGG = "model=1,3|year=5,4|month=9,2|day=11,2|prodLn=NA|seq=NA|lot=NA";	
-	public static final String DEF_FILE_FORMAT_GTMS_M = "model=NA|year=4,2|month=NA|day=NA|prodLn=NA|seq=7,3| =NA";	
-	public static final String DEF_FILE_FORMAT_GTMS_B1 = "model=6,4|year=10,2|month=12,1|day=NA|prodLn=13,2|seq=15,3|lot=6,12";	
-	public static final String DEF_FILE_FORMAT_GTMS_B2 = "model=1,4|year=5,2|month=7,1|day=NA|prodLn=8,2|seq=10,3|lot=1,12";	
-
 }

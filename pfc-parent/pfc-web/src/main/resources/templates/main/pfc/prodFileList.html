@@ -153,7 +153,7 @@
 											<div class="row col-sm-7">
 												<label class="col-form-label">:</label>
 												<div class="col">
-													<input type="text" class="form-control" id="searchPath"
+													<input type="text" class="form-control" id="searchFnExp"
 														th:value="${searchPath}" name="searchPath" maxlength=100>
 												</div>
 												<div class="col col-sm-4">
@@ -162,6 +162,25 @@
 														<option value="2" th:selected="${searchPathExp=='2'}">End with</option>
 														<option value="3" th:selected="${searchPathExp=='3'}">Exact match</option>
 														<option value="4" th:selected="${searchPathExp=='4'}">Start
+															with</option>
+													</select>
+												</div>
+											</div>
+										</div>
+										<div class="form-group row">
+											<label class="col-sm-2 col-form-label" th:text="#{lblFileName}"></label>
+											<div class="row col-sm-7">
+												<label class="col-form-label">:</label>
+												<div class="col">
+													<input type="text" class="form-control" id="searchFN"
+														th:value="${searchFN}" name="searchFN" maxlength=100>
+												</div>
+												<div class="col col-sm-4">
+													<select class="custom-select" name="searchFnExp">
+														<option value="1" th:selected="${searchFnExp=='1'}">Any</option>
+														<option value="2" th:selected="${searchFnExp=='2'}">End with</option>
+														<option value="3" th:selected="${searchFnExp=='3'}">Exact match</option>
+														<option value="4" th:selected="${searchFnExp=='4'}">Start
 															with</option>
 													</select>
 												</div>
@@ -231,7 +250,8 @@
 											<th scope="col" th:text="#{lblG2LotNo}"></th>
 											<th scope="col" th:text="#{lblFilePath}"></th>											
 											<th scope="col" th:text="#{lblFileName}"></th>									
-											<th scope="col" th:text="#{lblCreator}"></th>
+											<th scope="col" th:text="#{lblCreator}"></th>								
+											<th scope="col" th:text="#{lblUploadedDt}"></th>
 										</tr>
 									</thead>
 									<tbody>
@@ -246,6 +266,8 @@
 											<td th:text="${prodFileItem.filePath}"></td>
 											<td th:text="${prodFileItem.fileName}"></td>
 											<td th:text="${prodFileItem.creatorId}"></td>
+											<!--<td th:text="${#dates.format(prodFileItem.createdDatetime, 'dd/MM/yyyy HH:mm:ss')}"></td>-->
+											<td th:text="${prodFileItem.createdDatetime}"></td>
 										</tr>
 									</tbody>
 								</table>

@@ -636,10 +636,16 @@ public class UsbConfController {
 	 * @return
 	 */
 	protected List<Usr> getRemainingUsr(List<Usr> selected) {
-		List<Usr> remaining = usbConfServ.getAllActiveUsr().stream()
-				.filter(arg0 -> !selected.contains(arg0))
+		List<Usr> remaining = usbConfServ.getAllActiveUsr().stream().filter(arg0 -> !selected.contains(arg0))
 				.filter(arg0 -> StringUtils.equals(arg0.getGroupId(), selected.get(0).getGroupId()))
 				.collect(Collectors.toList());
+
+		// add susr
+		List<Usr> susr = usbConfServ.searchUserByRole(CommonConstants.ROLE_ID_SUSR).stream()
+				.filter(arg0 -> !selected.contains(arg0)).collect(Collectors.toList());
+
+		remaining.addAll(susr);
+
 		return remaining;
 	}
 	

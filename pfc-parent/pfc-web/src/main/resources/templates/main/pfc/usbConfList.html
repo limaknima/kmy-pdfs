@@ -190,7 +190,8 @@
 												id="checkAll"></th>
 											<th scope="col"><span th:text="#{lblUsbSerialNo}"></span></th>
 											<th scope="col"><span th:text="#{lblUsbName}"></span></th>											
-											<th scope="col"><span th:text="#{lblGrpType}"></span></th>										
+											<th scope="col"><span th:text="#{lblGrpType}"></span></th>											
+											<th scope="col"><span th:text="#{lblProdLn}"></span></th>										
 											<th scope="col"><span th:text="#{lblAssignTo}"></span></th>
 										</tr>
 									</thead>
@@ -204,6 +205,7 @@
 												th:text="${usbConfItem.serialNo}"></a></td>
 											<td th:text="${usbConfItem.name}"></td>
 											<td th:text="${usbConfItem.hplName}"></td>
+											<td th:text="${usbConfItem.prodLn}"></td>
 											<td th:text="${usbConfItem.usrNames}"></td>
 										</tr>
 									</tbody>

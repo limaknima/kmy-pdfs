@@ -114,9 +114,9 @@ public class ProdFileService {
 	 * @return ProdFileSearch object list
 	 */
 	public List<ProdFileSearch> searchByCriteria(String searchHplId, String searchHplModelId, String searchYear,
-			String searchMth, String g2LotNo, String g2LotNoExp, String path, String pathExp) {
-		return prodFileSearchRepo.searchByCriteria(searchHplId,searchHplModelId, searchYear, searchMth, g2LotNo, g2LotNoExp, path,
-				pathExp);
+			String searchMth, String g2LotNo, String g2LotNoExp, String path, String pathExp, String fn, String fnExp) {
+		return prodFileSearchRepo.searchByCriteria(searchHplId, searchHplModelId, searchYear, searchMth, g2LotNo,
+				g2LotNoExp, path, pathExp, fn, fnExp);
 	}
 
 	/**
@@ -176,6 +176,11 @@ public class ProdFileService {
 
 		// need to do something to files
 		manageFile(isFileChanged, finalFileContent, isCreate, dir, deleteDir);
+		
+		//TODO: check and create multiple files to other dir for gtms
+		if(dto.getHpl().equals("GTMS")) {
+			
+		}
 
 		return entity.getPkPfileId();
 	}
@@ -248,6 +253,11 @@ public class ProdFileService {
 
 		// need to do something to files
 		manageFile(isFileChanged, finalFileContent, isCreate, dir, deleteDir);
+		
+		//TODO: check and create multiple files to other dir for gtms
+		if(dto.getHpl().equals("GTMS")) {
+			
+		}
 
 		return entity.getPkPfileId();
 	}
@@ -389,6 +399,7 @@ public class ProdFileService {
 
 		List<RelPathDto2> relList = new ArrayList<RelPathDto2>();
 		if (!hpl.equals("GTMS")) {
+			// for IF, MGG
 			RelPathDto2 relDto = new RelPathDto2();
 			relDto.setYear(year);
 			relDto.setMth(mth);
@@ -399,7 +410,6 @@ public class ProdFileService {
 			relDto.setSeq("");
 			relList.add(relDto);
 		} else {
-			// for IF, MGG
 			RelPathDto2 relDto = new RelPathDto2();
 			relDto.setYear(year);
 			relDto.setMth(mth);
@@ -426,9 +436,9 @@ public class ProdFileService {
 			parentId = currDtos.get(0).getPkCatgId();
 			List<RelPathDto2> rels = new ArrayList<RelPathDto2>();
 			if (!hpl.equals("GTMS")) {
+				// for IF, MGG
 				rels = foldConfServ.searchRelPathByCriteria(parentId, "", year, mth, "", prodLn, "", 0, "");
 			} else {
-				// for IF, MGG
 				rels = foldConfServ.searchRelPathByCriteria(parentId, "", year, mth, "", prodLn, "", procType, subProc);
 			}
 
@@ -523,6 +533,38 @@ public class ProdFileService {
 
 		} catch (Exception e) {
 			throw new Exception();
+		}
+	}
+	
+	//TODO
+	private void createRelatedGtmsFiles(ProdFileDto pfDto, RelPathDto2 pathDto) {
+		// for gtms, it can has the same file name in multiple folders
+		// 1) mikron - cell 1, cell 2.1, cell 3 -  file name (KMY 210104504.txt) should repeat in cell 2.1 and cell 3
+		String year = pfDto.getYear();
+		String month = pfDto.getMth();
+		String prodLn = pfDto.getProdLn();
+		String seq = pfDto.getSeq();
+		
+		if(pathDto.getProcType() == 1) {
+			if(pathDto.getSubProc().equals("CELL1")) {
+				
+			} else if (pathDto.getSubProc().equals("CELL2")) {
+				
+			} else if (pathDto.getSubProc().equals("CELL3")) {
+				
+			}
+			
+		} else if (pathDto.getProcType() == 2) {				
+		// 2) backend fet 2, fet 3 - file name (5004_500421403104.csv) if exists in fet 2, should repeat in fet 3, 
+		// otherwise in fet 1
+		// 3) backend fet 1 - file name (500421403104.csv) should either in fet 1 or in fet 2 and fet 3 
+			if(pathDto.getSubProc().equals("FET1")) {
+				
+			} else if (pathDto.getSubProc().equals("FET2")) {
+				
+			} else if (pathDto.getSubProc().equals("FET3")) {
+				
+			}
 		}
 	}
 	
