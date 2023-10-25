@@ -513,7 +513,7 @@ public class ProdFileController {
 		if (StringUtils.isNotEmpty((String) model.get("filterHpl"))) {
 			searchHplId = (String) model.get("filterHpl");			
 		}
-		model.put("prodFileAllItems", prodFileServ.searchByCriteria(searchHplId, "", dto.getYear(), dto.getMth(), dto.getG2Lot(), "", "", "", "", ""));
+		model.put("prodFileAllItems", prodFileServ.searchByCriteria(searchHplId, "", "", "", dto.getG2Lot(), "3", "", "", "", ""));
 
 		return new ModelAndView("/main/pfc/prodFileList", model);
 	}
@@ -756,6 +756,7 @@ public class ProdFileController {
 		// Path dropdown items
 		List<RelPathDto2> paths = generatePathsItems2(hplId, year, prodLn2, mth, seq2, procType, subProc);
 		respObjMap.put("pathsItems", paths);
+		model.put("pathsItemsSize", paths.size());
 		logger.debug("loadFilePathOnly() hpl={}, year={}, mth={}, prodLn2={}, seq2={}, procType={}, subProc={}, lot size={}", hplId, year, mth,
 				prodLn2, seq2, procType, subProc, paths.size());
 		return respObjMap;
