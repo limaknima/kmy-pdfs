@@ -1161,18 +1161,25 @@
 			var lot = document.getElementById("g2Lot2").value;
 			var subProc = document.getElementById("subProc").value;	
 			
-			if(hpl === 'GTMS' && procType === '1'){
+			if(hpl === 'GTMS'){
 				console.log("loadModelMonthProdLnFilePath() hpl="+hpl+"; procType="+procType+"; lot="+lot);	
 				var ctx = "[[@{/}]]"; 
 				$.ajax({
 					url : ctx+"main/pfc/loadInfoByLotNo?hpl="+hpl+"&lot="+lot,
 					type : "GET",
 					success : function (data) {		
-						document.getElementById("hplModelId2").value = data.model;
-						document.getElementById("mth").value = data.mth;
-						document.getElementById("prodLn2").value = data.prodLn;		
-						loadFilePathOnly();
-						reloadPathSuggestion();
+						if( procType === '1'){
+							document.getElementById("hplModelId2").value = data.model;
+							document.getElementById("mth").value = data.mth;
+							document.getElementById("prodLn2").value = data.prodLn;		
+							loadFilePathOnly();
+							reloadPathSuggestion();
+						
+						} else if( procType === '2'){
+							document.getElementById("prodLn2").value = data.prodLn;								
+							reloadPathSuggestion();
+							
+						}
 					}				
 				});
 				

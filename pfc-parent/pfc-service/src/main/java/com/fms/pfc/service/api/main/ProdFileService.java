@@ -391,9 +391,9 @@ public class ProdFileService {
 					filePath = filePath + hpl + "#" + prodLn + "/";
 			}
 
-			if (year != "")
+			if (StringUtils.isNotEmpty(year))
 				filePath = filePath + year + "/";
-			if (mth != "")
+			if (StringUtils.isNotEmpty(mth))
 				filePath = filePath + mth + "/";
 		}
 

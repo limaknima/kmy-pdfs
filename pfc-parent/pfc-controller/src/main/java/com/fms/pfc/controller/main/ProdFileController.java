@@ -114,6 +114,7 @@ public class ProdFileController {
 	
 	@Value("${data.root.dir}")
 	private String DEFAULT_DATA_PATH;
+	
 	@Value("${def.file.format.if}")
 	private String DEF_FILE_FORMAT_IF;
 	@Value("${def.file.format.mgg}")
@@ -124,6 +125,17 @@ public class ProdFileController {
 	private String DEF_FILE_FORMAT_BACKEND_FET2_FET3;
 	@Value("${def.file.format.gtms.backend.fet1}")
 	private String DEF_FILE_FORMAT_BACKEND_FET1;
+	
+	@Value("${filename.len.if}")
+	private String FILENAME_LEN_IF;
+	@Value("${filename.len.mgg}")
+	private String FILENAME_LEN_MGG;
+	@Value("${filename.len.gtms.mikron}")
+	private String FILENAME_LEN_GTMS_M;
+	@Value("${filename.len.gtms.be.fet1}")
+	private String FILENAME_LEN_GTMS_FET1;
+	@Value("${filename.len.gtms.be.fet2.fet3}")
+	private String FILENAME_LEN_GTMS_FET2_FET3;
 
 	@Autowired
 	public ProdFileController(Authority auth, CommonValidation commonValServ, MessageSource msgSource,
@@ -875,14 +887,14 @@ public class ProdFileController {
 				// expecting file format from child table - rel_path2
 				// currently for gtms
 				int fileNameLen = originalFileName.length();
-				if (fileNameLen == CommonConstants.FILENAME_LEN_GTMS_M
+				if (fileNameLen == Integer.parseInt(FILENAME_LEN_GTMS_M) 
 						&& Pattern.compile("^[A-Z]").matcher(originalFileName).find()) {
 					// mikron all folder
 					procType = CommonConstants.PROCESS_TYPE_HPL_MIKRON;
 					subProc = CommonConstants.PROCESS_SUBTYPE_GTMS_M_CELL1; // or 2 or 3
 					year = StringUtils.substring(originalFileName, 3, 5);
 					year = year.length() == 2 ? "20" + year : year;
-				} else if (fileNameLen == CommonConstants.FILENAME_LEN_GTMS_B1
+				} else if (fileNameLen == Integer.parseInt(FILENAME_LEN_GTMS_FET2_FET3)
 						&& Pattern.compile("^[0-9_]").matcher(originalFileName).find()) {
 					// back-end fet2,fet3
 					// db file format len = 67
@@ -890,7 +902,7 @@ public class ProdFileController {
 					subProc = CommonConstants.PROCESS_SUBTYPE_GTMS_B_FET2; // or 3
 					year = StringUtils.substring(originalFileName, 9, 11);
 					year = year.length() == 2 ? "20" + year : year;
-				} else if (fileNameLen == CommonConstants.FILENAME_LEN_GTMS_B2
+				} else if (fileNameLen == Integer.parseInt(FILENAME_LEN_GTMS_FET1)
 						&& !StringUtils.startsWith(originalFileName,"KMY")) {
 					// back-end fet1
 					// db file format len = 64
@@ -909,11 +921,9 @@ public class ProdFileController {
 						fileFormat = relPathList.get(0).getProdFileFormat();
 					} else if (procType == CommonConstants.PROCESS_TYPE_HPL_BACKEND) {
 						// folder fet2,fet3
-						if (fileNameLen == CommonConstants.FILENAME_LEN_GTMS_B1) {
-							//relPathList = relPathList.stream().filter(arg0 -> arg0.getProdFileFormat().contains("lot=6,12"))
-							//		.collect(Collectors.toList());
+						if (fileNameLen == Integer.parseInt(FILENAME_LEN_GTMS_FET2_FET3)) {
 							relPathList = relPathList.stream()
-									.filter(arg0 -> arg0.getProdFileFormat().contains("lot=6,12") 
+									.filter(arg0 -> arg0.getProdFileFormat().contains("lot=6,10") 
 											&& (arg0.getSubProc().equals(CommonConstants.PROCESS_SUBTYPE_GTMS_B_FET2)
 											|| arg0.getSubProc().equals(CommonConstants.PROCESS_SUBTYPE_GTMS_B_FET3)))
 									.collect(Collectors.toList());
@@ -928,7 +938,7 @@ public class ProdFileController {
 						} else {
 							// folder fet1
 							relPathList = relPathList.stream()
-									.filter(arg0 -> arg0.getProdFileFormat().contains("lot=1,12")
+									.filter(arg0 -> arg0.getProdFileFormat().contains("lot=1,10")
 											&& arg0.getSubProc().equals(CommonConstants.PROCESS_SUBTYPE_GTMS_B_FET1))
 									.collect(Collectors.toList());
 							if(!relPathList.isEmpty()) {
