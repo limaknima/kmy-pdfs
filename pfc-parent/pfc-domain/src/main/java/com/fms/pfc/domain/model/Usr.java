@@ -67,6 +67,12 @@ public class Usr {
 
 	@Column(name = "password_set_date")
 	private Date passwordSetDate;
+	
+	@Column(name = "DIS_DT")
+	private Date disableDate;
+	
+	@Column(name = "REL_DIS_DT")
+	private Date relDisableDate;
 
 	public int getUser_unique_id() {
 		return user_unique_id;
@@ -210,5 +216,21 @@ public class Usr {
 
 	public void setPasswordSetDate(Date passwordSetDate) {
 		this.passwordSetDate = passwordSetDate;
+	}
+
+	public Date getDisableDate() {
+		return disableDate;
+	}
+
+	public void setDisableDate(Date disableDate) {
+		this.disableDate = disableDate;
+	}
+
+	public Date getRelDisableDate() {
+		return relDisableDate;
+	}
+
+	public void setRelDisableDate(Date relDisableDate) {
+		this.relDisableDate = relDisableDate;
 	}
 }

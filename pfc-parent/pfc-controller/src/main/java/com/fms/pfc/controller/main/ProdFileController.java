@@ -119,6 +119,8 @@ public class ProdFileController {
 	private String DEF_FILE_FORMAT_IF;
 	@Value("${def.file.format.mgg}")
 	private String DEF_FILE_FORMAT_MGG;
+	@Value("${def.file.format.mgg.1}")
+	private String DEF_FILE_FORMAT_MGG_1;
 	@Value("${def.file.format.gtms.mikron}")
 	private String DEF_FILE_FORMAT_MIKRON;
 	@Value("${def.file.format.gtms.backend.fet2.fet3}")
@@ -973,6 +975,19 @@ public class ProdFileController {
 		// if fileformat still empty, get system default
 		if(StringUtils.isEmpty(fileFormat))
 			fileFormat = getSysDefaultFileformat(foldConf.getHpl(), procType, subProc);
+		
+		//20231212 - MGG got diff format for 4digit model
+		{
+			if(hplId.equals(CommonConstants.RECORD_TYPE_ID_HPL_MGG)) {
+				//check first 4 digits are number
+				String mModel = StringUtils.substring(originalFileName, 0, originalFileName.indexOf("_"));
+				if(mModel.length() == 4) {
+					fileFormat = DEF_FILE_FORMAT_MGG_1;
+				} else if(mModel.length() == 3) {
+					fileFormat = DEF_FILE_FORMAT_MGG;
+				}
+			}
+		}
 		
 		model.put("fileFormatTemp", fileFormat);
 		

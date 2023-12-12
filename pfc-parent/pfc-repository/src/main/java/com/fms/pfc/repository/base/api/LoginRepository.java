@@ -56,11 +56,16 @@ public interface LoginRepository extends JpaRepository<Usr, String> {
 	@Transactional
 	@Query(value = "UPDATE USR SET FAILED_ATTEMPT_COUNT = ?1 WHERE USER_ID = ?2", nativeQuery = true)
 	void updateFailAttempt(int attempts, String user_id);
+	
+	@Modifying
+	@Transactional
+	@Query(value = "UPDATE USR SET DISABLED_FLAG = 'N', FAILED_ATTEMPT_COUNT = 0, DIS_DT = NULL, REL_DIS_DT = NULL WHERE USER_ID = ?1", nativeQuery = true)
+	void resetFailAttempt(String user_id);
 
 	@Modifying
 	@Transactional
-	@Query(value = "UPDATE USR SET DISABLED_FLAG = 'Y' WHERE USER_ID = ?1", nativeQuery = true)
-	void lockUser(String user_id);
+	@Query(value = "UPDATE USR SET DISABLED_FLAG = 'Y', DIS_DT=GETDATE(), REL_DIS_DT=DATEADD(minute,?2,GETDATE()) WHERE USER_ID = ?1", nativeQuery = true)
+	void lockUser(String user_id,int ret);
 	
 	@Query(value = "select "
 			+ "USR.* "

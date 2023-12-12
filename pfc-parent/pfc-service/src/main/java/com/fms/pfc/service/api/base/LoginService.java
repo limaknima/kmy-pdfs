@@ -63,11 +63,11 @@ public class LoginService {
 	}
 
 	public void resetFailedAttempts(String userId) {
-		loginRepository.updateFailAttempt(0, userId);
+		loginRepository.resetFailAttempt(userId);
 	}
 
-	public void lockUser(Usr user) {
-		loginRepository.lockUser(user.getUserId());
+	public void lockUser(Usr user, int ret) {
+		loginRepository.lockUser(user.getUserId(), ret);
 	}
 	
 	public List<Usr> searchUserByRole(String roleId) {
