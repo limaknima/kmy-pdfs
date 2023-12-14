@@ -82,6 +82,9 @@
 												<div class="count">
 													<span th:text="${lotCount}"></span>
 												</div>
+												<div class="desc">
+													<span th:text="${lotDesc}"></span>
+												</div>
 												<div class="title">Completed G2 Lot</div>
 											</div>
 											<!--/.info-box-->
@@ -91,6 +94,9 @@
 												<i class="fa fa-boxes"></i>
 												<div class="count">
 													<span th:text="${prodFileCount}"></span>
+												</div>
+												<div class="desc">
+													<span th:text="${prodFileDesc}"></span>
 												</div>
 												<div class="title">Files Uploaded</div>
 											</div>
@@ -121,7 +127,7 @@
 									<div class="row">
 										<div class="col-lg-6 col-md-6 col-sm-10 pr-0 mb-3">
 											<div class="card-collapsible card">
-												<div class="card-header">Completed G2 Lot against File Upload</div>
+												<div class="card-header">Completed G2 Lot(Outer) vs File Upload(Inner)</div>
 												<div class="card-body d-flex justify-content-around">
 													<canvas class="chart w-100" id="pieChart"></canvas>
 												</div>

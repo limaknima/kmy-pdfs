@@ -118,7 +118,7 @@ public interface G2LotViewRepository extends JpaRepository<G2LotView, String> {
 			+ "order by SEQ ", nativeQuery = true)
 	List<String> seqList (String hpl, String model, String year, String mth, String day, String prodLn);
 	
-	@Query(value = "select HPL, count(*) as CNT from CV22PDF where 1=1 group by HPL", nativeQuery = true)
+	@Query(value = "select HPL, count(*) as CNT from CV22PDF where 1=1 group by HPL order by HPL", nativeQuery = true)
 	List<Object[]> lotCountByHpl();
 	
 	@Query(value = "select count(*) from CV22PDF where 1=1", nativeQuery = true)

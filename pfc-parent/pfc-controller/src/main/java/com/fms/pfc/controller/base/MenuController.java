@@ -4,6 +4,7 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -41,6 +42,9 @@ public class MenuController {
 	private G2LotViewService g2Serv;
 	private ProdFileService pfServ;
 	
+	private List<Object[]> lotCount = new ArrayList<>();
+	private List<Object[]> fileCount = new ArrayList<>();
+	
 	@Autowired
 	public MenuController(LoginService logServ, AlertService alertServ, Authority auth, G2LotViewService g2Serv, ProdFileService pfServ) {
 		super();
@@ -49,7 +53,10 @@ public class MenuController {
 		this.auth = auth;
 		this.g2Serv = g2Serv;
 		this.pfServ = pfServ;
-	}
+		
+		this.lotCount = g2Serv.lotCountByHpl();
+		this.fileCount = pfServ.fileCountByHpl();
+	}	
 
 	@GetMapping("/")
 	public ModelAndView loadHomepage(HttpServletRequest request) {
@@ -80,8 +87,29 @@ public class MenuController {
 		model.put("showReminder", showReminder);
 		// for quick info card
 		{
+			String lotDesc = "(";			
+			for (Object[] ob : lotCount) {
+				String hpl = (String)ob[0];
+				String cnt = String.valueOf(ob[1]);
+				String appnd = hpl+"="+cnt+", ";
+				lotDesc +=appnd;
+			}			
+			lotDesc = lotDesc.substring(0, lotDesc.lastIndexOf(", "));			
+			lotDesc +=")";			
 			model.put("lotCount", g2Serv.countAll());
+			model.put("lotDesc", lotDesc);			
+			
+			String fileDesc = "(";			
+			for (Object[] ob : fileCount) {
+				String hpl = (String)ob[0];
+				String cnt = String.valueOf(ob[1]);
+				String appnd = hpl+"="+cnt+", ";
+				fileDesc +=appnd;
+			}			
+			fileDesc = fileDesc.substring(0, fileDesc.lastIndexOf(", "));			
+			fileDesc +=")";
 			model.put("prodFileCount", pfServ.countAll());
+			model.put("prodFileDesc", fileDesc);
 		}
         // for chart
         {
@@ -102,7 +130,7 @@ public class MenuController {
 	 * @param model
 	 */
 	private void generatePieChart(Map<String, Object> model) {
-		List<Object[]> result = g2Serv.lotCountByHpl();
+		List<Object[]> result = lotCount;
 		List<String> cols = result.stream().map(arg0 -> (String) arg0[0]).sorted().collect(Collectors.toList());
 		// List<String> data = result.stream().map(arg0 ->
 		// arg0[1].toString()).collect(Collectors.toList());
@@ -117,14 +145,14 @@ public class MenuController {
 		}
 		pcLot.setBackgroundColor(bg);		
 
-		List<Object[]> result2 = pfServ.fileCountByHpl();
+		List<Object[]> result2 = fileCount;
 		PieChartJs pcFile = new PieChartJs();
-		List<String> bg2 = new ArrayList<String>();
+//		List<String> bg2 = new ArrayList<String>();
 		pcFile.setData(result2.stream().map(arg0 -> (Integer) arg0[1]).collect(Collectors.toList()));
-		for (int idx = 0; idx < result.size(); idx++) {
-			bg2.add(CommonUtil.randomHexColor());
-		}
-		pcFile.setBackgroundColor(bg2);
+//		for (int idx = 0; idx < result.size(); idx++) {
+//			bg2.add(CommonUtil.randomHexColor());
+//		}
+		pcFile.setBackgroundColor(bg);
 
 		List<PieChartJs> pcList = new ArrayList<MenuController.PieChartJs>();
 		pcList.add(pcLot);
@@ -161,7 +189,7 @@ public class MenuController {
 	}
 	
 	private void generatePieChart2(Map<String, Object> model) {
-		List<Object[]> result = g2Serv.lotCountByHpl();
+		List<Object[]> result = lotCount;
 		//List<String> cols = result.stream().map(arg0 -> (String) arg0[0]).sorted().collect(Collectors.toList());
 		// List<String> data = result.stream().map(arg0 ->
 		// arg0[1].toString()).collect(Collectors.toList());

@@ -26,6 +26,6 @@ public interface ProdFileRepository extends JpaRepository<ProdFile, Integer> {
 			+ "and HPL = ?3 ", nativeQuery = true)
 	Integer countDuplicateFile(String fileName, String lotNo, String hpl);
 	
-	@Query(value = "select HPL, count(*) as CNT from PROD_FILE where 1=1 group by HPL", nativeQuery = true)
+	@Query(value = "select HPL, count(*) as CNT from PROD_FILE where 1=1 group by HPL order by HPL", nativeQuery = true)
 	List<Object[]> fileCountByHpl();
 }
