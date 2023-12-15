@@ -198,7 +198,7 @@ public class UsbConfController {
 			model.put("modifiedUser", dto.getModifierId());
 
 			List<Usr> selected = getSelectedUsr(pkUconfId);
-			List<Usr> remaining = getRemainingUsr(selected);
+			List<Usr> remaining = getRemainingUsr(selected, dto.getHpl());
 
 			model.put("selUsrItems", selected);
 			model.put("usrItems", remaining);
@@ -635,9 +635,10 @@ public class UsbConfController {
 	 * @param selected
 	 * @return
 	 */
-	protected List<Usr> getRemainingUsr(List<Usr> selected) {
-		List<Usr> remaining = usbConfServ.getAllActiveUsr().stream().filter(arg0 -> !selected.contains(arg0))
-				.filter(arg0 -> StringUtils.equals(arg0.getGroupId(), selected.get(0).getGroupId()))
+	protected List<Usr> getRemainingUsr(List<Usr> selected, String hpl) {
+		List<Usr> remaining = usbConfServ.getAllActiveUsr().stream()
+				.filter(arg0 -> !selected.contains(arg0))
+				.filter(arg0 -> StringUtils.equals(arg0.getGroupId(), hpl))
 				.collect(Collectors.toList());
 
 		// add susr
