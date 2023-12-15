@@ -174,7 +174,10 @@ public class UserProfileController {
 			@RequestParam(name = "para3") String para3, @RequestParam(name = "para4") String para4,
 			HttpSession session) {
 
-		boolean hasError = false;
+		boolean hasError = false;		
+
+		model.remove("success");
+		model.remove("error");
 		
 		if (StringUtils.isNotEmpty((String) model.get("filterGrp")))
 			gpName = (String) model.get("filterGrp");
@@ -322,7 +325,10 @@ public class UserProfileController {
 					// FSGS) Kent 26/2/2021 Add/changed - Add Function executed log END
 
 					model.put("success", msgSource.getMessage("msgSuccessAdd", new Object[] {}, Locale.getDefault()));
-					sendEmail(usr.getEmail(), usr.getUserId(), randomPass);
+					
+					String cc = userProfileServ.searchUserProfile("", request.getRemoteUser(), "", "", "", "",
+							String.valueOf(CommonConstants.SEARCH_OPTION_EXACT), "", "").get(0).getEmail();
+					sendEmail(usr.getEmail(), usr.getUserId(), randomPass, "Create", cc);
 
 				} else {
 					
@@ -585,16 +591,21 @@ public class UserProfileController {
 
 	}
 
-	private void sendEmail(String email, String userId, String password) {
+	private void sendEmail(String email, String userId, String password, String action, String cc) {
 		//String content = "User password for " + userId + " .\n" + "Kindly use this password to login pfc\n" + password
 		//		+ "\n" + "Thank you.";
 		
 		AlertMessage alertMsg = alertMsgServ.searchAlertById(AlertDefEnum.PWD_LOGIN.strValue());
-
+		String subj = alertMsg.getSubject().replace("[@UserName]", userId).replace("[@Action]", action);
+		String body = alertMsg.getDescription().replace("[@Pwd]", password).replace("[@UserName]", userId);
+		
+		logger.debug("sendEmail() subj={}, body={}",subj,body);
+		
 		SimpleMailMessage msg = new SimpleMailMessage();
 		msg.setTo(email);
-		msg.setSubject(alertMsg.getSubject().replace("[@UserName]", userId));
-		msg.setText(alertMsg.getDescription().replace("[@Pwd]", password));
+		msg.setCc(cc);
+		msg.setSubject(subj);
+		msg.setText(body);
 
 		javaMailSender.send(msg);
 	}
@@ -655,7 +666,9 @@ public class UserProfileController {
 			
 			//logger.debug("reset() usrID={}, newPass={}", usrID, randomPass);
 			
-			sendEmail(email, usrID, randomPass);
+			String cc = userProfileServ.searchUserProfile("", request.getRemoteUser(), "", "", "", "",
+					String.valueOf(CommonConstants.SEARCH_OPTION_EXACT), "", "").get(0).getEmail();
+			sendEmail(email, usrID, randomPass, "Reset", cc);
 
 		} catch (Exception e) {
 
