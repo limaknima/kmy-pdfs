@@ -12,7 +12,9 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 import java.util.stream.Stream;
 
@@ -211,6 +213,8 @@ public class CommonUtil implements Serializable {
 		if(procType == CommonConstants.PROCESS_TYPE_HPL_MIKRON) {
 			result.add(CommonConstants.PROCESS_SUBTYPE_GTMS_M_CELL1);
 			result.add(CommonConstants.PROCESS_SUBTYPE_GTMS_M_CELL2);
+			//result.add(CommonConstants.PROCESS_SUBTYPE_GTMS_M_CELL2_1);
+			//result.add(CommonConstants.PROCESS_SUBTYPE_GTMS_M_CELL2_2);
 			result.add(CommonConstants.PROCESS_SUBTYPE_GTMS_M_CELL3);
 			
 		} else if (procType == CommonConstants.PROCESS_TYPE_HPL_BACKEND) {
@@ -221,6 +225,8 @@ public class CommonUtil implements Serializable {
 		} else {
 			result.add(CommonConstants.PROCESS_SUBTYPE_GTMS_M_CELL1);
 			result.add(CommonConstants.PROCESS_SUBTYPE_GTMS_M_CELL2);
+			//result.add(CommonConstants.PROCESS_SUBTYPE_GTMS_M_CELL2_1);
+			//result.add(CommonConstants.PROCESS_SUBTYPE_GTMS_M_CELL2_2);
 			result.add(CommonConstants.PROCESS_SUBTYPE_GTMS_M_CELL3);
 			result.add(CommonConstants.PROCESS_SUBTYPE_GTMS_B_FET1);
 			result.add(CommonConstants.PROCESS_SUBTYPE_GTMS_B_FET2);
@@ -457,6 +463,16 @@ public class CommonUtil implements Serializable {
 		String colorCode = String.format("#%06x", nextInt);
 
 		return colorCode;
+	}
+	
+	public static Map<String, String> hplHexColor() {
+		Map<String, String> colors = new HashMap<>();
+
+		colors.put(CommonConstants.RECORD_TYPE_ID_HPL_GTMS, "#254892");
+		colors.put(CommonConstants.RECORD_TYPE_ID_HPL_IF, "#3dd5f0");
+		colors.put(CommonConstants.RECORD_TYPE_ID_HPL_MGG, "#d4cbb6");
+
+		return colors;
 	}
 
 }
