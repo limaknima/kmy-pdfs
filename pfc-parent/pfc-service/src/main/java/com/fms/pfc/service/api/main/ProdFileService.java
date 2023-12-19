@@ -393,8 +393,11 @@ public class ProdFileService {
 
 			if (StringUtils.isNotEmpty(year))
 				filePath = filePath + year + "/";
-			if (StringUtils.isNotEmpty(mth))
-				filePath = filePath + mth + "/";
+			
+			//if(!hpl.equals("GTMS")) {
+				if (StringUtils.isNotEmpty(mth))
+					filePath = filePath + mth + "/";				
+			//}
 		}
 
 		List<RelPathDto2> relList = new ArrayList<RelPathDto2>();
@@ -473,6 +476,27 @@ public class ProdFileService {
 	public List<Object[]> fileCountByHpl(){
 		return prodFileRepo.fileCountByHpl();
 	}
+	
+	/**
+	 * Count file by HPL
+	 * @return List<Object[]>
+	 */
+	public List<Object[]> fileCountByHpl2() {
+
+		List<Object[]> objs = new ArrayList<>();
+		List<Integer> results = prodFileRepo.fileCountByHpl2();
+		for (int idx = 0; idx < results.size(); idx++) {
+			if (idx == 0) {
+				objs.add(new Object[] { "GTMS", results.get(idx) });
+			} else if (idx == 1) {
+				objs.add(new Object[] { "IF", results.get(idx) });
+			} else if (idx == 2) {
+				objs.add(new Object[] { "MGG", results.get(idx) });
+			}
+		}
+
+		return objs;
+	}
 
 	/**
 	 * Save file to disk
@@ -546,12 +570,14 @@ public class ProdFileService {
 		String seq = pfDto.getSeq();
 		
 		if(pathDto.getProcType() == 1) {
-			if(pathDto.getSubProc().equals("CELL1")) {
-				
-			} else if (pathDto.getSubProc().equals("CELL2")) {
-				
+			if (pathDto.getSubProc().equals("CELL1")) {
+
+			} else if (pathDto.getSubProc().equals("CELL2.1")) {
+
+			} else if (pathDto.getSubProc().equals("CELL2.2")) {
+
 			} else if (pathDto.getSubProc().equals("CELL3")) {
-				
+
 			}
 			
 		} else if (pathDto.getProcType() == 2) {				

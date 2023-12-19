@@ -55,7 +55,7 @@ public class MenuController {
 		this.pfServ = pfServ;
 		
 		this.lotCount = g2Serv.lotCountByHpl();
-		this.fileCount = pfServ.fileCountByHpl();
+		this.fileCount = pfServ.fileCountByHpl2();
 	}	
 
 	@GetMapping("/")
@@ -141,7 +141,8 @@ public class MenuController {
 		List<String> bg = new ArrayList<String>();
 		pcLot.setData(result.stream().map(arg0 -> (Integer) arg0[1]).collect(Collectors.toList()));
 		for (int idx = 0; idx < result.size(); idx++) {
-			bg.add(CommonUtil.randomHexColor());
+			//bg.add(CommonUtil.randomHexColor());
+			bg.add(CommonUtil.hplHexColor().get(result.get(idx)[0]));
 		}
 		pcLot.setBackgroundColor(bg);		
 
@@ -175,7 +176,7 @@ public class MenuController {
 			BarChartJs bar = new BarChartJs();
 			bar.setLabel(hpl);
 			bar.setName(hpl);
-			bar.setBackgroundColor(CommonUtil.randomHexColor());
+			bar.setBackgroundColor(CommonUtil.hplHexColor().get(hpl));
 			
 			List<Integer> mths = new ArrayList<Integer>();
 			for(int idx = 1 ; idx <=month; idx ++) {

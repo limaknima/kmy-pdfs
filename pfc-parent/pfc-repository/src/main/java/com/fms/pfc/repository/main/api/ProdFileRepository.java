@@ -28,4 +28,11 @@ public interface ProdFileRepository extends JpaRepository<ProdFile, Integer> {
 	
 	@Query(value = "select HPL, count(*) as CNT from PROD_FILE where 1=1 group by HPL order by HPL", nativeQuery = true)
 	List<Object[]> fileCountByHpl();
+	
+	@Query(value = "select count(1) AS CNT from PROD_FILE where HPL = 'GTMS' "
+			+ "union all "
+			+ "select count(1)  AS CNT  from PROD_FILE where HPL = 'IF' "
+			+ "union all "
+			+ "select count(1)  AS CNT from PROD_FILE where HPL = 'MGG' ", nativeQuery = true)
+	List<Integer> fileCountByHpl2();
 }
