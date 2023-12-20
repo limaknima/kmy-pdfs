@@ -17,6 +17,13 @@ public interface GrpMenuRepository extends JpaRepository<GrpMenuItem, String> {
 	@Query(value = "select * from grp_menu_item where grp_id = ?1 order by menu_item_id", nativeQuery = true)
 	List<GrpMenuItem> searchMenu(String groupId);
 	
+	@Query(value = "select * from grp_menu_item where 1=1 "
+			+ "and grp_id = ?1 "
+			+ "and charindex(?2, roles) <> 0 "
+			+ "and ?2 in (select value from [dbo].[fn_split](ROLES,',') ) "
+			+ "order by menu_item_id ", nativeQuery = true)
+	List<GrpMenuItem> searchMenu(String groupId, String roleId);
+	
 	@Query(value = "select * from grp_menu_item where grp_id = ?1 and menu_item_id = ?2 order by menu_item_id", nativeQuery = true)
 	List<GrpMenuItem> searchMenu(String groupId, int menuItemId);
 	
@@ -28,9 +35,9 @@ public interface GrpMenuRepository extends JpaRepository<GrpMenuItem, String> {
 
 	@Modifying
 	@Transactional
-	@Query(value = "INSERT INTO GRP_MENU_ITEM (GRP_ID,MENU_ID,PARENT_MENU_ITEM_ID,MENU_ITEM_ID) " + "VALUES "
-			+ "(?1, ?2, ?3, ?4)", nativeQuery = true)
-	void addGrpMenuItem(String grpId, int menuId, int parentMenuItemId, int menuItemId);
+	@Query(value = "INSERT INTO GRP_MENU_ITEM (GRP_ID,MENU_ID,PARENT_MENU_ITEM_ID,MENU_ITEM_ID,ROLES) " + "VALUES "
+			+ "(?1, ?2, ?3, ?4, ?5)", nativeQuery = true)
+	void addGrpMenuItem(String grpId, int menuId, int parentMenuItemId, int menuItemId, String roles);
 
 	@Modifying
 	@Transactional

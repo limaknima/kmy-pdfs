@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 import com.fms.pfc.domain.converter.GrpMenuItemConverter;
 import com.fms.pfc.domain.dto.GrpMenuItemDto;
 import com.fms.pfc.domain.dto.LabelAndValueDto;
+import com.fms.pfc.domain.dto.RoleDto;
 import com.fms.pfc.domain.model.GrpMenuItem;
 import com.fms.pfc.domain.model.MenuItem;
 import com.fms.pfc.repository.base.api.GrpMenuRepository;
@@ -25,17 +26,24 @@ public class GrpMenuService {
 	private GrpMenuRepository grpMenuRepo;
 	private GrpMenuItemConverter gmiConv;
 	private MenuRepository menuRepo;
+	private RoleService roleServ;
 
 	@Autowired
-	public GrpMenuService(GrpMenuRepository grpMenuRepo, MenuRepository menuRepo, GrpMenuItemConverter gmiConv) {
+	public GrpMenuService(GrpMenuRepository grpMenuRepo, MenuRepository menuRepo, GrpMenuItemConverter gmiConv,
+			RoleService roleServ) {
 		super();
 		this.grpMenuRepo = grpMenuRepo;
 		this.menuRepo = menuRepo;
 		this.gmiConv = gmiConv;
+		this.roleServ = roleServ;
 	}
 
 	public List<GrpMenuItem> searchMenu(String groupId) {
 		return grpMenuRepo.searchMenu(groupId);
+	}
+	
+	public List<GrpMenuItem> searchMenu(String groupId, String roleId) {
+		return grpMenuRepo.searchMenu(groupId, roleId);
 	}
 
 	public List<GrpMenuItemDto> searchMenuDto(String groupId) {
@@ -102,7 +110,12 @@ public class GrpMenuService {
 	}
 
 	public void addGrpMenuItem(String grpId, int menuId, int parentMenuItemId, int menuItemId) {
-		grpMenuRepo.addGrpMenuItem(grpId, menuId, parentMenuItemId, menuItemId);
+		
+		List<RoleDto> dtos = roleServ.findAll();
+		List<String> roles = dtos.stream().map(RoleDto::getRoleId).collect(Collectors.toList());
+		String rol = String.join(",", roles);
+		
+		grpMenuRepo.addGrpMenuItem(grpId, menuId, parentMenuItemId, menuItemId, rol);
 	}
 
 	public void deleteGrpMenuItem(String grpId, int menuItemId) {
@@ -155,7 +168,7 @@ public class GrpMenuService {
 		// compare current to db
 		List<String> add = ui.stream().filter(obj -> !db.contains(obj)).collect(Collectors.toList());
 		add.forEach(arg0 -> {
-			grpMenuRepo.addGrpMenuItem(hpl, 1, menuRepo.searchMenuItem(Integer.valueOf(arg0)).getParentMenuId(),
+			this.addGrpMenuItem(hpl, 1, menuRepo.searchMenuItem(Integer.valueOf(arg0)).getParentMenuId(),
 					Integer.valueOf(arg0));
 		});
 //		add.forEach(arg0 -> {

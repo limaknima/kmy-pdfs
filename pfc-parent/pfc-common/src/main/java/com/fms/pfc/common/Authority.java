@@ -17,9 +17,11 @@ import com.fms.pfc.domain.dto.MenuRoleFunctionDto;
 import com.fms.pfc.domain.model.GrpMenuItem;
 import com.fms.pfc.domain.model.MenuItem;
 import com.fms.pfc.domain.model.Usr;
+import com.fms.pfc.domain.model.UsrRole;
 import com.fms.pfc.service.api.base.GrpMenuService;
 import com.fms.pfc.service.api.base.LoginService;
 import com.fms.pfc.service.api.base.MenuRoleFunctionService;
+import com.fms.pfc.service.api.base.UsrRoleService;
 
 @Service
 public class Authority {
@@ -29,13 +31,15 @@ public class Authority {
 	private LoginService logServ;
 	private GrpMenuService grpMenuServ;
 	private MenuRoleFunctionService mrfServ;
+	private UsrRoleService usrRoleServ;
 
 	@Autowired
-	public Authority(LoginService logServ, GrpMenuService grpMenuServ, MenuRoleFunctionService mrfServ) {
+	public Authority(LoginService logServ, GrpMenuService grpMenuServ, MenuRoleFunctionService mrfServ, UsrRoleService usrRoleServ) {
 		super();
 		this.logServ = logServ;
 		this.grpMenuServ = grpMenuServ;
 		this.mrfServ = mrfServ;
+		this.usrRoleServ = usrRoleServ;
 	}
 
 	public Map<String, Object> onPageLoad(Map<String, Object> model, HttpServletRequest request) {
@@ -52,7 +56,11 @@ public class Authority {
 		Usr usr = logServ.searchUser(request.getRemoteUser());
 		model.put("loggedUserGrp", usr.getGroupId());
 		model.put("loggedUserOrg", usr.getOrgId());
-		List<GrpMenuItem> groupMenu = grpMenuServ.searchMenu(usr.getGroupId());
+		
+		List<UsrRole> usrRoleList = usrRoleServ.searchUserRole(request.getRemoteUser());		
+		String roleId = usrRoleList.get(0).getRoleId();
+		
+		List<GrpMenuItem> groupMenu = grpMenuServ.searchMenu(usr.getGroupId(), roleId);
 		for (int i=0; i<groupMenu.size(); i ++) {
 			String menuId = "M" + String.valueOf(groupMenu.get(i).getMenuItemId());
 			model.put(menuId, true);
