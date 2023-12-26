@@ -771,7 +771,7 @@ public class ProdFileController {
 		List<RelPathDto2> paths = generatePathsItems2(hplId, year, prodLn2, mth, seq2, procType, subProc);
 		respObjMap.put("pathsItems", paths);
 		model.put("pathsItemsSize", paths.size());
-		logger.debug("loadFilePathOnly() hpl={}, year={}, mth={}, prodLn2={}, seq2={}, procType={}, subProc={}, lot size={}", hplId, year, mth,
+		logger.debug("loadFilePathOnly() hpl={}, year={}, mth={}, prodLn2={}, seq2={}, procType={}, subProc={}, paths size={}", hplId, year, mth,
 				prodLn2, seq2, procType, subProc, paths.size());
 		return respObjMap;
 	}
@@ -832,8 +832,10 @@ public class ProdFileController {
 		// map back file path (RelPathDto2) based on hpl, year, month, prodln
 		List<RelPathDto2> relPathList = foldCatConfServ2.searchRelPathByCriteria(confList.get(0).getPkCatgId(), "",
 				(String) respObjMap.get(CommonConstants.HPL_LOT_KEY_YEAR),
-				(String) respObjMap.get(CommonConstants.HPL_LOT_KEY_MONTH), "",
-				(String) respObjMap.get(CommonConstants.HPL_LOT_KEY_PRODLN), "", null, "");
+				!hplId.equals(CommonConstants.RECORD_TYPE_ID_HPL_GTMS)
+						? (String) respObjMap.get(CommonConstants.HPL_LOT_KEY_MONTH)
+						: "",
+				"", (String) respObjMap.get(CommonConstants.HPL_LOT_KEY_PRODLN), "", null, "");
 		model.put("filePath2Temp", relPathList.isEmpty() ? 0 : relPathList.get(0).getPkRelPathId());		
 
 		return respObjMap;
@@ -1068,7 +1070,8 @@ public class ProdFileController {
 		} else if (hpl.equals(CommonConstants.RECORD_TYPE_ID_HPL_GTMS)) {
 			if (procType == CommonConstants.PROCESS_TYPE_HPL_MIKRON) {
 				if (subProc.equals(CommonConstants.PROCESS_SUBTYPE_GTMS_M_CELL1)
-						|| subProc.equals(CommonConstants.PROCESS_SUBTYPE_GTMS_M_CELL2)
+						|| subProc.equals(CommonConstants.PROCESS_SUBTYPE_GTMS_M_CELL2_1)
+						|| subProc.equals(CommonConstants.PROCESS_SUBTYPE_GTMS_M_CELL2_2)
 						|| subProc.equals(CommonConstants.PROCESS_SUBTYPE_GTMS_M_CELL3)) {
 					result = DEF_FILE_FORMAT_MIKRON;
 				} 
@@ -1552,8 +1555,8 @@ public class ProdFileController {
 			// file len -> 12
 			if (procTypeTemp == CommonConstants.PROCESS_TYPE_HPL_MIKRON) {
 				if (Arrays.asList(CommonConstants.PROCESS_SUBTYPE_GTMS_M_CELL1,
-						CommonConstants.PROCESS_SUBTYPE_GTMS_M_CELL2, CommonConstants.PROCESS_SUBTYPE_GTMS_M_CELL3)
-						.contains(subProcTemp)) {
+						CommonConstants.PROCESS_SUBTYPE_GTMS_M_CELL2_1, CommonConstants.PROCESS_SUBTYPE_GTMS_M_CELL2_2,
+						CommonConstants.PROCESS_SUBTYPE_GTMS_M_CELL3).contains(subProcTemp)) {
 				}
 			}
 			
@@ -1806,7 +1809,7 @@ public class ProdFileController {
 			//	paths.add(relPathDto);
 			//}
 			if(hplId.equals(CommonConstants.RECORD_TYPE_ID_HPL_GTMS)) {
-				paths.addAll(foldCatConfServ2.searchRelPathByCriteria(foldDto.getPkCatgId(), "", year, mth, "", prodLn2, "", procType, subProc));
+				paths.addAll(foldCatConfServ2.searchRelPathByCriteria(foldDto.getPkCatgId(), "", year, "", "", prodLn2, "", procType, subProc));
 			} else {
 				paths.addAll(foldCatConfServ2.searchRelPathByCriteria(foldDto.getPkCatgId(), "", year, mth, "", prodLn2, "", 0, ""));	
 			}

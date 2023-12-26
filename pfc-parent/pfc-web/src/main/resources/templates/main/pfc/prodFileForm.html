@@ -1222,8 +1222,11 @@
 				}
 				if(year !== '')
 					result = result + year + "/";			
-				if(month !=='')
-					result = result + month + "/";			
+					
+				if(hplId !== '' && hplId !== 'GTMS'){
+					if(month !=='')
+						result = result + month + "/";								
+				}
 				
 				//alert("result="+result);
 				document.getElementById("relPathFilePath").value = result;		

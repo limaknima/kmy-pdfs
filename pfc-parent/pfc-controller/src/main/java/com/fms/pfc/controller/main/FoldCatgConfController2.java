@@ -601,18 +601,18 @@ public class FoldCatgConfController2 {
 			// as of current specs, GTMS has different folder format to cater for mikron and back end process
 			// so only validate both in sub-form for GTMS
 			String hplName = foldDto.getHpl();
-			if(StringUtils.equalsIgnoreCase(hplName.trim(), CommonConstants.GROUP_ID_GTMS)) {
+			if(StringUtils.equalsIgnoreCase(hplName.trim(), CommonConstants.RECORD_TYPE_ID_HPL_GTMS)) {
 				if (StringUtils.isEmpty(relPathFilePath) 
 						|| StringUtils.isEmpty(relPathFileFormat)
 						|| StringUtils.isEmpty(year)
-						|| StringUtils.isEmpty(mth)
+						//|| StringUtils.isEmpty(mth)
 						|| StringUtils.isEmpty(prodLn2)
 						|| procType <= 0
 						|| StringUtils.isEmpty(subProc)) {
 					errorMsg += "Please key in " + FILE_PATH_LBL 
 							+ ", " + FILE_FORMAT_LBL 
 							+ ", " + YEAR_LBL 
-							+ ", " + MONTH_LBL 
+							//+ ", " + MONTH_LBL 
 							+ ", " + PROD_LN_LBL 
 							+ ", " + PROC_TYPE_LBL
 							+ ", " + SUB_PROC_LBL

@@ -394,10 +394,10 @@ public class ProdFileService {
 			if (StringUtils.isNotEmpty(year))
 				filePath = filePath + year + "/";
 			
-			//if(!hpl.equals("GTMS")) {
+			if(!hpl.equals("GTMS")) {
 				if (StringUtils.isNotEmpty(mth))
 					filePath = filePath + mth + "/";				
-			//}
+			}
 		}
 
 		List<RelPathDto2> relList = new ArrayList<RelPathDto2>();
@@ -415,7 +415,7 @@ public class ProdFileService {
 		} else {
 			RelPathDto2 relDto = new RelPathDto2();
 			relDto.setYear(year);
-			relDto.setMth(mth);
+			relDto.setMth("");
 			relDto.setProdLn(prodLn);
 			relDto.setFilePath(filePath);
 			relDto.setProdFileFormat(defFormat);
@@ -442,7 +442,7 @@ public class ProdFileService {
 				// for IF, MGG
 				rels = foldConfServ.searchRelPathByCriteria(parentId, "", year, mth, "", prodLn, "", 0, "");
 			} else {
-				rels = foldConfServ.searchRelPathByCriteria(parentId, "", year, mth, "", prodLn, "", procType, subProc);
+				rels = foldConfServ.searchRelPathByCriteria(parentId, "", year, "", "", prodLn, "", procType, subProc);
 			}
 
 			// if RelPath not exists, create RelPath

@@ -136,6 +136,8 @@ public class CommonConstants implements Serializable {
 	public static final int PROCESS_TYPE_HPL_BACKEND = 2;
 	public static final String PROCESS_SUBTYPE_GTMS_M_CELL1 = "CELL1";
 	public static final String PROCESS_SUBTYPE_GTMS_M_CELL2 = "CELL2";
+	public static final String PROCESS_SUBTYPE_GTMS_M_CELL2_1 = "CELL2.1";
+	public static final String PROCESS_SUBTYPE_GTMS_M_CELL2_2 = "CELL2.2";
 	public static final String PROCESS_SUBTYPE_GTMS_M_CELL3 = "CELL3";
 	public static final String PROCESS_SUBTYPE_GTMS_B_FET1 = "FET1";
 	public static final String PROCESS_SUBTYPE_GTMS_B_FET2 = "FET2";

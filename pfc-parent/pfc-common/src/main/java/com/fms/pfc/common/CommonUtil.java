@@ -212,9 +212,9 @@ public class CommonUtil implements Serializable {
 		List<String> result = new ArrayList<String>();
 		if(procType == CommonConstants.PROCESS_TYPE_HPL_MIKRON) {
 			result.add(CommonConstants.PROCESS_SUBTYPE_GTMS_M_CELL1);
-			result.add(CommonConstants.PROCESS_SUBTYPE_GTMS_M_CELL2);
-			//result.add(CommonConstants.PROCESS_SUBTYPE_GTMS_M_CELL2_1);
-			//result.add(CommonConstants.PROCESS_SUBTYPE_GTMS_M_CELL2_2);
+			//result.add(CommonConstants.PROCESS_SUBTYPE_GTMS_M_CELL2);
+			result.add(CommonConstants.PROCESS_SUBTYPE_GTMS_M_CELL2_1);
+			result.add(CommonConstants.PROCESS_SUBTYPE_GTMS_M_CELL2_2);
 			result.add(CommonConstants.PROCESS_SUBTYPE_GTMS_M_CELL3);
 			
 		} else if (procType == CommonConstants.PROCESS_TYPE_HPL_BACKEND) {
@@ -224,9 +224,9 @@ public class CommonUtil implements Serializable {
 			
 		} else {
 			result.add(CommonConstants.PROCESS_SUBTYPE_GTMS_M_CELL1);
-			result.add(CommonConstants.PROCESS_SUBTYPE_GTMS_M_CELL2);
-			//result.add(CommonConstants.PROCESS_SUBTYPE_GTMS_M_CELL2_1);
-			//result.add(CommonConstants.PROCESS_SUBTYPE_GTMS_M_CELL2_2);
+			//result.add(CommonConstants.PROCESS_SUBTYPE_GTMS_M_CELL2);
+			result.add(CommonConstants.PROCESS_SUBTYPE_GTMS_M_CELL2_1);
+			result.add(CommonConstants.PROCESS_SUBTYPE_GTMS_M_CELL2_2);
 			result.add(CommonConstants.PROCESS_SUBTYPE_GTMS_M_CELL3);
 			result.add(CommonConstants.PROCESS_SUBTYPE_GTMS_B_FET1);
 			result.add(CommonConstants.PROCESS_SUBTYPE_GTMS_B_FET2);
