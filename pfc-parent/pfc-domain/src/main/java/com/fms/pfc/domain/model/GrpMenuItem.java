@@ -33,4 +33,7 @@ public class GrpMenuItem {
 	@Column(name = "menu_item_id")
 	private int menuItemId;
 	
+	@Column(name = "roles")
+	private String roles;
+	
 }

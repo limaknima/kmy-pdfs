@@ -71,7 +71,7 @@ public class GrpMenuService {
 		int idx = 1;
 		String label = "";
 		for (GrpMenuItemDto dto : dtos) {
-			logger.debug("getMenuItemId={}", dto.getMenuItemId());
+			//logger.debug("getMenuItemId={}", dto.getMenuItemId());
 			if (dto.getParentMenuId() != 0) {
 				label = "---- " + menuRepo.searchMenuItem(dto.getMenuItemId()).getMenuItemName();
 				//dto.setMenuItemNameTemp(label);
@@ -121,6 +121,10 @@ public class GrpMenuService {
 	public void deleteGrpMenuItem(String grpId, int menuItemId) {
 		grpMenuRepo.deleteGrpMenuItem(grpId, menuItemId);
 	}
+	
+	public void updateGrpMenuItem(String grpId, int menuItemId, String roles) {
+		grpMenuRepo.updateGrpMenuItem(grpId, menuItemId, roles);
+	}
 
 	public List<LabelAndValueDto> searchMenuItems() {
 		List<LabelAndValueDto> result = new ArrayList<LabelAndValueDto>();
@@ -147,6 +151,10 @@ public class GrpMenuService {
 	
 	public List<String> defaultGrpList () {
 		return grpMenuRepo.defaultGrpList();
+	}
+	
+	public List<RoleDto> getRoles(){
+		return roleServ.findAll();
 	}
 
 	public void save(String hpl, List<String> selected, List<String> current) {

@@ -91,6 +91,7 @@ public class GrpMenuItemController {
 		model = auth.onPageLoad(model, request);
 		auth.isAuthUrl(request, response);
 		mrfServ.menuRoleFunction(model, MENU_ITEM_ID, (String) model.get("loggedUser"));
+		model.put("hideRoleTab", true);
 		
 		filter(true);		
 
@@ -152,6 +153,8 @@ public class GrpMenuItemController {
 		screenMode = CommonConstants.SCREEN_MODE_VIEW;
 		model.put("mode", screenMode);
 		model.put("btnSaveSts", true);
+		model.put("currTab", "tab1");
+		model.put("editRow", "no");
 
 		// Set form header
 		model.put("header", "View " + MODULE_NAME);
@@ -168,6 +171,9 @@ public class GrpMenuItemController {
 
 		model.put("selMenuItems", selected);
 		model.put("menuItems", remaining);
+		model.put("allRoles", gmServ.getRoles());
+		model.put("roleAccess", getRoleAccess(hpl,0));
+		model.put("hideRoleTab", false);
 
 		// Put model to HTML
 //		if (dto != null) {
@@ -351,6 +357,7 @@ public class GrpMenuItemController {
 		}
 
 		model.put("btnEdit", false);
+		model.put("currTab", "tab1");
 		//model.put("searchHplItems", g2LotServ.hplList());
 		filter(true);
 
@@ -366,8 +373,57 @@ public class GrpMenuItemController {
 		model.put("btnSaveSts", false);
 		model.put("btnSave", "Save");
 		model.put("header", "Edit " + MODULE_NAME);
+		model.put("currTab", "tab1");
+		model.put("editRow", "no");
 		model.remove("success");
 		model.remove("error");
+
+		return new ModelAndView("/base/admin/grpMenuItemForm", model);
+	}
+	
+	@PostMapping(value = "/base/admin/grpMenuItemFormSave", params = "action=editRow")
+	public ModelAndView editRowSave(@Valid GrpMenuItemDto dto,
+			@RequestParam(name = "selectRole", required = false) String selectRole, HttpServletRequest request,
+			BindingResult bindingResult, HttpSession session) throws Exception {
+
+		model.put("editRow", "no");
+		model.put("currTab", "tab2");
+
+		logger.debug("editRowSave() hplId={},menuItemId={},selectRole={}", model.get("editHpl"), model.get("editMenu"),
+				selectRole);
+
+		if (!StringUtils.isEmpty(selectRole)) {
+			// update to db
+			gmServ.updateGrpMenuItem((String) model.get("editHpl"), (Integer) model.get("editMenu"), selectRole);
+			model.put("roleAccess", getRoleAccess((String) model.get("editHpl"), 0));
+			model.put("success", "Role Access for menu "+(String) model.get("editMenuName")+" successfully updated to "+selectRole);
+			model.remove("error");
+		} else {
+			model.put("error", "Role Access for menu "+(String) model.get("editMenuName")+" not updated. To modify, please select at least one role.");
+			model.remove("success");
+		}
+
+		return new ModelAndView("/base/admin/grpMenuItemForm", model);
+	}
+
+	@GetMapping("/base/admin/grpMenuItemEditRow")
+	public ModelAndView editRowGet(@Valid GrpMenuItemDto dto, @RequestParam(name = "hpl") String hplId,
+			@RequestParam(name = "menuItemId") int menuItemId,
+			@RequestParam(name = "menuName") String menuItemNameTemp, HttpServletRequest request,
+			BindingResult bindingResult, HttpSession session) throws Exception {
+
+		model.put("editRow", "yes");
+		model.put("currTab", "tab2");
+		model.remove("error");
+		model.remove("success");
+
+		logger.debug("editRowGet() hplId={},menuItemId={}", hplId, menuItemId);
+
+		model.put("editHpl", hplId);
+		model.put("editMenu", menuItemId);
+
+		menuItemNameTemp = menuItemNameTemp.substring(menuItemNameTemp.indexOf(" ") + 1, menuItemNameTemp.length());
+		model.put("editMenuName", menuItemNameTemp);
 
 		return new ModelAndView("/base/admin/grpMenuItemForm", model);
 	}
@@ -490,6 +546,10 @@ public class GrpMenuItemController {
 				.filter(arg0 -> !selIds.contains(arg0.getValue()))
 				.collect(Collectors.toList());
 		return remaining;
+	}
+
+	private List<GrpMenuItemDto> getRoleAccess(String hpl, int i) {		
+		return gmServ.searchMenuDto(hpl, i);
 	}
 	
 	private void getAllLables() {

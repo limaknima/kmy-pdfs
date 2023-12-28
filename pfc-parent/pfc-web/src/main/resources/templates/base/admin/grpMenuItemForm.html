@@ -7,6 +7,7 @@
 <link rel="stylesheet" type="text/css" th:href="@{/css/bootstrap-duallistbox.css}">
 <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/css/bootstrap-datepicker.css" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-multiselect/0.9.13/css/bootstrap-multiselect.css">  
 
 <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
 <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
@@ -16,6 +17,30 @@
 <script src="https://cdn.rawgit.com/google/code-prettify/master/loader/run_prettify.js"></script>
 <script type="text/javascript" src="../../js/jquery.bootstrap-duallistbox.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/1000hz-bootstrap-validator/0.11.9/validator.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-multiselect/0.9.13/js/bootstrap-multiselect.js"></script>  
+
+<style>
+.tableFixHead {
+	overflow-y: auto;
+	overflow-x: hidden;
+	height: 300px;
+	margin-bottom: 10px;
+}
+
+.tableFixHead thead th {
+	position: sticky;
+	top: 0;
+	background: #F5F5F5;
+	border-top: none;
+	border-bottom: none;
+	box-shadow: inset 0 0.1px 0 #000000, inset 0 -0.1px 0 #000000;
+	border-bottom: none;
+}
+
+.formGap {
+	margin-top: -20px;
+}
+</style>
 
 </head>
 <body onload="init()" class="sb-nav-fixed">
@@ -51,54 +76,159 @@
 								data-toggle="validator" novalidate="true"
 								enctype="multipart/form-data">
 								
-								<div id="hplDiv" class="form-group row">
-									<label class="col-sm-2 col-form-label control-label"><span th:text="#{lblGrpType}"></span>
-										<a name="asterisk" style="color: red;" hidden="true">*</a>
-									</label>
-
-									<div class="row col-sm-5">
-										<label class="col-form-label">:</label>
-										<div class="col">
-											<select id="hpl" class="custom-select" name="hpl" th:value="${hpl}" disabled required>
-												<option value="" selected hidden="true">Please Select</option>
-												<option th:each="hplItem: ${hplItems}"
-													th:value="${hplItem}"
-													th:text="${hplItem}"
-													th:selected="${hplItem} == ${hpl}"/>
-											</select>
-										</div>
-									</div>
-								</div>
+								<ul class="nav nav-tabs" id="tab" role="tablist">
+									<li class="nav-item"><a class="nav-link active" role="tab"
+										data-toggle="tab" href="#tab1" onclick="onInitTab1()"><span th:text="#{lblMenuItem}"></a></li>
+									<li class="nav-item" th:hidden="${hideRoleTab}"><a class="nav-link" data-toggle="tab"
+										role="tab" href="#tab2" onclick="onInitTab2()"><span th:text="#{lblRoleAccess}"></a></li>
+								</ul>
 								
-								<div id="usrListDiv" class="form-group row">
-									<label class="col-sm-2 col-form-label control-label"><span>Menu Item</span>
-										<a name="asterisk" style="color: red;" hidden="true">*</a>
-									</label> 
-									<label class="col-form-label">:</label>
-									<div id="usrListSel" class="col col-sm-5">
-										<div >
-											<ul class="list-group" id="selMenuItemView">
-												<li class="list-group-item" id="selMenuItemView1"
-													th:each="item : ${selMenuItems}"
-													th:value="${item.value}" th:utext="${item.label}">
-												</li>
-											</ul>
+								<div class="tab-content">
+									<!-- Start tab1 -->
+									<div id="tab1" class="container tab-pane active">
+										<br />
+										
+										<div id="hplDiv" class="form-group row">
+											<label class="col-sm-2 col-form-label control-label"><span th:text="#{lblGrpType}"></span>
+												<a name="asterisk" style="color: red;" hidden="true">*</a>
+											</label>
+		
+											<div class="row col-sm-5">
+												<label class="col-form-label">:</label>
+												<div class="col">
+													<select id="hpl" class="custom-select" name="hpl" th:value="${hpl}" disabled required>
+														<option value="" selected hidden="true">Please Select</option>
+														<option th:each="hplItem: ${hplItems}"
+															th:value="${hplItem}"
+															th:text="${hplItem}"
+															th:selected="${hplItem} == ${hpl}"/>
+													</select>
+												</div>
+											</div>
 										</div>
-										<div id="usrChoice" hidden="true">
-											<select multiple="multiple" size="20" name="menuItemChoice1" 
-												data-error="User selection cannot be empty!" 
-												class="dualList" >
-												<option th:each="item : ${menuItems}"
-													th:value="${item.value}" th:utext="${item.label}">
-												</option>
-												<option id="selMenuItemView1" th:each="item : ${selMenuItems}"
-													th:value="${item.value}" th:utext="${item.label}"
-													selected></option>
-											</select>
-											<div class="help-block with-errors"></div>
+										
+										<div id="usrListDiv" class="form-group row">
+											<label class="col-sm-2 col-form-label control-label"><span th:text="#{lblMenuItem}"></span>
+												<a name="asterisk" style="color: red;" hidden="true">*</a>
+											</label> 
+											<label class="col-form-label">:</label>
+											<div id="usrListSel" class="col col-sm-5">
+												<div >
+													<ul class="list-group" id="selMenuItemView">
+														<li class="list-group-item" id="selMenuItemView1"
+															th:each="item : ${selMenuItems}"
+															th:value="${item.value}" th:utext="${item.label}">
+														</li>
+													</ul>
+												</div>
+												<div id="usrChoice" hidden="true">
+													<select multiple="multiple" size="20" name="menuItemChoice1" 
+														data-error="User selection cannot be empty!" 
+														class="dualList" >
+														<option th:each="item : ${menuItems}"
+															th:value="${item.value}" th:utext="${item.label}">
+														</option>
+														<option id="selMenuItemView1" th:each="item : ${selMenuItems}"
+															th:value="${item.value}" th:utext="${item.label}"
+															selected></option>
+													</select>
+													<div class="help-block with-errors"></div>
+												</div>
+											</div>
+										</div>
+									
+									</div>
+									<!-- Finish tab1 -->
+									
+									<!-- Start tab2 -->
+									<div id="tab2" class="container tab-pane fade">
+										<br />
+										<div id="hplDiv" class="form-group row">
+											<label class="col-sm-2 col-form-label control-label"><span th:text="#{lblGrpType}"></span>
+												<a name="asterisk" style="color: red;" hidden="true">*</a>
+											</label>
+		
+											<div class="row col-sm-5">
+												<label class="col-form-label">:</label>
+												<div class="col">
+													<select id="hpl" class="custom-select" name="hpl" th:value="${hpl}" disabled>
+														<option value="" selected hidden="true">Please Select</option>
+														<option th:each="hplItem: ${hplItems}"
+															th:value="${hplItem}"
+															th:text="${hplItem}"
+															th:selected="${hplItem} == ${hpl}"/>
+													</select>
+													
+												</div>
+											</div>
+										</div>
+										<br>
+										<div class="form-group row col" style="margin-bottom: -15px">
+											<div class="col-xs-2">
+												<input id="tabInputSearch" class="form-control form-control-sm" placeholder="Search...">
+											</div>
+										</div>
+										<br>
+										<div class="tableFixHead" style="overflow-x: scroll;">
+											<table class="table table-bordered table-striped">
+												<caption>List of Menu Item</caption>
+												<thead>
+													<tr>
+														<th class="text-left"><span th:text="#{lblMenuItem}"></span></th>
+														<th class="text-left"><span th:text="#{lblRole}"></span></th>
+														<th class="text-left"><span th:text="#{btnAction}"></span></th>
+													</tr>
+												</thead>
+												<tbody id="tabSearchResult">
+													<tr th:each="item: ${roleAccess}">
+														<td th:text="${item.menuItemNameTemp}"></td>
+														<td th:text="${item.roles}"></td>
+														<td>
+															<div class="btn-group">
+																<a class="btn btn-secondary" id="btnEditRow"
+																	th:href="@{/base/admin/grpMenuItemEditRow(hpl=${item.groupId},menuItemId=${item.menuItemId},menuName=${item.menuItemNameTemp})}"><i
+																		class="far fa-edit"></i></a>
+															</div>
+														</td>
+													</tr>
+												</tbody>
+											</table>
+										</div>
+									
+									</div>
+									<!-- Finish tab2 -->									
+									
+								</div>		
+								
+								<!-- START: Edit Row modal -->
+								<div class="modal fade" id="editRowDialog" tabindex="-1" role="dialog" aria-hidden="true">
+									<div class="modal-dialog modal-dialog-centered" role="document">
+										<div class="modal-content">
+											<div class="modal-header">
+												<h5 class="modal-title">Update Role Access</h5>
+												<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+													<span aria-hidden="true">&times;</span>
+												</button>
+											</div>
+											<div class="modal-body">
+												<label class="col-form-label">To update, please select at least one role from below list :</label>
+												<div class="col">
+								
+													<select id="multiple-checkboxes" class="custom-select" name="selectRole" multiple="multiple">
+														<option th:each="rItem: ${allRoles}" th:value="${rItem.roleId}" th:text="${rItem.roleName}" />
+													</select>
+								
+												</div>
+											</div>
+											<div class="modal-footer">
+												<button type="submit" class="btn btn-primary" form="mainForm" value="editRow"
+													name="action">Update</button>
+												<button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+											</div>
 										</div>
 									</div>
 								</div>
+								<!-- END: Edit Row modal -->								
 																
 							</form>
 						</div>
@@ -278,6 +408,14 @@
 	</div>
 
 	<script type="text/javascript">
+		function onInitTab1() {
+			//document.getElementById("btnNext").hidden = false;
+		}
+		
+		function onInitTab2() {
+			//document.getElementById("btnNext").hidden = false;
+		}
+		
 		//When initialise page
 		function init() {
 
@@ -294,6 +432,21 @@
 			} else {
 				document.getElementById("break").hidden = false;
 				document.getElementById("btnViewCancel").hidden = false;
+			}
+			
+			var currTab = "[(${currTab})]";
+			
+			if (currTab === "tab1") {
+				$('#tab a[href="#tab1"]').tab('show');
+			}
+			
+			if (currTab === "tab2") {
+				$('#tab a[href="#tab2"]').tab('show');
+			}
+			
+			var editRow = "[(${editRow})]";
+			if (editRow === "yes") {
+				$('#editRowDialog').modal('show');
 			}
 		}
 
@@ -361,6 +514,25 @@
 		
 		
 	</script>
+	
+	<script type="text/javascript">  
+    	$(document).ready(function() {  
+	        $('#multiple-checkboxes').multiselect({
+				includeSelectAllOption: true,
+            	selectAllValue: 'ALL',
+            	onDeselectAll: function() {
+                	alert('Please select at least one role!');
+            	}
+			});  
+			
+			$("#tabInputSearch").on("keyup",function() {
+				var value = $(this).val().toLowerCase();
+				$("#tabSearchResult tr").filter(function() {
+					$(this).toggle($(this).text().toLowerCase().indexOf(value) > -1)
+				});
+			});
+	    });  
+	</script> 
 
 	<script type="text/javascript" src="../../js/scripts.js"></script>
 

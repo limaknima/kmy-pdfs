@@ -24,7 +24,11 @@ public interface GrpMenuRepository extends JpaRepository<GrpMenuItem, String> {
 			+ "order by menu_item_id ", nativeQuery = true)
 	List<GrpMenuItem> searchMenu(String groupId, String roleId);
 	
-	@Query(value = "select * from grp_menu_item where grp_id = ?1 and menu_item_id = ?2 order by menu_item_id", nativeQuery = true)
+	@Query(value = "select * from grp_menu_item "
+			+ "where 1=1 "
+			+ "and grp_id = ?1 "
+			+ "and (0 = ?2 or menu_item_id = ?2) "
+			+ "order by menu_item_id", nativeQuery = true)
 	List<GrpMenuItem> searchMenu(String groupId, int menuItemId);
 	
 	@Query(value = "select group_id from grp where 1=1 and org_id =?1 order by 1", nativeQuery = true)
@@ -44,5 +48,11 @@ public interface GrpMenuRepository extends JpaRepository<GrpMenuItem, String> {
 	@Query(value = "DELETE FROM GRP_MENU_ITEM WHERE GRP_ID = ?1 "
 			+ "AND (0 = ?2 OR MENU_ITEM_ID = ?2) ", nativeQuery = true)
 	void deleteGrpMenuItem(String grpId, int menuItemId);
+	
+	@Modifying
+	@Transactional
+	@Query(value = "UPDATE GRP_MENU_ITEM SET ROLES =?3 WHERE GRP_ID = ?1 "
+			+ "AND (0 = ?2 OR MENU_ITEM_ID = ?2) ", nativeQuery = true)
+	void updateGrpMenuItem(String grpId, int menuItemId, String roles);
 
 }

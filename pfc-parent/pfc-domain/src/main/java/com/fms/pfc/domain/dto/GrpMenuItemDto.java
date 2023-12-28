@@ -8,5 +8,6 @@ public class GrpMenuItemDto {
 	private int menuId;
 	private int parentMenuId;
 	private int menuItemId;
+	private String roles;
 	private String menuItemNameTemp;
 }
