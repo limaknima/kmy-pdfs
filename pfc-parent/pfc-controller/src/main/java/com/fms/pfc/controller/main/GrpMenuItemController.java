@@ -306,6 +306,7 @@ public class GrpMenuItemController {
 				model.put("success", "Record added successfully.");
 				model.remove("error");
 				model.put("grpMenuItemItem", new GrpMenuItemDto());
+				model.put("roleAccess", getRoleAccess(hplId,0));
 
 				trxHistServ.addTrxHistory(new Date(), "Insert " + MODULE_NAME, request.getRemoteUser(),
 						CommonConstants.FUNCTION_TYPE_INSERT, hplId, CommonConstants.RECORD_TYPE_ID_GRP_MENU_ITEM,
@@ -343,6 +344,7 @@ public class GrpMenuItemController {
 				// Print update success
 				model.put("success", "Record updated successfully.");
 				model.remove("error");
+				model.put("roleAccess", getRoleAccess((String) model.get("hpl"),0));
 
 				trxHistServ.addTrxHistory(new Date(), "Update " + MODULE_NAME, request.getRemoteUser(),
 						CommonConstants.FUNCTION_TYPE_UPDATE,(String) model.get("hpl"),
