@@ -12,6 +12,8 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import javax.validation.Valid;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Controller;
@@ -35,6 +37,8 @@ import com.fms.pfc.validation.common.CommonValidation;
 @Controller
 @SessionScope
 public class ProfileController {
+	
+	private static final Logger logger = LoggerFactory.getLogger(ProfileController.class);
 	
 	private LoginService loginServ;	
 	private UsrRoleService usrRoleServ;
@@ -68,6 +72,10 @@ public class ProfileController {
 		auth.isAuthUrl(request, response);
 		Usr user = loginServ.searchUser(request.getRemoteUser());
 		model.put("user", user);
+		model.put("pwChgSucc", false);
+		
+		//20240308 - Logout modal
+		
 		setData(model, user, request);
 
 		//request.getSession().setAttribute("sessionModel", model);
@@ -80,8 +88,16 @@ public class ProfileController {
 
 		//Map<String, Object> model = new HashMap<String, Object>();
 
-		//model = auth.onPageLoad(model, request);
-		//auth.isAuthUrl(request, response);
+		model = auth.onPageLoad(model, request);
+		auth.isAuthUrl(request, response);
+		
+		if (null != model.get("pwChgSucc") && (Boolean) model.get("pwChgSucc")) {
+			logger.debug("pwChgSucc true");
+		} else {
+			logger.debug("pwChgSucc false");
+		}
+		
+		//model.put("pwChgSucc", false);
 
 		//request.getSession().setAttribute("sessionModel", model);
 
@@ -92,6 +108,8 @@ public class ProfileController {
 	public ModelAndView updatePassword(@RequestParam(name = "oldPass") String oldPass,
 			@RequestParam(name = "newPass") String newPass, @RequestParam(name = "conNewPass") String conNewPass,
 			HttpServletRequest request, HttpSession session) {
+
+		model.put("pwChgSucc", false);
 
 		//Map<String, Object> model = (Map<String, Object>) session.getAttribute("sessionModel");
 
@@ -107,15 +125,16 @@ public class ProfileController {
 
 		if (errorMsg.length() != 0) {
 			model.put("error", errorMsg);
+			model.remove("success");
 			return new ModelAndView("/base/tray/changePassword", model);
 		}
 
 		Usr user = loginServ.searchUser(request.getRemoteUser());
-		boolean isPasswordMatch = passwordEncoder.matches(oldPass, user.getPassword());
+		boolean isPasswordMatch = passwordEncoder.matches(oldPass.trim(), user.getPassword());
 
 		List<PassHistory> passHis = pwdHistServ.searchHistory(request.getRemoteUser());
 		for (int i = 0; i < passHis.size(); i++) {
-			boolean oldPassMatch = passwordEncoder.matches(newPass, passHis.get(i).getPassword());
+			boolean oldPassMatch = passwordEncoder.matches(newPass.trim(), passHis.get(i).getPassword());
 			if (oldPassMatch) {
 				model.put("error", "New password cannot same as password history!");
 				error = true;
@@ -140,11 +159,19 @@ public class ProfileController {
 		}
 
 		if (!error) {
-			try {
-				String encodedPassword = passwordEncoder.encode(newPass);
+			try {				
+				String encodedPassword = passwordEncoder.encode(newPass.trim());
+				logger.debug("chgPwdNew={}, encoded={}",newPass,encodedPassword);
+				
 				loginServ.updateUserPass(request.getRemoteUser(), encodedPassword);
 				pwdHistServ.insertPassHis(request.getRemoteUser(), user.getPassword());
-				model.put("success", "Password change successfully!");
+				model.put("success", "Password changed successfully! Please logout and login again with new password!");
+				model.remove("error");
+				model.put("pwChgSucc", true);
+				
+				//20240308 - Logout modal
+				
+				
 				// FSGS) Kent 26/2/2021 Add/changed - Add Function executed log START
 				trxHistServ.addTrxHistory(new Date(), "Update Password", request.getRemoteUser(),
 						CommonConstants.FUNCTION_TYPE_UPDATE, user.getUserId(),
@@ -152,11 +179,14 @@ public class ProfileController {
 				// FSGS) Kent 26/2/2021 Add/changed - Add Function executed log END
 			} catch (Exception e) {
 				model.put("error", "Password fail to change!");
+				model.remove("success");
 			}
 		} else {
 			model.put("oldPass", oldPass);
 			model.put("newPass", newPass);
 			model.put("conNewPass", conNewPass);
+			model.put("pwChgSucc", false);
+			model.remove("success");
 		}
 
 		return new ModelAndView("/base/tray/changePassword", model);

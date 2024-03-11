@@ -282,7 +282,7 @@ public class UserProfileController {
 
 		String randomPass = alphaNumericString(10);
 		BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
-		String encodedPassword = passwordEncoder.encode(randomPass);
+		String encodedPassword = passwordEncoder.encode(randomPass.trim());
 		model.remove("error");
 		model.remove("success");
 		
@@ -328,7 +328,7 @@ public class UserProfileController {
 					
 					String cc = userProfileServ.searchUserProfile("", request.getRemoteUser(), "", "", "", "",
 							String.valueOf(CommonConstants.SEARCH_OPTION_EXACT), "", "").get(0).getEmail();
-					sendEmail(usr.getEmail(), usr.getUserId(), randomPass, "Create", cc);
+					sendEmail(usr.getEmail(), usr.getUserId(), randomPass.trim(), "Create", cc);
 
 				} else {
 					
@@ -652,7 +652,7 @@ public class UserProfileController {
 		String errorMsg = "";
 		String randomPass = alphaNumericString(10);
 		BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
-		String encodedPassword = passwordEncoder.encode(randomPass);
+		String encodedPassword = passwordEncoder.encode(randomPass.trim());
 
 		try {
 
@@ -668,7 +668,7 @@ public class UserProfileController {
 			
 			String cc = userProfileServ.searchUserProfile("", request.getRemoteUser(), "", "", "", "",
 					String.valueOf(CommonConstants.SEARCH_OPTION_EXACT), "", "").get(0).getEmail();
-			sendEmail(email, usrID, randomPass, "Reset", cc);
+			sendEmail(email, usrID, randomPass.trim(), "Reset", cc);
 
 		} catch (Exception e) {
 
