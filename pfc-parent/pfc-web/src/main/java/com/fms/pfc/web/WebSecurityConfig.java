@@ -35,8 +35,8 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
             .usersByUsernameQuery("select user_id, password, 'true' from usr "
             		+ "where 1=1 "
             		+ "and user_id=? "
-            		+ "and DISABLED_FLAG = 'N' "
-            		+ "or (DISABLED_FLAG = 'Y' and GETDATE() > REL_DIS_DT)")
+            		+ "and (DISABLED_FLAG = 'N' "
+            		+ "or (DISABLED_FLAG = 'Y' and GETDATE() > REL_DIS_DT))")
             .authoritiesByUsernameQuery("select user_id, 'true' from usr_role where user_id=?");
     }
 	

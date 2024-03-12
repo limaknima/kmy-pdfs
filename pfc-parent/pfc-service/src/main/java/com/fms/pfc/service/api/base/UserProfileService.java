@@ -68,7 +68,12 @@ public class UserProfileService {
 	
 	//Unlock account
 	public void lockOrUnlockAccount(String user_id, String modifier, String flag) {
-		usrProfileRepo.lockOrUnlockAccount(user_id, modifier, flag);		
+
+		if (flag.equalsIgnoreCase("N")) {
+			usrProfileRepo.unlockAccountOnly(user_id, modifier, flag);
+		} else if (flag.equalsIgnoreCase("Y")) {
+			usrProfileRepo.lockOrUnlockAccount(user_id, modifier, flag);
+		}
 	}
 	
 	public List<UsrProfile> findUsersByGroup(String grpId){

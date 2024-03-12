@@ -140,6 +140,9 @@ public interface UserProfileRepository extends JpaRepository<UsrProfile, String>
 	  @Query(value = " UPDATE USR  "
 	  		+ " SET PASSWORD 		= ?2 "
 	  		+ ", MODIFIER_ID 		= ?3 "
+	  		+ ", FAILED_ATTEMPT_COUNT = 0 "
+	  		+ ", DIS_DT = NULL "
+	  		+ ", REL_DIS_DT = NULL "
 	  		+ ", MODIFIED_DATETIME 	= GETDATE() "
 	  		+ " WHERE 		USER_ID = ?1", nativeQuery = true)
 	  void resetPassword(String user_id, String newPassword, String modifier);
@@ -152,6 +155,18 @@ public interface UserProfileRepository extends JpaRepository<UsrProfile, String>
 	  		+ ", MODIFIED_DATETIME 	= GETDATE() "
 	  		+ " WHERE 	USER_ID 	= ?1 ", nativeQuery = true)
 	  void lockOrUnlockAccount(String user_id, String modifier, String flag);
+	  
+	  @Modifying
+	  @Transactional
+	  @Query(value = " UPDATE USR "
+	  		+ " SET DISABLED_FLAG 	= ?3 "
+	  		+ ", MODIFIER_ID 	  	= ?2 "
+	  		+ ", MODIFIED_DATETIME 	= GETDATE() "
+	  		+ ", FAILED_ATTEMPT_COUNT = 0 "
+	  		+ ", DIS_DT = NULL "
+	  		+ ", REL_DIS_DT = NULL "
+	  		+ " WHERE 	USER_ID 	= ?1 ", nativeQuery = true)
+	  void unlockAccountOnly(String user_id, String modifier, String flag);
 	  
 	  @Query(value = "SELECT U.*, 'orgname' as org_name,'grpname' as group_name FROM USR U WHERE 1=1 AND U.GROUP_ID=?1 ", nativeQuery = true)
 	  List<UsrProfile> findUsersByGroup(String grpId);
