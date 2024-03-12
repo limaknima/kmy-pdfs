@@ -221,11 +221,12 @@
 											<th scope="col">User Name</th>
 											<th scope="col">Email Address</th>
 											<th scope="col">User Group</th>
+											<th scope="col">User Role</th>
 											<th scope="col">Account Disabled?</th>
 										</tr>
 									</thead>
 									<tbody>
-										<tr th:each="upItem: ${userProfileItem}">
+										<tr th:each="upItem: ${userProfileItemList}">
 											<td><input type="checkbox" style="margin-top: 5px;"
 												onclick="delButtonToggle()" name="tableRow" id="tableRow"
 												th:value="${upItem.userId}"/></td>
@@ -236,6 +237,7 @@
 											<td th:text="${upItem.userName}"></td>
 											<td th:text="${upItem.email}"></td>
 											<td th:text="${upItem.groupName}"></td>
+											<td th:text="${upItem.roles}"></td>
 											<td th:text="${upItem.disabledFlag} == 'N' ? 'No' : 'Yes'"></td>
 										</tr>
 									</tbody>

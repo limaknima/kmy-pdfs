@@ -68,6 +68,8 @@ public class UsrProfile {
 	private String orgName;
 
 	private String groupName;
+	
+	private String roles;
 
 	public int getUser_unique_id() {
 		return user_unique_id;
@@ -219,6 +221,14 @@ public class UsrProfile {
 
 	public void setGroupName(String groupName) {
 		this.groupName = groupName;
+	}
+
+	public String getRoles() {
+		return roles;
+	}
+
+	public void setRoles(String roles) {
+		this.roles = roles;
 	}
 
 }

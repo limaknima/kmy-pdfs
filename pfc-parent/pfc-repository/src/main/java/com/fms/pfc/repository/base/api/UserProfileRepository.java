@@ -17,7 +17,8 @@ public interface UserProfileRepository extends JpaRepository<UsrProfile, String>
 	//Search query for userProfileList
 	@Query(value = "select usr.*, org.ORG_NAME, grp.GROUP_NAME, "
 			+ " convert(varchar, usr.effective_date_from, 103) as effective_date_from, "
-			+ " convert(varchar, usr.effective_date_to, 103) as effective_date_to "
+			+ " convert(varchar, usr.effective_date_to, 103) as effective_date_to, "
+			+ " (SELECT STRING_AGG(role.role_name,',') from usr_role  left join role on usr_role.role_ID = role.role_ID  WHERE USER_ID = usr.user_id) as roles "
 			+ " from usr "
 			+ " inner join organization org on org.org_ID = usr.org_ID "
 			+ " inner join grp on grp.group_ID = usr.group_ID "			

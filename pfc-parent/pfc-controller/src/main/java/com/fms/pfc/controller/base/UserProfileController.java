@@ -138,13 +138,13 @@ public class UserProfileController {
 		if (init) {
 			// check if user is not super user, do filtering
 			if (!isSuperUser) {
-				model.put("userProfileItem", userProfileServ.searchUserProfile("", "", "", "", grp, "", "", "", "")
+				model.put("userProfileItemList", userProfileServ.searchUserProfile("", "", "", "", grp, "", "", "", "")
 						.stream().filter(arg0 -> arg0.getOrgId().equals((String) model.get("loggedUserOrg")))
 						.collect(Collectors.toList()));
 				model.put("groupItem", groupServ.searchGroup((String) model.get("loggedUserOrg"), grp));// FSGS) Azmeer 01/03/2021 - Add data for User Group dropdown
 
 			} else {
-				model.put("userProfileItem", userProfileServ.searchUserProfile("", "", "", "", "", "", "", "", "")
+				model.put("userProfileItemList", userProfileServ.searchUserProfile("", "", "", "", "", "", "", "", "")
 					.stream().filter(arg0 -> arg0.getOrgId().equals((String) model.get("loggedUserOrg")))
 					.collect(Collectors.toList()));
 				model.put("groupItem", groupServ.searchGroup((String) model.get("loggedUserOrg"), ""));// FSGS) Azmeer 01/03/2021 - Add data for User Group dropdown
@@ -223,7 +223,7 @@ public class UserProfileController {
 				hasError = false;
 
 				// FSGS) Hani 10/3/2021 Add/Change .trim() to search criteria START
-				model.put("userProfileItem", userProfileServ.searchUserProfile(orgName.trim(), userId.trim(), userName.trim(),
+				model.put("userProfileItemList", userProfileServ.searchUserProfile(orgName.trim(), userId.trim(), userName.trim(),
 						email.trim(), gpName, para1, para2, para3, para4)
 						.stream().filter(arg0 -> arg0.getOrgId().equals((String) model.get("loggedUserOrg")))
 						.collect(Collectors.toList()));
@@ -242,7 +242,7 @@ public class UserProfileController {
 				errorMsg += " " + msgSource.getMessage("msgFailSearchRecord", new Object[] {}, Locale.getDefault());
 				model.put("error", errorMsg);
 				// return back user input
-				model.put("userProfileItem", userProfileServ.searchUserProfile("", "", "", "", "", "", "", "", "")
+				model.put("userProfileItemList", userProfileServ.searchUserProfile("", "", "", "", "", "", "", "", "")
 						.stream().filter(arg0 -> arg0.getOrgId().equals((String) model.get("loggedUserOrg")))
 						.collect(Collectors.toList()));
 			}
@@ -424,7 +424,7 @@ public class UserProfileController {
 		if (StringUtils.isNotEmpty((String) model.get("filterGrp")))
 			grp = (String) model.get("filterGrp");
 		
-		model.put("userProfileItem", userProfileServ.searchUserProfile("", "", "", "", grp, "", "", "", "")
+		model.put("userProfileItemList", userProfileServ.searchUserProfile("", "", "", "", grp, "", "", "", "")
 				.stream().filter(arg0 -> arg0.getOrgId().equals((String) model.get("loggedUserOrg")))
 				.collect(Collectors.toList()));
 		return new ModelAndView("/base/admin/userProfile/userProfileList", model);
@@ -583,7 +583,7 @@ public class UserProfileController {
 		if (StringUtils.isNotEmpty((String) model.get("filterGrp")))
 			grp = (String) model.get("filterGrp");
 
-		model.put("userProfileItem", userProfileServ.searchUserProfile("", "", "", "", "", "", "", "", "")
+		model.put("userProfileItemList", userProfileServ.searchUserProfile("", "", "", "", "", "", "", "", "")
 				.stream().filter(arg0 -> arg0.getOrgId().equals((String) model.get("loggedUserOrg")))
 				.collect(Collectors.toList()));
 
