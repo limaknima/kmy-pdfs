@@ -12,7 +12,7 @@ import com.fms.pfc.domain.model.main.OnDemandSearch;
 public interface OnDemandSearchRepository extends JpaRepository<OnDemandSearch, String> {
 	@Query(value = "select * from ( "
 			+ " select "
-			+ "	t1.HPL, t1.LOT,"
+			+ "	concat(t1.LOT,t2.PFILE_ID) as UID, t2.PFILE_ID as FILE_ID, t1.LOT, t1.HPL,"
 			+ "	t2.FILE_NAME, t2.FILE_SIZE,"
 			+ "	(select t3.FILE_PATH from REL_PATH2 t3 where t3.REL_ID = t2.FILE_PATH) as FILE_PATH, "
 			+ "	case"
@@ -21,8 +21,7 @@ public interface OnDemandSearchRepository extends JpaRepository<OnDemandSearch, 
 			+ "		when (t2.FILE_SIZE < 0 OR t2.FILE_SIZE is NULL) then 'File size is zero'"
 			+ "		else 'OK'"
 			+ "	end AS ALERT, "
-			+ "	t1.YEAR, t1.MTH, (case when t1.DDAY = '' then '01' else t1.DDAY end) as DDAY, "
-			+ " t2.PFILE_ID as FILE_ID "
+			+ "	t1.YEAR, t1.MTH, (case when t1.DDAY = '' then '01' else t1.DDAY end) as DDAY "
 			+ "from CV22PDF t1 "
 			+ "left outer join PROD_FILE t2 on t2.G2_LOT_NO = t1.LOT "
 			+ "where 1=1 "

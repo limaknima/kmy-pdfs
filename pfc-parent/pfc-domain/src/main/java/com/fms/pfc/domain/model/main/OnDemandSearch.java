@@ -27,7 +27,6 @@ public class OnDemandSearch implements Serializable {
 	 */
 	private static final long serialVersionUID = -1167508760128675601L;
 
-	@Id
 	@Column(name = "LOT")
 	private String lot;
 	@Column(name = "HPL")
@@ -48,5 +47,8 @@ public class OnDemandSearch implements Serializable {
 	private String day;	
 	@Column(name = "FILE_ID")
 	private Integer fileId;	
+	@Id
+	@Column (name = "UID")
+	private String uid;
 		
 }
