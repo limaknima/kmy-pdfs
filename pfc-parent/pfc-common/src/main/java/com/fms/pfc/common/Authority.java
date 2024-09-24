@@ -56,6 +56,7 @@ public class Authority {
 		Usr usr = logServ.searchUser(request.getRemoteUser());
 		model.put("loggedUserGrp", usr.getGroupId());
 		model.put("loggedUserOrg", usr.getOrgId());
+		model.put("loggedUserName", usr.getUserName());
 		
 		List<UsrRole> usrRoleList = usrRoleServ.searchUserRole(request.getRemoteUser());		
 		String roleId = usrRoleList.get(0).getRoleId();
