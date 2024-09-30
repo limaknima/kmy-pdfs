@@ -513,9 +513,17 @@
 									</div>
 									<div class="modal-body">Do you confirm to save this
 										record?</div>
+										
+									<div class="modal-body">
+										<div class="d-flex align-items-center">
+										  <strong>Loading...</strong>
+										  <div class="spinner-border ml-auto" role="status" aria-hidden="true"></div>
+										</div>										
+									</div>
+									
 									<div class="modal-footer">
 										<button type="submit" class="btn btn-primary" form="mainForm"
-											value="save" name="action">Confirm</button>
+											value="save" name="action" id="btnSaveConfirm">Confirm</button>
 										<button type="button" class="btn btn-secondary"
 											data-dismiss="modal">Cancel</button>
 									</div>
@@ -1282,6 +1290,17 @@
 		    if(!$("#filePath2").val()) {
 		    	//alert("hello");
 		    };
+		    
+		    $("#btnSaveConfirm").click(function() {
+				 // disable button
+	            $("#btnSaveConfirm").prop("hidden", true);
+	            // add spinner to button
+	          //  $("#btnSaveConfirm").html(
+	          //  `<i class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></i> Loading ...`
+	          //  );
+				//$("#mainForm").submit();
+			});
+			
 		});
 		
 	</script>

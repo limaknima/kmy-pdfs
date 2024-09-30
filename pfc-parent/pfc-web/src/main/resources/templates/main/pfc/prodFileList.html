@@ -250,6 +250,7 @@
 											<th scope="col" th:text="#{lblG2LotNo}"></th>
 											<th scope="col" th:text="#{lblFilePath}"></th>											
 											<th scope="col" th:text="#{lblFileName}"></th>									
+											<th scope="col" th:text="#{lblFileSize}"></th>									
 											<th scope="col" th:text="#{lblCreator}"></th>								
 											<th scope="col" th:text="#{lblUploadedDt}"></th>
 										</tr>
@@ -265,6 +266,7 @@
 											<td th:text="${prodFileItem.g2Lot}"></td>
 											<td th:text="${prodFileItem.filePath}"></td>
 											<td th:text="${prodFileItem.fileName}"></td>
+											<td th:text="${prodFileItem.fileSize}"></td>
 											<td th:text="${prodFileItem.creatorId}"></td>
 											<!--<td th:text="${#dates.format(prodFileItem.createdDatetime, 'dd/MM/yyyy HH:mm:ss')}"></td>-->
 											<td th:text="${prodFileItem.createdDatetime}"></td>

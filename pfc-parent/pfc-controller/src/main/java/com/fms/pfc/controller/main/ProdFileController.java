@@ -19,6 +19,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.StringTokenizer;
+import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
@@ -138,6 +139,8 @@ public class ProdFileController {
 	private String FILENAME_LEN_GTMS_FET1;
 	@Value("${filename.len.gtms.be.fet2.fet3}")
 	private String FILENAME_LEN_GTMS_FET2_FET3;
+	@Value("${use.usb.upload}")
+	private String USE_USB_UPLOAD;
 
 	@Autowired
 	public ProdFileController(Authority auth, CommonValidation commonValServ, MessageSource msgSource,
@@ -432,6 +435,12 @@ public class ProdFileController {
 		finalFileContent = setMultipartfileIfFromUSB(fileContentName, newFileContentName, mode, finalFileContent);
 
 		String errorMsg = validateForm(dto, finalFileContent, mode, request.getRemoteUser(), procType, subProc);
+		
+//		try {
+//		    TimeUnit.SECONDS.sleep(5);
+//		} catch (InterruptedException ie) {
+//		    Thread.currentThread().interrupt();
+//		}
 
 		if (errorMsg.length() != 0) {
 			model.put("error", errorMsg);
@@ -1200,7 +1209,7 @@ public class ProdFileController {
 				dto.getHpl());
 		String errorMsg = "";
 		if (!StringUtils.equals(dto.getHpl(), CommonConstants.RECORD_TYPE_ID_HPL_GTMS)) {
-			Integer count = prodFileServ.countDuplicateFile(fileName, dto.getG2Lot(), dto.getHpl());
+			Integer count = prodFileServ.countDuplicateFile(fileName, "", dto.getHpl());
 			if (count > 0) {
 				errorMsg = "File already exists in database - File name=" + fileName + "; Lot no="
 						+ dto.getG2Lot() + "; HPL=" + dto.getHpl();
@@ -1280,65 +1289,82 @@ public class ProdFileController {
 	 */
 	private String validateUsbUsrConf(ProdFileDto dto, String userId) {
 		String errorMsg = "";
-		if (!usbDet.getUsbDevices().isEmpty()) {
-			// if device detected
-			USBStorageDevice dev = usbDet.getOneDeviceInfo();
-			// check conf from db
-			List<UsbConfDto> usbConfList = dev != null ? prodFileServ.findUsbConf(dev.getDeviceName(), dev.getUuid())
-					: new ArrayList<UsbConfDto>();
+		
+		// check app properties - use.usb.upload
+		// if value is false, do not need to check for usb config, continue upload from
+		// drive
+		boolean useUsb = Boolean.parseBoolean(USE_USB_UPLOAD);
+		if (!useUsb) {
+			// default upload by drive
+			errorMsg = checkUsbConf(dto, userId, errorMsg);
+		} else {
+			if (!usbDet.getUsbDevices().isEmpty()) {
+				// if device detected
+				USBStorageDevice dev = usbDet.getOneDeviceInfo();
+				// check conf from db
+				List<UsbConfDto> usbConfList = dev != null ? prodFileServ.findUsbConf(dev.getDeviceName(), dev.getUuid())
+						: new ArrayList<UsbConfDto>();
 
-			if (!usbConfList.isEmpty()) {
-				// check if match hpl and prod ln
-				UsbConfDto usbConf = usbConfList.get(0);
-				if (!StringUtils.equals(usbConf.getHpl(), dto.getHpl())
-						|| !StringUtils.equalsIgnoreCase(usbConf.getProdLn(), dto.getProdLn())) {
-					errorMsg += "USB-User config >> No configuration found for USB=" + usbConf.getName() + ", Serial No="
-							+ usbConf.getSerialNo() + ", HPL=" + usbConf.getHpl() + ",Prod Ln=" + usbConf.getProdLn()+BREAKLINE;
-				}
-				// check if current user is permitted
-				List<Usr> usrList = prodFileServ.findUsbUsrByParent(usbConf.getPkUconfId());
-				if (!usrList.isEmpty()) {
-					usrList = usrList.stream().filter(arg0 -> arg0.getUserId().equals(userId)).collect(Collectors.toList());
-					if (usrList.isEmpty()) {
-						errorMsg += "USB-User config >> Current user " + userId + " is not configured to be an uploader from this device"+BREAKLINE;
+				if (!usbConfList.isEmpty()) {
+					// check if match hpl and prod ln
+					UsbConfDto usbConf = usbConfList.get(0);
+					if (!StringUtils.equals(usbConf.getHpl(), dto.getHpl())
+							|| !StringUtils.equalsIgnoreCase(usbConf.getProdLn(), dto.getProdLn())) {
+						errorMsg += "USB-User config >> No configuration found for USB=" + usbConf.getName() + ", Serial No="
+								+ usbConf.getSerialNo() + ", HPL=" + usbConf.getHpl() + ",Prod Ln=" + usbConf.getProdLn()+BREAKLINE;
+					}
+					// check if current user is permitted
+					List<Usr> usrList = prodFileServ.findUsbUsrByParent(usbConf.getPkUconfId());
+					if (!usrList.isEmpty()) {
+						usrList = usrList.stream().filter(arg0 -> arg0.getUserId().equals(userId)).collect(Collectors.toList());
+						if (usrList.isEmpty()) {
+							errorMsg += "USB-User config >> Current user " + userId + " is not configured to be an uploader from this device"+BREAKLINE;
+						}
+					} else {
+						// user list empty
+						errorMsg += "USB-User config >> No user is configured to be an uploader from this device"+BREAKLINE;
 					}
 				} else {
-					// user list empty
-					errorMsg += "USB-User config >> No user is configured to be an uploader from this device"+BREAKLINE;
+					// no conf found
+					errorMsg += "USB-User config >> No configuration found for USB=" + dev.getDeviceName() + ", Serial No=" + dev.getUuid()+BREAKLINE;
 				}
+
 			} else {
-				// no conf found
-				errorMsg += "USB-User config >> No configuration found for USB=" + dev.getDeviceName() + ", Serial No=" + dev.getUuid()+BREAKLINE;
+				// if no usb devices detected
+				// file could be coming from local drive/folder
+				// logger.debug("validateUsbUsrConf() No usb devices detected! File could be
+				// coming from local drive/folder.");
+				errorMsg = checkUsbConf(dto, userId, errorMsg);
+			}
+		}
+		
+		return errorMsg;
+	}
+
+	private String checkUsbConf(ProdFileDto dto, String userId, String errorMsg) {
+		model.put("info", "USB-User config >> No usb devices detected! However, file can be uploaded from local drive/folder"+BREAKLINE);
+		
+		//allow user to continue upload from folder
+		// do further checking if user is eligible to upload
+		// based on grp/hpl, prod ln - check against UsbConf
+		// check conf from db
+		List<UsbConfDto> usbConfList = prodFileServ.findAllByCriteria("", "", dto.getProdLn(), dto.getHpl());
+		if (usbConfList.isEmpty()) {
+			errorMsg += "No configuration found for HPL=" + dto.getHpl() + " and Prod Line=" + dto.getProdLn()
+					+ BREAKLINE;
+		} else {
+			// if there is config, check against assign User
+			List<Usr> usrList = new ArrayList<Usr>();
+			for (UsbConfDto usbConf : usbConfList) {
+				usrList.addAll(prodFileServ.findUsbUsrByParent(usbConf.getPkUconfId()));
 			}
 
-		} else {
-			// if no usb devices detected
-			// file could be coming from local drive/folder
-			//logger.debug("validateUsbUsrConf() No usb devices detected! File could be coming from local drive/folder.");
-			model.put("info", "USB-User config >> No usb devices detected! However, file can be uploaded from local drive/folder"+BREAKLINE);
-			
-			//allow user to continue upload from folder
-			// do further checking if user is eligible to upload
-			// based on grp/hpl, prod ln - check against UsbConf
-			// check conf from db
-			List<UsbConfDto> usbConfList = prodFileServ.findAllByCriteria("", "", dto.getProdLn(), dto.getHpl());
-			if (usbConfList.isEmpty()) {
-				errorMsg += "No configuration found for HPL=" + dto.getHpl() + " and Prod Line=" + dto.getProdLn()
-						+ BREAKLINE;
-			} else {
-				// if there is config, check against assign User
-				List<Usr> usrList = new ArrayList<Usr>();
-				for (UsbConfDto usbConf : usbConfList) {
-					usrList.addAll(prodFileServ.findUsbUsrByParent(usbConf.getPkUconfId()));
-				}
+			usrList = usrList.stream().filter(arg0 -> arg0.getUserId().equals(userId)).collect(Collectors.toList());
 
-				usrList = usrList.stream().filter(arg0 -> arg0.getUserId().equals(userId)).collect(Collectors.toList());
-
-				if (usrList.isEmpty()) {
-					errorMsg += "User " + userId + " is not configured to upload for HPL=" + dto.getHpl()
-							+ " and Prod Line=" + dto.getProdLn() + BREAKLINE;
-				}
-			}			
+			if (usrList.isEmpty()) {
+				errorMsg += "User " + userId + " is not configured to upload for HPL=" + dto.getHpl()
+						+ " and Prod Line=" + dto.getProdLn() + BREAKLINE;
+			}
 		}
 		return errorMsg;
 	}
