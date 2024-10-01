@@ -125,11 +125,21 @@
 
 									<!-- Dashboard start -->
 									<div class="row">
+										<!-- 
 										<div class="col-lg-6 col-md-6 col-sm-10 pr-0 mb-3">
 											<div class="card-collapsible card">
 												<div class="card-header">Completed G2 Lot(Outer) vs File Upload(Inner)</div>
 												<div class="card-body d-flex justify-content-around">
 													<canvas class="chart w-100" id="pieChart"></canvas>
+												</div>
+											</div>											
+										</div>
+										 -->
+										 <div class="col-lg-6 col-md-6 col-sm-10 pr-0 mb-3">
+											<div class="card-collapsible card">
+												<div class="card-header">Completed G2 Lot vs File Upload</div>
+												<div class="card-body d-flex justify-content-around">
+													<canvas class="chart w-100" id="stackedChartID"></canvas>
 												</div>
 											</div>
 										</div>
@@ -347,8 +357,9 @@
 
 	<script type="text/javascript">
 		$(document).ready(function() {
-			initPieChart();
+			//initPieChart();
 			initBarChart();
+			initStackedChart();
 			var showReminder = "[(${showReminder})]";
 
 			if (showReminder == "true") {
@@ -466,6 +477,40 @@
 	    	    options: barChartOptions
 	    	  });
 	    	}
+	    	
+	    	 function initStackedChart () {
+				var cols = [[${cols}]];
+			 	var datas = [[${stackedBars}]];
+				// Get the drawing context on the canvas
+		        var myContext = document.getElementById(
+		            "stackedChartID").getContext('2d');
+		        var myChart = new Chart(myContext, {
+		            type: 'bar',
+		            data: {
+		                labels: cols.split(','),
+		                datasets: datas,
+		            },
+		            options: {
+		                plugins: {
+		                    title: {
+		                        display: true,
+		                        text: 'Stacked Bar chart for pollution status'
+		                    },
+		                },
+		                indexAxis: 'y',
+		                scales: {
+		                    xAxes: [{
+				                stacked: true
+				            }],
+				            yAxes: [{
+				                stacked: true
+				            }]
+		                }
+		            }
+		        });
+			}
+	    	
+	    	
 	    
     </script>
 	<script th:src="@{/js/chartjs.js}"></script>

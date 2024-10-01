@@ -2,6 +2,7 @@ package com.fms.pfc.controller.base;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -99,22 +100,26 @@ public class MenuController {
 			model.put("lotCount", g2Serv.countAll());
 			model.put("lotDesc", lotDesc);			
 			
+			int sum = 0;
 			String fileDesc = "(";			
 			for (Object[] ob : fileCount) {
 				String hpl = (String)ob[0];
 				String cnt = String.valueOf(ob[1]);
 				String appnd = hpl+"="+cnt+", ";
+				sum += Integer.parseInt(cnt);
 				fileDesc +=appnd;
 			}			
 			fileDesc = fileDesc.substring(0, fileDesc.lastIndexOf(", "));			
 			fileDesc +=")";
-			model.put("prodFileCount", pfServ.countAll());
+			//model.put("prodFileCount", pfServ.countAll());
+			model.put("prodFileCount", sum);
 			model.put("prodFileDesc", fileDesc);
 		}
         // for chart
         {
-        	generatePieChart(model);        	
+        	//generatePieChart(model);        	
         	generateBarChart(model);
+        	generateStackedBarChart(model);
         }
         // for tables
 		{
@@ -187,6 +192,37 @@ public class MenuController {
 		}     
 		
 		model.put("bars", bars);
+	}
+	
+	private void generateStackedBarChart(Map<String, Object> model) {
+		List<String> cols = lotCount.stream().map(arg0 -> (String) arg0[0]).sorted().collect(Collectors.toList());
+		model.put("cols", String.join(",", cols));
+		List<BarChartJs> bars = new ArrayList<MenuController.BarChartJs>();
+		List<String> lbls = Arrays.asList("Completed G2 lot", "File upload");
+		for (String lbl : lbls) {
+			BarChartJs bar = new BarChartJs();
+			bar.setLabel(lbl);
+			bar.setBackgroundColor(CommonUtil.randomHexColor());
+			
+			List<Integer> mths = new ArrayList<Integer>();
+			if(lbl.equals("Completed G2 lot")) {
+				List<Object[]> fls = this.lotCount;
+				List<Integer> ints = fls.stream().map(ob -> Integer.parseInt(String.valueOf(ob[1])))
+						.collect(Collectors.toList());
+				mths.addAll(ints);
+				
+			} else {
+				List<Object[]> fls = this.fileCount;
+				List<Integer> ints = fls.stream().map(ob -> Integer.parseInt(String.valueOf(ob[1])))
+						.collect(Collectors.toList());
+				mths.addAll(ints);
+			}
+			
+			bar.setData(mths);
+			bars.add(bar);				
+		}     
+		
+		model.put("stackedBars", bars);
 	}
 	
 	private void generatePieChart2(Map<String, Object> model) {

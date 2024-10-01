@@ -334,7 +334,8 @@ public class ProdFileService {
 	 * @return int
 	 */
 	public int countFileByCriteria(String hpl, int year, int month) {
-		Integer cnt = prodFileRepo.countFileByCriteria(hpl, year, month);
+		Integer cnt = (hpl.equals("GTMS") ? prodFileRepo.countFileByCriteria2(hpl, year, month)
+				: prodFileRepo.countFileByCriteria(hpl, year, month));
 		return Objects.isNull(cnt) ? 0 : cnt.intValue();
 	}
 	

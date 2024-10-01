@@ -19,6 +19,18 @@ public interface ProdFileRepository extends JpaRepository<ProdFile, Integer> {
 			+ "group by hpl, MONTH(CREATED_DATETIME)", nativeQuery = true)
 	Integer countFileByCriteria(String hpl, int year, int month);
 	
+	@Query(value = "select sum(tb.CNT) from ( "
+			+ "	select t.G2_LOT_NO, IIF(t.FCNT >=3, 1, 0) as CNT from ( "
+			+ "		select pf.G2_LOT_NO, count(distinct pf.FILE_PATH) as FCNT from PROD_FILE pf "
+			+ "		where 1=1 "
+			+ "		and pf.HPL = ?1 "
+			+ "		and YEAR(pf.CREATED_DATETIME) = ?2 "
+			+ "		and MONTH(pf.CREATED_DATETIME) = ?3 "
+			+ "		group by pf.G2_LOT_NO "
+			+ "	)t "
+			+ ")tb", nativeQuery = true)
+	Integer countFileByCriteria2(String hpl, int year, int month);
+	
 	@Query(value = "select count(*) as cnt from PROD_FILE "
 			+ "where 1=1 "
 			+ "and FILE_NAME = ?1 "
@@ -29,7 +41,14 @@ public interface ProdFileRepository extends JpaRepository<ProdFile, Integer> {
 	@Query(value = "select HPL, count(*) as CNT from PROD_FILE where 1=1 group by HPL order by HPL", nativeQuery = true)
 	List<Object[]> fileCountByHpl();
 	
-	@Query(value = "select count(1) AS CNT from PROD_FILE where HPL = 'GTMS' "
+	@Query(value = "select sum(tb.CNT) from ("
+			+ "	select t.G2_LOT_NO, IIF(t.FCNT >=3, 1, 0) as CNT from ("
+			+ "		select G2_LOT_NO, count(distinct FILE_PATH) as FCNT from PROD_FILE "
+			+ "		where 1=1 "
+			+ "		and HPL = 'GTMS'"
+			+ "		group by G2_LOT_NO"
+			+ "	)t"
+			+ ")tb "
 			+ "union all "
 			+ "select count(1)  AS CNT  from PROD_FILE where HPL = 'IF' "
 			+ "union all "
